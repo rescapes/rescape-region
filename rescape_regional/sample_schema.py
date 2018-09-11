@@ -15,7 +15,7 @@ from rescape_graphene.graphql_helpers.schema_helpers import allowed_query_argume
     input_type_fields, DENY, stringify_query_kwargs
 
 # configuration for the builtin User modal
-from regional.models import Foo
+from rescape_regional.models import Foo
 
 user_fields = merge_with_django_properties(UserType, dict(
     id=dict(type=graphene.String, create=DENY, update=[REQUIRE]),
