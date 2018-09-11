@@ -4,9 +4,9 @@ from django.contrib.auth.hashers import make_password
 from graphene.test import Client
 from rescape_graphene.user.user_schema import UserType
 
-from rescape_regional.sample_schema import user_fields, FooType
+from rescape_region.sample_schema import user_fields, FooType
 
-from rescape_regional.sample_schema import schema, foo_fields
+from rescape_region.sample_schema import schema, foo_fields
 from rescape_graphene.graphql_helpers.schema_helpers import allowed_query_arguments, input_type_fields, CREATE, UPDATE, \
     input_type_parameters_for_update_or_create
 from snapshottest import TestCase

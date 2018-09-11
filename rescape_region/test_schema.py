@@ -4,7 +4,7 @@ from rescape_graphene.functional import ramda as R
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from graphene.test import Client
-from rescape_regional.sample_schema import schema, graphql_query_foos, Foo
+from rescape_region.sample_schema import schema, graphql_query_foos, Foo
 from snapshottest import TestCase
 from rescape_graphene.user.user_schema import graphql_update_or_create_user, graphql_query_users, \
     graphql_authenticate_user, graphql_verify_user, graphql_refresh_token
