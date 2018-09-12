@@ -23,6 +23,7 @@ def default_geometry():
     }
 )
 
+
 class Region(Model):
     """
         Models a geospatial region
