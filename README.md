@@ -11,14 +11,14 @@ Quick start
 
     INSTALLED_APPS = [
         ...
-        'regional',
+        'rescape-region',
     ]
 
 2. Include the polls URLconf in your project urls.py like this::
 
-    path('regional/', include('regional.urls')),
+    path('rescape-region/', include('regional.urls')),
 
-3. Run `python manage.py migrate` to create the regional models.
+3. Run `python manage.py migrate` to create the rescape-region models.
 
 ## Installation
 

@@ -1,21 +1,19 @@
 from django.contrib.auth import get_user_model
 
-from app.models.feature import Feature
+from .feature import Feature
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models import  ForeignKey
 from django.db.models import (
     CharField,  Model,
     DateTimeField)
 from django.contrib.postgres.fields import JSONField
-
+from rescape_python_helpers import ewkt_from_feature
 
 def default():
     return dict()
 
 
 def default_geometry():
-    # Prevent loading from rescape_graphene before Django models are loaded
-    from rescape_graphene import ewkt_from_feature
     ewkt_from_feature(
     {
         "type": "Feature",
