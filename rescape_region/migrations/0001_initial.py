@@ -5,9 +5,8 @@ import django.contrib.gis.db.models.fields
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
-import rescape_region.models.feature
-import rescape_region.models.region
-import rescape_region.models.user_state
+import rescape_region.models
+import rescape_region.models
 
 
 class Migration(migrations.Migration):
@@ -27,7 +26,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=500, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('geometry', django.contrib.gis.db.models.fields.GeometryField(default=rescape_region.models.feature.default_geometry, srid=4326)),
+                ('geometry', django.contrib.gis.db.models.fields.GeometryField(default=rescape_region.models.default_geometry, srid=4326)),
             ],
         ),
         migrations.CreateModel(
@@ -38,7 +37,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=50)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.region.default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.default)),
                 ('boundary', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='regions', to='rescape_region.Feature')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='regions', to=settings.AUTH_USER_MODEL)),
             ],
@@ -47,7 +46,7 @@ class Migration(migrations.Migration):
             name='UserState',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.user_state.default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.user_state_default)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
