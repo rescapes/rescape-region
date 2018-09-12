@@ -18,4 +18,4 @@ class UserState(Model):
     data = JSONField(null=False, default=default)
 
     class Meta:
-        app_label = "app"
+        app_label = "rescape_region"

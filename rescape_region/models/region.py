@@ -38,7 +38,7 @@ class Region(Model):
     owner = ForeignKey(get_user_model(), null=False, related_name='regions', on_delete=models.CASCADE)
 
     class Meta:
-        app_label = "app"
+        app_label = "rescape_region"
 
     def __str__(self):
         return self.name
