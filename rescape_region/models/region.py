@@ -34,7 +34,7 @@ class Region(Model):
     name = CharField(max_length=50, null=False)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    boundary = ForeignKey(Feature, related_name='regions', null=False, on_delete=models.CASCADE)
+    boundary = ForeignKey(Feature, related_name='regions', null=False, default=default_geometry, on_delete=models.CASCADE)
     data = JSONField(null=False, default=default)
     owner = ForeignKey(get_user_model(), null=False, related_name='regions', on_delete=models.CASCADE)
 

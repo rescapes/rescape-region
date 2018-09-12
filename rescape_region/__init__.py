@@ -3,7 +3,8 @@
 from .models import (
     UserState,
     Feature,
-    Region
+    Region,
+    default_geometry
 )
 
 __all__ = [
