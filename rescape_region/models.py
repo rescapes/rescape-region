@@ -76,6 +76,10 @@ def user_state_default():
     return dict(resources=[])
 
 
+def group_state_default():
+    return dict(resources=[])
+
+
 class UserState(Model):
     """
         User state reference a single User.
@@ -89,3 +93,15 @@ class UserState(Model):
     class Meta:
         app_label = "rescape_region"
 
+
+class GroupState(Model):
+    """
+        Group state reference a single Group.
+        The json structure of data should be identical to that of UserState, but maybe in the future will
+        have additional attributes that deal with groups
+    """
+    group = OneToOneField(User, null=False, on_delete=models.CASCADE)
+    data = JSONField(null=False, default=user_state_default)
+
+    class Meta:
+        app_label = "rescape_region"
