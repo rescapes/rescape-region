@@ -101,7 +101,7 @@ class GroupState(Model):
         have additional attributes that deal with groups
     """
     group = OneToOneField(User, null=False, on_delete=models.CASCADE)
-    data = JSONField(null=False, default=user_state_default)
+    data = JSONField(null=False, default=group_state_default)
 
     class Meta:
         app_label = "rescape_region"
