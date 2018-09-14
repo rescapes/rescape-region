@@ -6,7 +6,7 @@ from rescape_python_helpers import ewkt_from_feature
 from django.db.models import (
     CharField,  Model,
     DateTimeField)
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Model, ForeignKey, OneToOneField
@@ -101,7 +101,7 @@ class GroupState(Model):
         The json structure of data should be identical to that of UserState, but maybe in the future will
         have additional attributes that deal with groups
     """
-    group = OneToOneField(User, null=False, on_delete=models.CASCADE)
+    group = OneToOneField(Group, null=False, on_delete=models.CASCADE)
     data = JSONField(null=False, default=group_state_default)
 
     class Meta:
