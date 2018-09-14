@@ -30,6 +30,7 @@ def default_geometry():
         }
     )
 
+
 class Feature(Model):
     """
         Models a geospatial feature. Location is the geometry with a type and coordinates. All other properties
