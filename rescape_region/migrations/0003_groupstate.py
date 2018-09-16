@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='GroupState',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.user_state_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.user_state_default)),
                 ('group', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

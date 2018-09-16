@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='groupstate',
             name='data',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.group_state_default),
+            field=django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.group_state_default),
         ),
         migrations.AlterField(
             model_name='groupstate',

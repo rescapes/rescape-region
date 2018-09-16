@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=500, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('geometry', django.contrib.gis.db.models.fields.GeometryField(default=rescape_region.models.default_geometry, srid=4326)),
+                ('geometry', django.contrib.gis.db.models.fields.GeometryField(default=rescape_region.model_helpers.feature_geometry_default, srid=4326)),
             ],
         ),
         migrations.CreateModel(
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=50)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_default)),
                 ('boundary', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='regions', to='rescape_region.Feature')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='regions', to=settings.AUTH_USER_MODEL)),
             ],
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
             name='UserState',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.models.user_state_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.user_state_default)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
