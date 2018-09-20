@@ -31,7 +31,7 @@ mapbox_data_fields = dict(
     )
 )
 
-# Mapbox settings for the User's use of a particular Region
+# Mapbox settings for the Group's use of a particular Region
 MapboxDataType = type(
     'MapboxDataType',
     (ObjectType,),
@@ -62,10 +62,10 @@ group_region_data_fields = dict(
 )
 
 # References a Region model instance, dictating settings imposed on or chosen by a group for a particular Region
-# to which they have some level of access. This also adds settings like mapbox that are particular to the User's use
+# to which they have some level of access. This also adds settings like mapbox that are particular to the Group's use
 # of the Region but that the Region itself doesn't care about
-UserRegionDataType = type(
-    'UserRegionDataType',
+GroupRegionDataType = type(
+    'GroupRegionDataType',
     (ObjectType,),
     R.map_with_obj(
         # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
@@ -75,8 +75,8 @@ UserRegionDataType = type(
 
 group_state_data_fields = dict(
     group_regions=dict(
-        type=UserRegionDataType,
-        graphene_type=UserRegionDataType,
+        type=GroupRegionDataType,
+        graphene_type=GroupRegionDataType,
         fields=group_region_data_fields,
         type_modifier=lambda typ: List(typ, resolver=resolver_for_dict_list)
     )
