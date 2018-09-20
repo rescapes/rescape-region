@@ -1,10 +1,10 @@
 
 from django.contrib.auth import get_user_model
 from rescape_python_helpers import ramda as R
-from app.models import  UserState
 
-from app.schema_models.region_sample import create_sample_regions
-from app.schema_models.user_sample import create_sample_users
+from rescape_region.models import UserState
+from rescape_region.schema_models.region_sample import create_sample_regions
+from rescape_region.schema_models.user_sample import create_sample_users
 
 sample_user_states = [
     dict(

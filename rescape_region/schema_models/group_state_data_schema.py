@@ -1,6 +1,6 @@
 from rescape_python_helpers import ramda as R
 from rescape_graphene import merge_with_django_properties, REQUIRE, resolver_for_dict_field, \
-    resolver_for_dict_list, model_resolver_for_dict_field, UserType
+    resolver_for_dict_list, model_resolver_for_dict_field
 from graphene import ObjectType,  Float, List, Field, Int
 
 from rescape_region.models import Region
@@ -41,7 +41,7 @@ MapboxDataType = type(
         mapbox_data_fields)
 )
 
-user_region_data_fields = dict(
+group_region_data_fields = dict(
     # References a Region.
     # For simplicity we limit fields to id. Mutations can only use id, and a query doesn't need other
     # details of the region--it can query separately for that. We could offer all fields in a query only
@@ -52,7 +52,7 @@ user_region_data_fields = dict(
         fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))),
         type_modifier=lambda typ: Field(typ, resolver=model_resolver_for_dict_field(Region))
     ),
-    # The mapbox state for the user's use of this Region
+    # The mapbox state for the group's use of this Region
     mapbox=dict(
         type=MapboxDataType,
         graphene_type=MapboxDataType,
@@ -61,7 +61,7 @@ user_region_data_fields = dict(
     )
 )
 
-# References a Region model instance, dictating settings imposed on or chosen by a user for a particular Region
+# References a Region model instance, dictating settings imposed on or chosen by a group for a particular Region
 # to which they have some level of access. This also adds settings like mapbox that are particular to the User's use
 # of the Region but that the Region itself doesn't care about
 UserRegionDataType = type(
@@ -70,23 +70,23 @@ UserRegionDataType = type(
     R.map_with_obj(
         # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
         lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        user_region_data_fields)
+        group_region_data_fields)
 )
 
-user_state_data_fields = dict(
-    user_regions=dict(
+group_state_data_fields = dict(
+    group_regions=dict(
         type=UserRegionDataType,
         graphene_type=UserRegionDataType,
-        fields=user_region_data_fields,
+        fields=group_region_data_fields,
         type_modifier=lambda typ: List(typ, resolver=resolver_for_dict_list)
     )
 )
 
-UserStateDataType = type(
-    'UserStateDataType',
+GroupStateDataType = type(
+    'GroupStateDataType',
     (ObjectType,),
     R.map_with_obj(
         # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
         lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        user_state_data_fields)
+        group_state_data_fields)
 )

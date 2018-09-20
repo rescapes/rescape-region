@@ -3,13 +3,14 @@ import logging
 import pytest
 from django.contrib.auth.hashers import make_password
 
-from app.models import Region
-from app.schema.schema import dump_errors, schema
 from rescape_python_helpers import ramda as R
 from graphene.test import Client
 from snapshottest import TestCase
 
-from app.schema_models.user_sample import create_sample_user
+from rescape_region.models import Region
+from rescape_region.sample_schema import schema
+from rescape_region.schema_models.sample_schema import dump_errors
+from rescape_region.schema_models.user_sample import create_sample_user
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data, create_sample_user_state
 from .user_state_schema import graphql_query_user_states, graphql_update_or_create_user_state
