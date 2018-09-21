@@ -5,12 +5,11 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     resolver, DENY
 from rescape_python_helpers import ramda as R
-from rescape_graphene import increment_prop_until_unique, UserType, enforce_unique_props
+from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.region import Region
-from rescape_region.schema_models.feature_collection_schema import FeatureCollectionType, \
-    feature_collection_fields_in_graphql_geojson_format
-from .feature_schema import FeatureType, feature_fields_in_graphql_geojson_format, mutate_feature
+from rescape_region.schema_models.feature_collection_schema import FeatureCollectionType, feature_collection_fields,\
+    mutate_feature_collection
 from .region_data_schema import RegionDataType, region_data_fields
 
 
@@ -33,7 +32,7 @@ region_fields = merge_with_django_properties(RegionType, dict(
     data=dict(graphene_type=RegionDataType, fields=region_data_fields, default=lambda: dict()),
     # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
     # support our Mutation subclasses below
-    boundary=dict(graphene_type=FeatureCollectionType, fields=feature_collection_fields_in_graphql_geojson_format)
+    boundary=dict(graphene_type=FeatureCollectionType, fields=feature_collection_fields)
 ))
 
 region_mutation_config = dict(
@@ -59,8 +58,8 @@ class UpsertRegion(Mutation):
 
         boundary_data = R.prop_or(None, 'boundary', region_data)
         if boundary_data:
-            feature, feature_created = mutate_feature(boundary_data)
-            modified_boundary_data = dict(id=feature.id)
+            feature_collection, feature_collection_created = mutate_feature_collection(boundary_data)
+            modified_boundary_data = dict(id=feature_collection.id)
         else:
             modified_boundary_data = boundary_data
 

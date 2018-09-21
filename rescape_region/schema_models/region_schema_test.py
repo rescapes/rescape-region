@@ -4,6 +4,7 @@ import pytest
 from rescape_python_helpers import ramda as R
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
+from rescape_region.schema_models.graphql_geojson_helpers import to_graphql_geojson
 from rescape_region.schema_models.schema import test_schema
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
 
@@ -40,7 +41,7 @@ class RegionSchemaTestCase(TestCase):
             key='luxembourg',
             boundary=dict(
                 name='Belgium bounds',
-                geometry=ewkt_from_feature_collection({
+                geometry={
                     'type': 'FeatureCollection',
                     'features': [{
                         "type": "Feature",
@@ -51,8 +52,8 @@ class RegionSchemaTestCase(TestCase):
                                  [51.4750237087, 6.15665815596],
                                  [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
                         }
-                    }]}
-                )
+                    }]
+                }
             ),
             data=dict()
         )
@@ -75,12 +76,20 @@ class RegionSchemaTestCase(TestCase):
             name='Luxembourg',
             key='luxembourg',
             boundary=dict(
-                geometry=dict(
-                    type="Polygon",
-                    coordinates=[
-                        [[49.4426671413, 5.67405195478], [50.1280516628, 5.67405195478], [50.1280516628, 6.24275109216],
-                         [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
-                )
+                name='Belgium bounds',
+                geometry=to_graphql_geojson({
+                    'type': 'FeatureCollection',
+                    'features': [{
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [[49.4426671413, 5.67405195478], [50.1280516628, 5.67405195478],
+                                 [50.1280516628, 6.24275109216],
+                                 [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
+                        }
+                    }]
+                })
             ),
             data=dict()
         )
@@ -97,7 +106,7 @@ class RegionSchemaTestCase(TestCase):
                 dict(id=int(created['id']),
                      boundary=dict(
                          name='Belgium bounds',
-                         geometry=ewkt_from_feature_collection({
+                         geometry={
                              'type': 'FeatureCollection',
                              'features': [{
                                  "type": "Feature",
@@ -108,8 +117,8 @@ class RegionSchemaTestCase(TestCase):
                                           [51.4750237087, 6.15665815596],
                                           [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
                                  }
-                             }]}
-                         )
+                             }]
+                         }
                      )
                  ),
                 values

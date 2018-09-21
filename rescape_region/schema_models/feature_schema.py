@@ -1,3 +1,4 @@
+from graphene_django import DjangoObjectType
 from rescape_python_helpers import geometry_from_geojson
 from graphene.types.generic import GenericScalar
 from graphql_geojson import GeoJSONType, Geometry
@@ -5,37 +6,31 @@ from graphql_geojson import GeoJSONType, Geometry
 from graphene import InputObjectType,   String, Mutation, Field
 
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
-    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties
+    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
+    resolver_for_dict_field
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models.feature import Feature
+from rescape_region.schema_models.geojson_data_schema import FeatureDataType, feature_data_type_fields
 
 
-class FeatureType(GeoJSONType):
-    """
-        This models the Feature type for Graphene/graphql. Because of the superclass GeoJSONType,
-        the actually queryable object is in the form. I don't know if this is really worth while,
-        all it seems to give me is a way to query the bbox. Instead of GeoJSONType this could probably
-        just be an ObjectType and work just as well
-        {
-            geometry {
-                type
-                coordinates
-            }
-            properties {
-              name
-              description
-              createdAt
-              updatedAt
-              data
-            }
-        }
-    """
-
+class FeatureType(DjangoObjectType):
     class Meta:
         model = Feature
-        geojson_field = 'geometry'
 
+feature_fields = merge_with_django_properties(FeatureType, dict(
+    name=dict(),
+    description=dict(),
+    created_at=dict(),
+    updated_at=dict(),
+    geometry=dict(
+        create=REQUIRE,
+        type=FeatureDataType,
+        graphene_type=FeatureDataType,
+        fields=feature_data_type_fields,
+        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
+    ),
+))
 
 geometry_fields = dict(
     type=dict(type=String),
@@ -49,31 +44,6 @@ feature_fields = merge_with_django_properties(FeatureType, dict(
     updated_at=dict(),
     geometry=dict(create=REQUIRE, fields=geometry_fields)
 ))
-
-
-def as_graphql_geojson_format(geojson_field, field_dict):
-    """
-    GeoJSONType alters the format of the class, so we need to present the fields in the way that
-    matches what it does. It would probably be better to write a function to interpret the fields
-    of GeoJSONType, but this matches our field_dict format
-    :param geojson_field:
-    :param field_dict:
-    :return:
-    """
-    return dict(
-        geometry=dict(
-            type=Geometry,
-            fields=dict(
-                type=dict(type=String),
-                coordinates=dict(type=GenericScalar),
-            )
-        ),
-        # All properties minus the geojson_field
-        properties=dict(type=FeatureType, fields=R.omit([geojson_field], field_dict))
-    )
-
-
-feature_fields_in_graphql_geojson_format = as_graphql_geojson_format(FeatureType._meta.geojson_field, feature_fields)
 
 feature_mutation_config = dict(
     class_name='Feature',
