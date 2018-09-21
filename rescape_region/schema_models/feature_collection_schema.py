@@ -25,10 +25,8 @@ feature_collection_fields = merge_with_django_properties(FeatureCollectionType, 
     updated_at=dict(),
     geometry=dict(
         create=REQUIRE,
-        type=GeometryCollectionDataType,
         graphene_type=GeometryCollectionDataType,
-        fields=geometry_collection_fields,
-        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
+        fields=geometry_collection_fields
     ),
 ))
 

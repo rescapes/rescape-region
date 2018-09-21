@@ -3,6 +3,7 @@ from graphene import String, ObjectType, List, Field
 from rescape_graphene import resolver_for_dict_list, resolver_for_dict_field
 from rescape_python_helpers import ramda as R
 
+
 feature_geometry_data_type_fields = dict(
     # Polygon, Linestring, Point, etc
     type=dict(type=String),
@@ -11,21 +12,22 @@ feature_geometry_data_type_fields = dict(
 
 # This matches the fields of GeoDjango's GeometryCollectionField features[...].geometry property
 FeatureGeometryDataType = type(
-    'GeometryDataType',
-    (GeoJSONType,),
+    'FeatureGeometryDataType',
+    (ObjectType,),
     R.map_with_obj(
         # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
         lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        feature_geometry_data_type_fields)
+        feature_geometry_data_type_fields
+    )
 )
 
 feature_data_type_fields = dict(
     # Always Feature
     type=dict(type=String),
     geometry=dict(
-        type=FeatureDataType,
+        type=FeatureGeometryDataType,
         graphene_type=FeatureGeometryDataType,
-        fields=feature_data_type_fields,
+        fields=feature_geometry_data_type_fields,
         type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
     )
 )

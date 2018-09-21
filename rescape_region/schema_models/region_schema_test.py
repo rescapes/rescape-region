@@ -2,9 +2,7 @@ import logging
 
 import pytest
 from rescape_python_helpers import ramda as R
-from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
-from rescape_region.schema_models.graphql_geojson_helpers import to_graphql_geojson
 from rescape_region.schema_models.schema import test_schema
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
 
@@ -77,7 +75,7 @@ class RegionSchemaTestCase(TestCase):
             key='luxembourg',
             boundary=dict(
                 name='Belgium bounds',
-                geometry=to_graphql_geojson({
+                geometry={
                     'type': 'FeatureCollection',
                     'features': [{
                         "type": "Feature",
@@ -89,7 +87,7 @@ class RegionSchemaTestCase(TestCase):
                                  [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
                         }
                     }]
-                })
+                }
             ),
             data=dict()
         )

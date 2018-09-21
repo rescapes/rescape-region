@@ -25,10 +25,8 @@ feature_fields = merge_with_django_properties(FeatureType, dict(
     updated_at=dict(),
     geometry=dict(
         create=REQUIRE,
-        type=FeatureDataType,
         graphene_type=FeatureDataType,
-        fields=feature_data_type_fields,
-        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
+        fields=feature_data_type_fields
     ),
 ))
 
