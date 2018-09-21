@@ -1,23 +1,24 @@
 import inspect
 
+import pytest
 from django.contrib.auth.hashers import make_password
 from graphene.test import Client
-from rescape_graphene.user.user_schema import UserType
+from rescape_graphene.user.user_schema import UserType, user_fields
 
-from rescape_region.sample_schema import user_fields, FooType
-
-from rescape_region.sample_schema import schema, foo_fields
 from rescape_graphene.graphql_helpers.schema_helpers import allowed_query_arguments, input_type_fields, CREATE, UPDATE, \
     input_type_parameters_for_update_or_create
+from sample_webapp.sample_schema import foo_fields, FooType
 from snapshottest import TestCase
-from rescape_python_helpers import ramda as R
+from rescape_python_helpers import ramda as R, omit_deep
 
+from rescape_region.schema_models.schema import test_schema
 
+@pytest.mark.django_db
 class SchemaHelpersTypeCase(TestCase):
     client = None
 
     def setUp(self):
-        self.client = Client(schema)
+        self.client = Client(test_schema)
 
     def test_merge_with_django_properties(self):
 
@@ -25,7 +26,9 @@ class SchemaHelpersTypeCase(TestCase):
             lambda value: R.merge(value, dict(type=R.prop('type', value).__name__)),
             user_fields
         )
-        self.assertMatchSnapshot(user_results)
+
+        omit_deep_partial = omit_deep(['unique_with'])
+        self.assertMatchSnapshot(omit_deep_partial(user_results))
         foo_results = R.map_dict(
             lambda value: R.merge(value, dict(type=R.prop('type', value).__name__)),
             foo_fields
@@ -33,7 +36,7 @@ class SchemaHelpersTypeCase(TestCase):
         def map_type(t):
             return t.__name__ if inspect.isclass(t) else t
 
-        self.assertMatchSnapshot(R.map_deep(dict(type=map_type, graphene_type=map_type, django_type=map_type), R.omit_deep(['default', 'type_modifier'], foo_results)))
+        self.assertMatchSnapshot(omit_deep_partial(R.map_deep(dict(type=map_type, graphene_type=map_type, django_type=map_type), R.omit_deep(['default', 'type_modifier'], foo_results))))
 
     # context_value={'user': 'Peter'}
     # root_value={'user': 'Peter'}

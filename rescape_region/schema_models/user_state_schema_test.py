@@ -8,8 +8,8 @@ from graphene.test import Client
 from snapshottest import TestCase
 
 from rescape_region.models import Region
-from rescape_region.sample_schema import schema
-from rescape_region.schema_models.sample_schema import dump_errors
+
+from rescape_region.schema_models.schema import test_schema, dump_errors
 from rescape_region.schema_models.user_sample import create_sample_user
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data, create_sample_user_state
@@ -27,7 +27,7 @@ class UserStateSchemaTestCase(TestCase):
     user_state = None
 
     def setUp(self):
-        self.client = Client(schema)
+        self.client = Client(test_schema)
         delete_sample_user_states()
         self.user_states = create_sample_user_states()
         # Gather all unique sample users

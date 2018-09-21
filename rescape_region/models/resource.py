@@ -1,8 +1,7 @@
 from django.contrib.gis.db import models
-from django.db.models import (
-    CharField, IntegerField, Model,
-    DateTimeField, ForeignKey)
+from django.db.models import (CharField, DateTimeField, ForeignKey)
 from django.contrib.postgres.fields import JSONField
+from django.contrib.gis.db.models import Model
 
 
 def default():

@@ -2,8 +2,8 @@ from django.db import models
 from django.db.models import (
     CharField,
     DateTimeField, ForeignKey)
-from django.db.models import Model
 from django.contrib.postgres.fields import JSONField
+from django.contrib.gis.db.models import Model
 
 from rescape_region.model_helpers import region_default
 

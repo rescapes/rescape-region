@@ -1,8 +1,8 @@
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Model, OneToOneField
-
+from django.db.models import OneToOneField
+from django.contrib.gis.db.models import Model
 from rescape_region.model_helpers import group_state_default
 
 

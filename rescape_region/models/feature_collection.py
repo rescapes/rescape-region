@@ -1,8 +1,7 @@
-from django.contrib.gis.db.models import GeometryCollectionField
 from django.db.models import (
     CharField,
     DateTimeField)
-from django.db.models import Model
+from django.contrib.gis.db.models import GeometryCollectionField, GeometryField, Model
 
 from rescape_region.model_helpers import feature_collection_geometry_default
 

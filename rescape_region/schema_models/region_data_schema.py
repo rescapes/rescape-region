@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from rescape_python_helpers import ramda as R
 from graphene import ObjectType, String, Float, List, Field, Int
 

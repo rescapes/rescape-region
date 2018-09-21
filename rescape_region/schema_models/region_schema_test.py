@@ -2,14 +2,15 @@ import logging
 
 import pytest
 from rescape_python_helpers import ramda as R
+from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
-from rescape_region.sample_schema import schema
+from rescape_region.schema_models.schema import test_schema
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
 
 from graphene.test import Client
 from snapshottest import TestCase
 
-from .region_sample import  create_sample_regions
+from .region_sample import create_sample_regions
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -21,9 +22,8 @@ class RegionSchemaTestCase(TestCase):
     client = None
 
     def setUp(self):
-        self.client = Client(schema)
+        self.client = Client(test_schema)
         self.regions = create_sample_regions()
-        self.users = list(set(map(lambda region: region.owner, self.regions)))
 
     def test_query(self):
         all_result = graphql_query_regions(self.client)
@@ -39,15 +39,22 @@ class RegionSchemaTestCase(TestCase):
             name='Luxembourg',
             key='luxembourg',
             boundary=dict(
-                geometry=dict(
-                    type="Polygon",
-                    coordinates=[
-                        [[49.4426671413, 5.67405195478], [50.1280516628, 5.67405195478], [50.1280516628, 6.24275109216],
-                         [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
+                name='Belgium bounds',
+                geometry=ewkt_from_feature_collection({
+                    'type': 'FeatureCollection',
+                    'features': [{
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                                 [51.4750237087, 6.15665815596],
+                                 [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                        }
+                    }]}
                 )
             ),
-            data=dict(),
-            owner=dict(id=R.head(self.users).id)
+            data=dict()
         )
         result = graphql_update_or_create_region(self.client, values)
         result_path_partial = R.item_path(['data', 'createRegion', 'region'])
@@ -75,8 +82,7 @@ class RegionSchemaTestCase(TestCase):
                          [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
                 )
             ),
-            data=dict(),
-            owner=dict(id=R.head(self.users).id)
+            data=dict()
         )
         result = graphql_update_or_create_region(self.client, values)
         result_path_partial = R.item_path(['data', 'createRegion', 'region'])
@@ -90,16 +96,24 @@ class RegionSchemaTestCase(TestCase):
             R.merge(
                 dict(id=int(created['id']),
                      boundary=dict(
-                         geometry=dict(
-                             type="Polygon",
-                             coordinates=[
-                                 [[59.4426671413, 5.67405195478], [50.1280516628, 5.67405195478],
-                                  [50.1280516628, 6.24275109216],
-                                  [49.4426671413, 6.24275109216], [59.4426671413, 5.67405195478]]]
+                         name='Belgium bounds',
+                         geometry=ewkt_from_feature_collection({
+                             'type': 'FeatureCollection',
+                             'features': [{
+                                 "type": "Feature",
+                                 "geometry": {
+                                     "type": "Polygon",
+                                     "coordinates": [
+                                         [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                                          [51.4750237087, 6.15665815596],
+                                          [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                                 }
+                             }]}
                          )
-                     ),
-                     ),
-                values)
+                     )
+                 ),
+                values
+            )
         )
         assert not R.has('errors', updated_result), R.dump_json(R.prop('errors', updated_result))
         result_path_partial = R.item_path(['data', 'updateRegion', 'region'])

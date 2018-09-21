@@ -41,8 +41,12 @@ MIDDLEWARE = [
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'testdb',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.environ.get('SOP_DB_NAME', 'rescape_region'),
+        'USER': os.environ.get('SOP_DB_USER', 'test_user'),
+        'PASSWORD': os.environ.get('SOP_DB_PASS', 'test'),
+        'HOST': os.environ.get('SOP_DB_HOST'),
+        'PORT': os.environ.get('SOP_DB_PORT', ''),
     }
 }
 

@@ -1,9 +1,14 @@
 import graphene
+import logging
+import sys
+import traceback
+from graphql import format_error
+from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs
 from rescape_python_helpers import ramda as R
 import graphql_jwt
 from graphene import ObjectType, Schema
 from graphene_django.debug import DjangoDebug
-#from graphql_jwt.decorators import login_required
+# from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import login_required
 from rescape_graphene import allowed_query_arguments
 from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
@@ -17,6 +22,8 @@ from rescape_region.schema_models.group_state_schema import GroupStateType, grou
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.user_state_schema import UserStateType, user_state_fields
 
+logger = logging.getLogger('rescape-region')
+
 
 class Query(ObjectType):
     debug = graphene.Field(DjangoDebug, name='__debug')
@@ -28,7 +35,7 @@ class Query(ObjectType):
 
     @login_required
     def resolve_viewer(self, info, **kwargs):
-       return info.context.user
+        return info.context.user
 
     regions = graphene.List(
         RegionType,
@@ -59,7 +66,7 @@ class Query(ObjectType):
         FeatureCollectionType,
         **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
     )
-    
+
     user_states = graphene.List(
         UserStateType,
         **allowed_query_arguments(user_state_fields, UserStateType)
@@ -99,16 +106,45 @@ class Query(ObjectType):
             **R.map_keys(lambda key: 'data__contains' if R.equals('data', key) else key, kwargs))
 
     def resolve_features(self, info, **kwargs):
-        return Feature.objects.filter(**kwargs)
+        return Feature.objects.filter(
+            **stringify_query_kwargs(Region, kwargs)
+        )
 
     def resolve_feature_collections(self, info, **kwargs):
-        return FeatureCollection.objects.filter(**kwargs)
+        return FeatureCollection.objects.filter(
+            **stringify_query_kwargs(Region, kwargs)
+        )
 
     def resolve_user_states(self, info, **kwargs):
-        return UserState.objects.filter(**kwargs)
+        return UserState.objects.filter(
+            **stringify_query_kwargs(Region, kwargs)
+        )
 
     def resolve_group_states(self, info, **kwargs):
-        return GroupState.objects.filter(**kwargs)
+        return GroupState.objects.filter(
+            **stringify_query_kwargs(Region, kwargs)
+        )
+
+    def resolve_region(self, info, **kwargs):
+        return Region.objects.get(
+            **stringify_query_kwargs(Region, kwargs)
+        )
+
+    def resolve_feature(self, info, **kwargs):
+        return Feature.objects.get(
+            **stringify_query_kwargs(Feature, kwargs)
+        )
+
+    def resolve_user_state(self, info, **kwargs):
+        return UserState.objects.get(
+            **stringify_query_kwargs(UserState, kwargs)
+        )
+
+    def resolve_group_state(self, info, **kwargs):
+        return GroupState.objects.get(
+            **stringify_query_kwargs(GroupState, kwargs)
+        )
+
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
@@ -128,4 +164,17 @@ class Mutation(graphene.ObjectType):
     update_feature_collection = UpdateFeatureCollection.Field()
 
 
-schema = Schema(query=Query, mutation=Mutation)
+test_schema = Schema(query=Query, mutation=Mutation)
+
+
+def dump_errors(result):
+    """
+        Dump any errors to in the result to stderr
+    :param result:
+    :return:
+    """
+    if R.has('errors', result):
+        for error in result['errors']:
+            logger.error(format_error(error))
+            if 'stack' in error:
+                traceback.print_tb(error['stack'], limit=10, file=sys.stderr)

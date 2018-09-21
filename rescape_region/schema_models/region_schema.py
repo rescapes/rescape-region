@@ -8,6 +8,8 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, UserType, enforce_unique_props
 
 from rescape_region.models.region import Region
+from rescape_region.schema_models.feature_collection_schema import FeatureCollectionType, \
+    feature_collection_fields_in_graphql_geojson_format
 from .feature_schema import FeatureType, feature_fields_in_graphql_geojson_format, mutate_feature
 from .region_data_schema import RegionDataType, region_data_fields
 
@@ -31,7 +33,7 @@ region_fields = merge_with_django_properties(RegionType, dict(
     data=dict(graphene_type=RegionDataType, fields=region_data_fields, default=lambda: dict()),
     # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
     # support our Mutation subclasses below
-    boundary=dict(graphene_type=FeatureType, fields=feature_fields_in_graphql_geojson_format)
+    boundary=dict(graphene_type=FeatureCollectionType, fields=feature_collection_fields_in_graphql_geojson_format)
 ))
 
 region_mutation_config = dict(
