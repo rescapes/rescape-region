@@ -2,7 +2,7 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import resolver_for_dict_list
 from graphene import ObjectType, List
 
-from rescape_region.schema_models import UserRegionDataType, user_region_data_fields
+from rescape_region.schema_models.user_state_data_schema import UserRegionDataType, user_region_data_fields
 
 group_state_data_fields = dict(
     group_regions=dict(
