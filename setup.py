@@ -21,7 +21,7 @@ class CleanCommand(setuptools.Command):
 
 setuptools.setup(
     name="rescape-region",
-    version="0.0.27",
+    version="0.0.28",
     author="Andy Likuski",
     author_email="andy@likuski.org",
     description="Geospatial region support for Rescape projects",
