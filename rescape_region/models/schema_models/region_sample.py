@@ -1,11 +1,9 @@
-from rescape_python_helpers import ramda as R, ewkt_from_feature
+from rescape_python_helpers import ramda as R
 from django.db import transaction
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
 from rescape_region.models import FeatureCollection
-from rescape_region.models.feature import Feature
 from rescape_region.models.region import Region
-from rescape_region.schema_models.user_sample import create_sample_users
 
 sample_regions = [
     dict(
@@ -13,7 +11,7 @@ sample_regions = [
         name='Belgium',
         boundary=dict(
             name='Belgium bounds',
-            geometry=ewkt_from_feature_collection({
+            geometry_collection=ewkt_from_feature_collection({
                 'type': 'FeatureCollection',
                 'features': [{
                     "type": "Feature",

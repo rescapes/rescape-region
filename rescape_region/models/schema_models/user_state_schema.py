@@ -5,7 +5,7 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType
 from rescape_graphene import resolver
 from rescape_region.models import UserState
-from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
+from rescape_region.models.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
 
 
 class UserStateType(DjangoObjectType):

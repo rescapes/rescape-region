@@ -9,8 +9,8 @@ from snapshottest import TestCase
 
 from rescape_region.models import Region
 
-from rescape_region.schema_models.schema import test_schema, dump_errors
-from rescape_region.schema_models.user_sample import create_sample_user
+from rescape_region.models.schema_models import test_schema, dump_errors
+from rescape_region.models.schema_models import create_sample_user
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data, create_sample_user_state
 from .user_state_schema import graphql_query_user_states, graphql_update_or_create_user_state

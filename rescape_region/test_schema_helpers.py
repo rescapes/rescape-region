@@ -11,7 +11,7 @@ from sample_webapp.sample_schema import foo_fields, FooType
 from snapshottest import TestCase
 from rescape_python_helpers import ramda as R, omit_deep
 
-from rescape_region.schema_models.schema import test_schema
+from rescape_region.models.schema_models import test_schema
 
 @pytest.mark.django_db
 class SchemaHelpersTypeCase(TestCase):

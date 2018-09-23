@@ -32,7 +32,7 @@ def feature_collection_geometry_default():
                 }
             }]
         }
-    ).ewkt
+    )
 
 
 def region_default():

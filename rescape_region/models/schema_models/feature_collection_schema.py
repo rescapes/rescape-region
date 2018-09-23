@@ -1,16 +1,14 @@
 from graphene_django import DjangoObjectType
 from rescape_python_helpers import geometry_from_geojson
-from graphene.types.generic import GenericScalar
 
-from graphene import InputObjectType, String, Mutation, Field, ObjectType
+from graphene import InputObjectType,  Mutation, Field
 
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    resolver_for_dict_field
+    GeometryCollectionDataType, geometry_collection_fields
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models.feature_collection import FeatureCollection
-from rescape_region.schema_models.geojson_data_schema import GeometryCollectionDataType, geometry_collection_fields
 
 
 class FeatureCollectionType(DjangoObjectType):
@@ -23,7 +21,7 @@ feature_collection_fields = merge_with_django_properties(FeatureCollectionType, 
     description=dict(),
     created_at=dict(),
     updated_at=dict(),
-    geometry=dict(
+    geo_collection=dict(
         create=REQUIRE,
         graphene_type=GeometryCollectionDataType,
         fields=geometry_collection_fields

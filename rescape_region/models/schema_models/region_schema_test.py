@@ -3,7 +3,7 @@ import logging
 import pytest
 from rescape_python_helpers import ramda as R
 
-from rescape_region.schema_models.schema import test_schema
+from rescape_region.models.schema_models import test_schema
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
 
 from graphene.test import Client

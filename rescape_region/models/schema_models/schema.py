@@ -15,12 +15,12 @@ from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
 from rescape_region.models import Region, Feature, FeatureCollection, UserState, GroupState
-from rescape_region.schema_models.feature_collection_schema import FeatureCollectionType, feature_collection_fields, \
+from rescape_region.models.schema_models.feature_collection_schema import FeatureCollectionType, feature_collection_fields, \
     CreateFeatureCollection, UpdateFeatureCollection
-from rescape_region.schema_models.feature_schema import FeatureType, CreateFeature, UpdateFeature, feature_fields
-from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields
-from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.schema_models.user_state_schema import UserStateType, user_state_fields
+from rescape_region.models.schema_models import FeatureType, CreateFeature, UpdateFeature, feature_fields
+from rescape_region.models.schema_models.group_state_schema import GroupStateType, group_state_fields
+from rescape_region.models.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
+from rescape_region.models.schema_models.user_state_schema import UserStateType, user_state_fields
 
 logger = logging.getLogger('rescape-region')
 
@@ -107,22 +107,22 @@ class Query(ObjectType):
 
     def resolve_features(self, info, **kwargs):
         return Feature.objects.filter(
-            **stringify_query_kwargs(Region, kwargs)
+            **stringify_query_kwargs(Feature, kwargs)
         )
 
     def resolve_feature_collections(self, info, **kwargs):
         return FeatureCollection.objects.filter(
-            **stringify_query_kwargs(Region, kwargs)
+            **stringify_query_kwargs(FeatureCollection, kwargs)
         )
 
     def resolve_user_states(self, info, **kwargs):
         return UserState.objects.filter(
-            **stringify_query_kwargs(Region, kwargs)
+            **stringify_query_kwargs(UserState, kwargs)
         )
 
     def resolve_group_states(self, info, **kwargs):
         return GroupState.objects.filter(
-            **stringify_query_kwargs(Region, kwargs)
+            **stringify_query_kwargs(GroupState, kwargs)
         )
 
     def resolve_region(self, info, **kwargs):

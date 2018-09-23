@@ -23,7 +23,7 @@ class Feature(Model):
     description = CharField(max_length=500, unique=False, null=True)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    geometry = GeometryField(null=False, default=feature_geometry_default)
+    geo = GeometryField(null=False, default=feature_geometry_default)
 
     class Meta:
         app_label = "rescape_region"

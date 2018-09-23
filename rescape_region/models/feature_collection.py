@@ -24,7 +24,7 @@ class FeatureCollection(Model):
     description = CharField(max_length=500, unique=False, null=True)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    geometry = GeometryCollectionField(null=False, default=feature_collection_geometry_default)
+    geo_collection = GeometryCollectionField(null=False, default=feature_collection_geometry_default)
 
     class Meta:
         app_label = "rescape_region"
