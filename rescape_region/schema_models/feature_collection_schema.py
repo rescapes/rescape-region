@@ -6,7 +6,7 @@ from rescape_python_helpers import geometry_from_geojson
 from graphene import InputObjectType,  Mutation, Field
 
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
-    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
+    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties
 
 from rescape_python_helpers import ramda as R
 
