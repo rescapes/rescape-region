@@ -15,12 +15,12 @@ from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
 from rescape_region.models import Region, Feature, FeatureCollection, UserState, GroupState
-from rescape_region.models.schema_models.feature_collection_schema import FeatureCollectionType, feature_collection_fields, \
+from rescape_region.schema_models import FeatureCollectionType, feature_collection_fields, \
     CreateFeatureCollection, UpdateFeatureCollection
-from rescape_region.models.schema_models import FeatureType, CreateFeature, UpdateFeature, feature_fields
-from rescape_region.models.schema_models.group_state_schema import GroupStateType, group_state_fields
-from rescape_region.models.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.models.schema_models.user_state_schema import UserStateType, user_state_fields
+from rescape_region.schema_models import FeatureType, CreateFeature, UpdateFeature, feature_fields
+from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields
+from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
+from rescape_region.schema_models import UserStateType, user_state_fields
 
 logger = logging.getLogger('rescape-region')
 

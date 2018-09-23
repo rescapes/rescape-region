@@ -8,7 +8,7 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.region import Region
-from rescape_region.models.schema_models.feature_collection_schema import FeatureCollectionType, feature_collection_fields,\
+from rescape_region.schema_models import FeatureCollectionType, feature_collection_fields,\
     mutate_feature_collection
 from .region_data_schema import RegionDataType, region_data_fields
 
