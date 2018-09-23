@@ -177,7 +177,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'sample_schema',
+    'SCHEMA': 'rescape_region_schema',
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
     ]

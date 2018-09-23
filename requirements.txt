@@ -15,8 +15,8 @@ twine==1.11.0
 utils==0.9.0
 simplejson==3.16.0
 jsonfield===2.0.2
-rescape-graphene==0.2.35
+rescape-graphene==0.2.39
 rescape-python-helpers==0.0.13
-pytest==3.8.0
+pytest==3.8.1
 pytest-cov==2.6.0
 pytest-django==3.4.3
