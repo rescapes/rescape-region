@@ -1,4 +1,5 @@
 from graphene_django import DjangoObjectType
+from rescape_graphene.graphql_helpers.json_field_helpers import resolver_for_geometry_collection
 from rescape_graphene.schema_models.geojson.types.geometry_collection import geometry_collection_fields, \
     GeometryCollectionType
 from rescape_python_helpers import geometry_from_geojson
@@ -18,12 +19,16 @@ class FeatureCollectionType(DjangoObjectType):
         model = FeatureCollection
 
 
+FeatureCollectionType._meta.fields['geometry_collection'] = Field(
+    GeometryCollectionType,
+    resolver=resolver_for_geometry_collection('geometry_collection')
+)
 feature_collection_fields = merge_with_django_properties(FeatureCollectionType, dict(
     name=dict(),
     description=dict(),
     created_at=dict(),
     updated_at=dict(),
-    geo_collection=dict(
+    geometry_collection=dict(
         create=REQUIRE,
         graphene_type=GeometryCollectionType,
         fields=geometry_collection_fields

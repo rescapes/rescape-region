@@ -14,10 +14,9 @@ from rescape_graphene import allowed_query_arguments
 from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
-from rescape_region.models import Region, Feature, FeatureCollection, UserState, GroupState
+from rescape_region.models import Region, FeatureCollection, UserState, GroupState
 from rescape_region.schema_models.feature_collection_schema import feature_collection_fields, FeatureCollectionType, \
     CreateFeatureCollection, UpdateFeatureCollection
-from rescape_region.schema_models.feature_schema import feature_fields, FeatureType, CreateFeature, UpdateFeature
 from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.user_state_schema import user_state_fields, UserStateType
@@ -44,17 +43,12 @@ class Query(ObjectType):
 
     region = graphene.Field(
         RegionType,
-        **allowed_query_arguments(feature_fields, RegionType)
+        **allowed_query_arguments(region_fields, RegionType)
     )
 
-    features = graphene.List(
-        FeatureType,
-        **allowed_query_arguments(feature_fields, FeatureType)
-    )
-
-    feature = graphene.Field(
-        FeatureType,
-        **allowed_query_arguments(feature_fields, FeatureType)
+    feature_collection = graphene.Field(
+        FeatureCollectionType,
+        **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
     )
 
     feature_collections = graphene.List(
@@ -62,10 +56,6 @@ class Query(ObjectType):
         **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
     )
 
-    feature_collection = graphene.Field(
-        FeatureCollectionType,
-        **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
-    )
 
     user_states = graphene.List(
         UserStateType,
@@ -102,13 +92,8 @@ class Query(ObjectType):
         # Small correction here to change the data filter to data__contains to handle any json
         # https://docs.djangoproject.com/en/2.0/ref/contrib/postgres/fields/#std:fieldlookup-hstorefield.contains
         return Region.objects.filter(
-            deleted=False,
+            deleted__isnull=True,
             **R.map_keys(lambda key: 'data__contains' if R.equals('data', key) else key, kwargs))
-
-    def resolve_features(self, info, **kwargs):
-        return Feature.objects.filter(
-            **stringify_query_kwargs(Feature, kwargs)
-        )
 
     def resolve_feature_collections(self, info, **kwargs):
         return FeatureCollection.objects.filter(
@@ -130,9 +115,9 @@ class Query(ObjectType):
             **stringify_query_kwargs(Region, kwargs)
         )
 
-    def resolve_feature(self, info, **kwargs):
-        return Feature.objects.get(
-            **stringify_query_kwargs(Feature, kwargs)
+    def resolve_feature_collection(self, info, **kwargs):
+        return FeatureCollection.objects.get(
+            **stringify_query_kwargs(FeatureCollection, kwargs)
         )
 
     def resolve_user_state(self, info, **kwargs):
@@ -157,14 +142,11 @@ class Mutation(graphene.ObjectType):
     create_region = CreateRegion.Field()
     update_region = UpdateRegion.Field()
 
-    create_feature = CreateFeature.Field()
-    update_feature = UpdateFeature.Field()
-
     create_feature_collection = CreateFeatureCollection.Field()
     update_feature_collection = UpdateFeatureCollection.Field()
 
 
-test_schema = Schema(query=Query, mutation=Mutation)
+schema = Schema(query=Query, mutation=Mutation)
 
 
 def dump_errors(result):

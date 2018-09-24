@@ -11,12 +11,13 @@ djangorestframework-jwt==1.11.0
 psycopg2-binary==2.7.5
 django-graphql-jwt==0.1.12
 wheel==0.31.1
-twine==1.11.0
+twine==1.12.0
 utils==0.9.0
 simplejson==3.16.0
 jsonfield===2.0.2
-rescape-graphene==0.2.39
-rescape-python-helpers==0.0.13
+rescape-graphene==0.2.43
+rescape-python-helpers==0.0.14
 pytest==3.8.1
 pytest-cov==2.6.0
 pytest-django==3.4.3
+django-safedelete==0.5.1

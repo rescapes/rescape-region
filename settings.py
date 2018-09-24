@@ -24,9 +24,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'rest_framework',
+    'safedelete',
+    'graphene_django',
     'rescape_region'
 ]
+
+STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles'
+CORS_ORIGIN_ALLOW_ALL = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -51,7 +58,7 @@ DATABASES = {
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validator
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -97,8 +104,30 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
 }
+
+ROOT_URLCONF = 'rescape_region.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'rescape_region/templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 LOG_PATH = os.path.join(BASE_DIR, "log/")
 LOGGING = {
@@ -170,14 +199,13 @@ LOGGING = {
     },
 }
 
-
 AUTHENTICATION_BACKENDS = [
     'graphql_jwt.backends.JSONWebTokenBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'rescape_region_schema',
+    'SCHEMA': 'rescape_region.schema_models.schema.schema',
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
     ]

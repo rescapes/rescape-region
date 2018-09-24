@@ -3,7 +3,7 @@ import logging
 import pytest
 from rescape_python_helpers import ramda as R
 
-from rescape_region.schema_models.schema import test_schema
+from rescape_region.schema_models.schema import schema
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
 
 from graphene.test import Client
@@ -21,7 +21,7 @@ class RegionSchemaTestCase(TestCase):
     client = None
 
     def setUp(self):
-        self.client = Client(test_schema)
+        self.client = Client(schema)
         self.regions = create_sample_regions()
 
     def test_query(self):

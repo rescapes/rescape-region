@@ -4,11 +4,12 @@ from django.db.models import (
     DateTimeField, ForeignKey)
 from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import Model
+from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_default
 
 
-class Region(Model):
+class Region(SafeDeleteModel):
     """
         Models a geospatial region
     """
