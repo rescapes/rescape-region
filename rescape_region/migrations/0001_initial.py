@@ -6,7 +6,6 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import rescape_region.models
-import rescape_region.models
 
 
 class Migration(migrations.Migration):
