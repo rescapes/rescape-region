@@ -82,4 +82,4 @@ class UpdateUserState(UpsertUserState):
 
 
 graphql_update_or_create_user_state = graphql_update_or_create(user_state_mutation_config, user_state_fields)
-graphql_query_user_states = graphql_query('userStates', user_state_fields)
+graphql_query_user_states = graphql_query(UserStateType, user_state_fields, 'userStates')

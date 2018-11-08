@@ -77,4 +77,4 @@ class UpdateGroupState(UpsertGroupState):
 
 
 graphql_update_or_create_group_state = graphql_update_or_create(group_state_mutation_config, group_state_fields)
-graphql_query_group_states = graphql_query('groupStates', group_state_fields)
+graphql_query_group_states = graphql_query(GroupStateType, group_state_fields, 'groupStates')

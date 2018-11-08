@@ -57,7 +57,6 @@ class UserStateSchemaTestCase(TestCase):
         # I'd like this to just be UserReadInputType but Graphene forces us to use unique types for input classes
         # throughout the schema, even if they represent the same underlying model class or json blob structure
         results = graphql_query_user_states(self.client,
-                                            dict(user='UserTypeofUserStateTypeRelatedReadInputType'),
                                             variable_values=dict(user=R.pick(['id'], self.users[0].__dict__)))
         # Check against errors
         assert not R.has('errors', results), R.dump_json(R.prop('errors', results))

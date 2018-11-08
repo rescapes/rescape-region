@@ -27,7 +27,10 @@ class RegionSchemaTestCase(TestCase):
     def test_query(self):
         all_result = graphql_query_regions(self.client)
         assert not R.has('errors', all_result), R.dump_json(R.prop('errors', all_result))
-        result = graphql_query_regions(self.client, dict(name='String'), variable_values=dict(name='Belgium'))
+        result = graphql_query_regions(
+            self.client,
+            variable_values=dict(name='Belgium')
+        )
         # Check against errors
         assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
         # Visual assertion that the query looks good

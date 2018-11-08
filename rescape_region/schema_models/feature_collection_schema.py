@@ -106,4 +106,4 @@ class UpdateFeatureCollection(UpsertFeatureCollection):
 
 graphql_update_or_create_feature_collection = graphql_update_or_create(feature_collection_mutation_config,
                                                                        feature_collection_fields)
-graphql_query_feature_collections = graphql_query('feature_collections', feature_collection_fields)
+graphql_query_feature_collections = graphql_query(FeatureCollectionType, feature_collection_fields, 'feature_collections')

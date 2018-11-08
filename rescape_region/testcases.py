@@ -10,7 +10,7 @@ class GraphQLRequestFactory(RequestFactory):
     def execute(self, query, **variables):
         return self._schema.execute(
             query,
-            variable_values=variables['variable_values'] if R.has('variable_values', variables) else None,
+            variable_values=R.prop_or(None, 'variable_values', variables['variable_values']),
             context_value=mock.MagicMock())
 
 

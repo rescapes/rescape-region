@@ -97,4 +97,4 @@ class UpdateRegion(UpsertRegion):
 
 
 graphql_update_or_create_region = graphql_update_or_create(region_mutation_config, region_fields)
-graphql_query_regions = graphql_query('regions', region_fields)
+graphql_query_regions = graphql_query(RegionType, region_fields, 'regions')
