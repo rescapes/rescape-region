@@ -11,7 +11,7 @@ sample_regions = [
         name='Belgium',
         boundary=dict(
             name='Belgium bounds',
-            geometry_collection=ewkt_from_feature_collection({
+            geojson=ewkt_from_feature_collection({
                 'type': 'FeatureCollection',
                 'features': [{
                     "type": "Feature",

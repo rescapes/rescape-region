@@ -11,7 +11,7 @@ class FeatureCollection(Model):
         Models a geospatial feature collection along with some metadata. The GEOS name for this is GeometryCollection
         and can store the geometry of a geojson feature collection.
         The metadata like name and description could be populated by the geojson that populates the geometry column
-        (using for instance rescape_python_helpers.geometry_collection_from_geojson).
+        (using for instance rescape_python_helpers.feature_collection_from_geojson).
         The reason we make a separate model for FeatureCollection rather than having classes like Region just use a
         GeometryField or GeometryCollectionField directly has to do with the implementation supporting
         geospatial fields in graphene, which can't handle multiple geospatial fields but can handle multiple
@@ -24,7 +24,7 @@ class FeatureCollection(Model):
     description = CharField(max_length=500, unique=False, null=True)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    geometry_collection = GeometryCollectionField(null=False, default=feature_collection_geometry_default)
+    geojson = GeometryCollectionField(null=False, default=feature_collection_geometry_default)
 
     class Meta:
         app_label = "rescape_region"

@@ -1,13 +1,12 @@
 from graphene_django import DjangoObjectType
-from rescape_graphene.graphql_helpers.json_field_helpers import resolver_for_geometry_collection
-from rescape_graphene.schema_models.geojson.types.geometry_collection import geometry_collection_fields, \
-    GeometryCollectionType
+from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import geometry_from_geojson
 
 from graphene import InputObjectType,  Mutation, Field
 
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
-    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties
+    CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
+    FeatureCollectionDataType, resolver
 
 from rescape_python_helpers import ramda as R
 
@@ -19,19 +18,21 @@ class FeatureCollectionType(DjangoObjectType):
         model = FeatureCollection
 
 
-FeatureCollectionType._meta.fields['geometry_collection'] = Field(
-    GeometryCollectionType,
-    resolver=resolver_for_geometry_collection('geometry_collection')
+# Modify the geojson field to use the geometry collection resolver
+FeatureCollectionType._meta.fields['geojson'] = Field(
+    FeatureCollectionDataType,
+    resolver=resolver('geojson')
 )
+
 feature_collection_fields = merge_with_django_properties(FeatureCollectionType, dict(
     name=dict(),
     description=dict(),
     created_at=dict(),
     updated_at=dict(),
-    geometry_collection=dict(
+    geojson=dict(
         create=REQUIRE,
-        graphene_type=GeometryCollectionType,
-        fields=geometry_collection_fields
+        graphene_type=FeatureCollectionDataType,
+        fields=feature_collection_data_type_fields
     ),
 ))
 
