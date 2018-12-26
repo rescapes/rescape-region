@@ -207,6 +207,7 @@ AUTHENTICATION_BACKENDS = [
 GRAPHENE = {
     'SCHEMA': 'rescape_region.schema_models.schema.schema',
     'MIDDLEWARE': [
-        'graphene_django.debug.DjangoDebugMiddleware',
+        # This messes up schema remote introspection
+        #'graphene_django.debug.DjangoDebugMiddleware',
     ]
 }

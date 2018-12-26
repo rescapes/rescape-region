@@ -25,7 +25,8 @@ logger = logging.getLogger('rescape-region')
 
 
 class Query(ObjectType):
-    debug = graphene.Field(DjangoDebug, name='__debug')
+    # This causes problems with remote query introspection because of the __
+    #debug = graphene.Field(DjangoDebug, name='__debug')
     users = graphene.List(UserType)
     viewer = graphene.Field(
         UserType,

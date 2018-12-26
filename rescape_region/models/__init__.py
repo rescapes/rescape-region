@@ -4,7 +4,6 @@ from .user_state import UserState
 from .group_state import GroupState
 
 __all__ = [
-    'feature.Feature',
     'feature.FeatureCollection',
     'region.Region',
     'user_state.UserState'

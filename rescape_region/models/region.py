@@ -19,7 +19,7 @@ class Region(SafeDeleteModel):
     name = CharField(max_length=50, null=False)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    # Boundary of the Region. This is required by can be initialized to default_feature_collection_geometry()
+    # Boundary of the Region. This is required but can be initialized to default_feature_collection_geometry()
     # which is the extend of earth if no restrictions are needed. Boundary is intended for setting the viewport
     # of a map, although it could also outline the region or something else
     boundary = ForeignKey('FeatureCollection', related_name='regions', null=False, on_delete=models.CASCADE)
