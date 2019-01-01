@@ -58,7 +58,7 @@ def mutate_feature_collection(feature_collection_data):
         # Extract properties from the properties key
         R.prop_or({}, 'properties', feature_collection_data),
         # Extract geometry to the original name (which is also geometry)
-        {FeatureCollectionType._meta.geojson_field: geometry_from_geojson(R.prop('geometry', feature_collection_data))}
+        {FeatureCollectionType._meta.geojson_field: geometry_from_geojson(R.prop('geojson', feature_collection_data))}
     )
     update_or_create_values = input_type_parameters_for_update_or_create(feature_collection_fields,
                                                                          feature_collection_dict)
