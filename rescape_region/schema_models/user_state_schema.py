@@ -1,17 +1,24 @@
+from deepmerge import Merger
 from graphene import Field, Mutation, InputObjectType
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
-    guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType
+    guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
+    enforce_unique_props
 from rescape_graphene import resolver
+from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update
+from rescape_python_helpers.functional.ramda import to_dict_deep
+
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
+from rescape_python_helpers import ramda as R
 
 
 class UserStateType(DjangoObjectType):
     """
         UserStateType models UserState, which represents the settings both imposed upon and chosen by the user
     """
+
     class Meta:
         model = UserState
 
@@ -42,11 +49,13 @@ user_state_mutation_config = dict(
 )
 
 
+
 class UpsertUserState(Mutation):
     """
         Abstract base class for mutation
     """
     user_state = Field(UserStateType)
+
 
     def mutate(self, info, user_state_data=None):
         """
@@ -55,8 +64,21 @@ class UpsertUserState(Mutation):
         :param user_state_data:
         :return:
         """
-        update_or_create_values = input_type_parameters_for_update_or_create(user_state_fields, user_state_data)
-        # We can do update_or_create since we have a unique user_id in addition to the unique id
+
+        modified_data = merge_data_fields_on_update(
+            ['data'],
+            UserState.objects.get(id=user_state_data['id']),
+            user_state_data
+        ) if R.has('id', user_state_data) else user_state_data
+
+        update_or_create_values = input_type_parameters_for_update_or_create(
+            user_state_fields,
+            # Make sure that all props are unique that must be, either by modifying values or erring.
+            enforce_unique_props(
+                user_state_fields,
+                modified_data)
+        )
+
         user_state, created = UserState.objects.update_or_create(**update_or_create_values)
         return UpsertUserState(user_state=user_state)
 
@@ -68,7 +90,7 @@ class CreateUserState(UpsertUserState):
 
     class Arguments:
         user_state_data = type('CreateUserStateInputType', (InputObjectType,),
-                             input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
+                               input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
 
 
 class UpdateUserState(UpsertUserState):
@@ -78,7 +100,7 @@ class UpdateUserState(UpsertUserState):
 
     class Arguments:
         user_state_data = type('UpdateUserStateInputType', (InputObjectType,),
-                             input_type_fields(user_state_fields, UPDATE, UserStateType))(required=True)
+                               input_type_fields(user_state_fields, UPDATE, UserStateType))(required=True)
 
 
 graphql_update_or_create_user_state = graphql_update_or_create(user_state_mutation_config, user_state_fields)

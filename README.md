@@ -84,12 +84,15 @@ username: your username for pypi.org
 Create a postgres database rescape_region
 # Login to psql:
 CREATE DATABASE rescape_region;
-CREATE USER test_user WITH PASSWORD 'test'
-GRANT ALL PRIVILEGES ON DATABASE rescape_region to test_user
+CREATE USER test_user WITH PASSWORD 'test';
+GRANT ALL PRIVILEGES ON DATABASE rescape_region to test_user;
 # Give Superuser permission to create test databasees
 ALTER ROLE test_user SUPERUSER;
 
+# Migrate the database
+./manage migrate
+
 # Create a Django user test with pw testpass
  ./manage.py createsuperuser
- # or echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('test', 'test@nowhere.man', 'testpass')" | python manage.py shell
+ # or echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('test', 'test@nowhere.man', 'testpass')" | ./manage.py shell
 

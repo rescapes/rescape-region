@@ -40,22 +40,19 @@ class RegionSchemaTestCase(TestCase):
         values = dict(
             name='Luxembourg',
             key='luxembourg',
-            boundary=dict(
-                name='Belgium bounds',
-                geometry={
-                    'type': 'FeatureCollection',
-                    'features': [{
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [
-                                [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
-                                 [51.4750237087, 6.15665815596],
-                                 [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
-                        }
-                    }]
-                }
-            ),
+            geojson={
+                'type': 'FeatureCollection',
+                'features': [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                             [51.4750237087, 6.15665815596],
+                             [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                    }
+                }]
+            },
             data=dict()
         )
         result = graphql_update_or_create_region(self.client, values)
@@ -64,7 +61,7 @@ class RegionSchemaTestCase(TestCase):
         created = result_path_partial(result)
         # look at the users added and omit the non-determinant dateJoined
         self.assertMatchSnapshot(R.omit_deep(omit_props, created))
-        # Try creating the same region again, because of the unique contraint on key and the unique_with property
+        # Try creating the same region again, because of the unique constraint on key and the unique_with property
         # on its field definition value, it will increment to luxembourg1
         new_result = graphql_update_or_create_region(self.client, values)
         assert not R.has('errors', new_result), R.dump_json(R.prop('errors', new_result))
@@ -76,22 +73,19 @@ class RegionSchemaTestCase(TestCase):
         values = dict(
             name='Luxembourg',
             key='luxembourg',
-            boundary=dict(
-                name='Belgium bounds',
-                geometry={
-                    'type': 'FeatureCollection',
-                    'features': [{
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [
-                                [[49.4426671413, 5.67405195478], [50.1280516628, 5.67405195478],
-                                 [50.1280516628, 6.24275109216],
-                                 [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
-                        }
-                    }]
-                }
-            ),
+            geojson={
+                'type': 'FeatureCollection',
+                'features': [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [[49.4426671413, 5.67405195478], [50.1280516628, 5.67405195478],
+                             [50.1280516628, 6.24275109216],
+                             [49.4426671413, 6.24275109216], [49.4426671413, 5.67405195478]]]
+                    }
+                }]
+            },
             data=dict()
         )
         result = graphql_update_or_create_region(self.client, values)
@@ -105,23 +99,19 @@ class RegionSchemaTestCase(TestCase):
             self.client,
             R.merge(
                 dict(id=int(created['id']),
-                     boundary=dict(
-                         name='Belgium bounds',
-                         geometry={
-                             'type': 'FeatureCollection',
-                             'features': [{
-                                 "type": "Feature",
-                                 "geometry": {
-                                     "type": "Polygon",
-                                     "coordinates": [
-                                         [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
-                                          [51.4750237087, 6.15665815596],
-                                          [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
-                                 }
-                             }]
-                         }
-                     )
-                 ),
+                     geojson={
+                         'type': 'FeatureCollection',
+                         'features': [{
+                             "type": "Feature",
+                             "geometry": {
+                                 "type": "Polygon",
+                                 "coordinates": [
+                                     [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                                      [51.4750237087, 6.15665815596],
+                                      [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                             }
+                         }]
+                     }),
                 values
             )
         )

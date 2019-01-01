@@ -74,7 +74,7 @@ UserRegionDataType = type(
 )
 
 user_state_data_fields = dict(
-    user_regions=dict(
+    userRegions=dict(
         type=UserRegionDataType,
         graphene_type=UserRegionDataType,
         fields=user_region_data_fields,

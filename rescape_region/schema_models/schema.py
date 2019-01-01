@@ -14,12 +14,11 @@ from rescape_graphene import allowed_query_arguments
 from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
-from rescape_region.models import Region, FeatureCollection, UserState, GroupState
-from rescape_region.schema_models.feature_collection_schema import feature_collection_fields, FeatureCollectionType, \
-    CreateFeatureCollection, UpdateFeatureCollection
+from rescape_region.models import Region, UserState, GroupState
 from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.schema_models.user_state_schema import user_state_fields, UserStateType
+from rescape_region.schema_models.user_state_schema import user_state_fields, UserStateType, CreateUserState, \
+    UpdateUserState
 
 logger = logging.getLogger('rescape-region')
 
@@ -46,17 +45,6 @@ class Query(ObjectType):
         RegionType,
         **allowed_query_arguments(region_fields, RegionType)
     )
-
-    feature_collection = graphene.Field(
-        FeatureCollectionType,
-        **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
-    )
-
-    feature_collections = graphene.List(
-        FeatureCollectionType,
-        **allowed_query_arguments(feature_collection_fields, FeatureCollectionType)
-    )
-
 
     user_states = graphene.List(
         UserStateType,
@@ -96,11 +84,6 @@ class Query(ObjectType):
             deleted__isnull=True,
             **R.map_keys(lambda key: 'data__contains' if R.equals('data', key) else key, kwargs))
 
-    def resolve_feature_collections(self, info, **kwargs):
-        return FeatureCollection.objects.filter(
-            **stringify_query_kwargs(FeatureCollection, kwargs)
-        )
-
     def resolve_user_states(self, info, **kwargs):
         return UserState.objects.filter(
             **stringify_query_kwargs(UserState, kwargs)
@@ -114,11 +97,6 @@ class Query(ObjectType):
     def resolve_region(self, info, **kwargs):
         return Region.objects.get(
             **stringify_query_kwargs(Region, kwargs)
-        )
-
-    def resolve_feature_collection(self, info, **kwargs):
-        return FeatureCollection.objects.get(
-            **stringify_query_kwargs(FeatureCollection, kwargs)
         )
 
     def resolve_user_state(self, info, **kwargs):
@@ -143,8 +121,8 @@ class Mutation(graphene.ObjectType):
     create_region = CreateRegion.Field()
     update_region = UpdateRegion.Field()
 
-    create_feature_collection = CreateFeatureCollection.Field()
-    update_feature_collection = UpdateFeatureCollection.Field()
+    create_user_state = CreateUserState.Field()
+    update_user_state = UpdateUserState.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)

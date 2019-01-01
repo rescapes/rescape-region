@@ -8,7 +8,7 @@ from graphene.test import Client
 from snapshottest import TestCase
 
 from rescape_region.models import Region
-from rescape_region.schema_models.schema import test_schema, dump_errors
+from rescape_region.schema_models.schema import dump_errors, schema
 from rescape_region.schema_models.user_sample import create_sample_user
 
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
@@ -27,7 +27,7 @@ class UserStateSchemaTestCase(TestCase):
     user_state = None
 
     def setUp(self):
-        self.client = Client(test_schema)
+        self.client = Client(schema)
         delete_sample_user_states()
         self.user_states = create_sample_user_states()
         # Gather all unique sample users
@@ -44,7 +44,7 @@ class UserStateSchemaTestCase(TestCase):
             # Second map each to the region id
             R.map(R.item_str_path('region.id')),
             # First flat map the user regions of all user_states
-            R.chain(lambda user_state: R.item_str_path('data.user_regions', user_state.__dict__))
+            R.chain(lambda user_state: R.item_str_path('data.userRegions', user_state.__dict__))
         )(self.user_states)
 
     def test_query(self):
@@ -71,7 +71,7 @@ class UserStateSchemaTestCase(TestCase):
         sample_user_data = form_sample_user_state_data(
             self.regions,
             dict(
-                user_regions=[
+                userRegions=[
                     dict(
                         # Assign the first region
                         region=dict(key=R.prop('key', R.head(self.regions))),
@@ -107,7 +107,7 @@ class UserStateSchemaTestCase(TestCase):
             dict(
                 username=user.username,
                 data=dict(
-                    user_regions=[
+                    userRegions=[
                         dict(
                             # Assign the first region
                             region=dict(key=R.prop('key', R.head(self.regions))),
@@ -128,7 +128,7 @@ class UserStateSchemaTestCase(TestCase):
             id=user_state.id
         )
         # Update the zoom
-        R.item_str_path('mapbox.viewport', R.head(R.item_str_path('data.user_regions', user_state_values)))['zoom'] = 7
+        R.item_str_path('mapbox.viewport', R.head(R.item_str_path('data.userRegions', user_state_values)))['zoom'] = 7
         update_result = graphql_update_or_create_user_state(self.client, user_state_values)
         dump_errors(update_result)
         assert not R.has('errors', update_result), R.dump_json(R.prop('errors', update_result))

@@ -10,7 +10,7 @@ sample_user_states = [
     dict(
         username="lion",  # This is converted to a user=persisted User
         data=dict(
-            user_regions=[
+            userRegions=[
                 dict(
                     region=dict(key='belgium'),  # key is converted to persisted Region's id
                     mapbox=dict(viewport=dict(
@@ -25,7 +25,7 @@ sample_user_states = [
     dict(
         username="cat",  # This is converted to a user=persisted User
         data=dict(
-            user_regions=[
+            userRegions=[
                 dict(
                     region=dict(key='belgium'),  # key is converted to persisted Region's id
                     mapbox=dict(viewport=dict(
@@ -52,7 +52,7 @@ def create_sample_user_state(regions, user_state_dict):
     :param user_state_dict: Sample data in the form: dict(
         username="lion",  # This will be mapped to the User id in create_sample_user_state
         data=dict(
-            user_regions=[
+            userRegions=[
                 dict(
                     region=dict(key='belgium'),  # key is converted to persisted Region's id
                     mapbox=dict(viewport=dict(
@@ -95,7 +95,7 @@ def form_sample_user_state_data(regions, data):
     :param regions: Persisted regions
     :param {dict} data: Sample data in the form:
     dict(
-        user_regions=[
+        userRegions=[
             dict(
                 region=dict(key='belgium'),  # key is converted to persisted Region's id
                 mapbox=dict(viewport=dict(
@@ -106,13 +106,13 @@ def form_sample_user_state_data(regions, data):
             )
         ]
     ),
-    :return: Data in the form dict(user_regions=[dict(region=dict(id=x), mapbox=..., ...), ...])
+    :return: Data in the form dict(userRegions=[dict(region=dict(id=x), mapbox=..., ...), ...])
     """
     regions_by_key = R.map_prop_value_as_index('key', regions)
     return R.merge(
         # Rest of data that's not regions
-        R.omit(['user_regions'], data),
-        dict(user_regions=R.map(
+        R.omit(['userRegions'], data),
+        dict(userRegions=R.map(
             # Find the id of th region that matches,
             # returning dict(id=region_id). We can't return the whole region
             # because we are saving within json data, not the Django ORM
@@ -134,7 +134,7 @@ def form_sample_user_state_data(regions, data):
                     )
                 )
             ),
-            R.prop('user_regions', data)
+            R.prop('userRegions', data)
         ))
     )
 
@@ -144,15 +144,14 @@ def create_sample_user_states():
         Creates sample persisted users that contain references to persisted regions
     :return:
     """
-    users = create_sample_users()
+    create_sample_users()
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
-    regions = create_sample_regions(users)
+    regions = create_sample_regions()
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user
     user_states = R.map(
         lambda sample_user_state: create_sample_user_state(regions, sample_user_state),
-
         sample_user_states
     )
     return user_states

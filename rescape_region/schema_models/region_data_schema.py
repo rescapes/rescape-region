@@ -1,7 +1,7 @@
 from rescape_python_helpers import ramda as R
 from graphene import ObjectType, String, Float, List, Field, Int
 
-###
+# We don't have anything in region data yet, but this will be metadata about the region
 region_data_fields = dict(
     example=dict(type=Float)
 )

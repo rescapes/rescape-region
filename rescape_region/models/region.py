@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import Model
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.model_helpers import region_default
+from rescape_region.model_helpers import region_default, feature_collection_default
 
 
 class Region(SafeDeleteModel):
@@ -19,10 +19,11 @@ class Region(SafeDeleteModel):
     name = CharField(max_length=50, null=False)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    # Boundary of the Region. This is required but can be initialized to default_feature_collection_geometry()
-    # which is the extend of earth if no restrictions are needed. Boundary is intended for setting the viewport
-    # of a map, although it could also outline the region or something else
-    boundary = ForeignKey('FeatureCollection', related_name='regions', null=False, on_delete=models.CASCADE)
+    # Stores geojson from OSM that represents the Location.
+    # Note that this isn't stored as a GEOS GeometryCollection because that structure doesn't include properties
+    # and other meta data that we want to keep from Open Street Map. It should still be possible to do PostGIS
+    # operations in the database if needed by extracting the geometry from the geojson and casting it
+    geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=region_default)
 
     class Meta:

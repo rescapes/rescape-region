@@ -3,10 +3,10 @@ from django.db.models import (
     DateTimeField)
 from django.contrib.gis.db.models import GeometryCollectionField, GeometryField, Model
 
-from rescape_region.model_helpers import feature_collection_geometry_default
+from rescape_region.model_helpers import geos_feature_collection_geometry_default
 
 
-class FeatureCollection(Model):
+class GeosFeatureCollection(Model):
     """
         Models a geospatial feature collection along with some metadata. The GEOS name for this is GeometryCollection
         and can store the geometry of a geojson feature collection.
@@ -15,7 +15,7 @@ class FeatureCollection(Model):
         The reason we make a separate model for FeatureCollection rather than having classes like Region just use a
         GeometryField or GeometryCollectionField directly has to do with the implementation supporting
         geospatial fields in graphene, which can't handle multiple geospatial fields but can handle multiple
-        foreign keys that point to objects one geospatial field.
+        foreign keys that point to objects of one geospatial field.
     """
 
     # Optional name of a feature.
@@ -24,7 +24,7 @@ class FeatureCollection(Model):
     description = CharField(max_length=500, unique=False, null=True)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    geojson = GeometryCollectionField(null=False, default=feature_collection_geometry_default)
+    geojson = GeometryCollectionField(null=False, default=geos_feature_collection_geometry_default)
 
     class Meta:
         app_label = "rescape_region"
