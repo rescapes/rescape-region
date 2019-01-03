@@ -53,7 +53,13 @@ class RegionSchemaTestCase(TestCase):
                     }
                 }]
             },
-            data=dict()
+            data=dict(
+                locations=dict(
+                    params=dict(
+                        city='Luxembourg City'
+                    )
+                )
+            )
         )
         result = graphql_update_or_create_region(self.client, values)
         result_path_partial = R.item_path(['data', 'createRegion', 'region'])

@@ -6,6 +6,7 @@ from rescape_region.schema_models.user_state_data_schema import UserRegionDataTy
 
 group_state_data_fields = dict(
     group_regions=dict(
+        # Intentional use of UserRegionDataType here. We want any group state to match user state
         type=UserRegionDataType,
         graphene_type=UserRegionDataType,
         fields=user_region_data_fields,
