@@ -1,7 +1,7 @@
 from rescape_python_helpers import ramda as R
 from rescape_graphene import merge_with_django_properties, REQUIRE, resolver_for_dict_field, \
-    resolver_for_dict_list, model_resolver_for_dict_field
-from graphene import ObjectType,  Float, List, Field, Int
+    resolver_for_dict_list, model_resolver_for_dict_field, type_modify_fields
+from graphene import ObjectType, Float, List, Field, Int
 
 from rescape_region.models import Region
 from rescape_region.schema_models.region_schema import RegionType
@@ -16,10 +16,7 @@ viewport_data_fields = dict(
 ViewportDataType = type(
     'ViewportDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        viewport_data_fields)
+    type_modify_fields(viewport_data_fields)
 )
 
 mapbox_data_fields = dict(
@@ -27,7 +24,7 @@ mapbox_data_fields = dict(
         type=ViewportDataType,
         graphene_type=ViewportDataType,
         fields=viewport_data_fields,
-        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
     )
 )
 
@@ -35,10 +32,7 @@ mapbox_data_fields = dict(
 MapboxDataType = type(
     'MapboxDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        mapbox_data_fields)
+    type_modify_fields(mapbox_data_fields)
 )
 
 user_region_data_fields = dict(
@@ -50,14 +44,14 @@ user_region_data_fields = dict(
         type=RegionType,
         graphene_type=RegionType,
         fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))),
-        type_modifier=lambda typ: Field(typ, resolver=model_resolver_for_dict_field(Region))
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=model_resolver_for_dict_field(Region))
     ),
     # The mapbox state for the user's use of this Region
     mapbox=dict(
         type=MapboxDataType,
         graphene_type=MapboxDataType,
         fields=mapbox_data_fields,
-        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
     )
 )
 
@@ -67,10 +61,7 @@ user_region_data_fields = dict(
 UserRegionDataType = type(
     'UserRegionDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        user_region_data_fields)
+    type_modify_fields(user_region_data_fields)
 )
 
 user_state_data_fields = dict(
@@ -78,15 +69,12 @@ user_state_data_fields = dict(
         type=UserRegionDataType,
         graphene_type=UserRegionDataType,
         fields=user_region_data_fields,
-        type_modifier=lambda typ: List(typ, resolver=resolver_for_dict_list)
+        type_modifier=lambda *type_and_args: List(*type_and_args, resolver=resolver_for_dict_list)
     )
 )
 
 UserStateDataType = type(
     'UserStateDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        user_state_data_fields)
+    type_modify_fields(user_state_data_fields)
 )

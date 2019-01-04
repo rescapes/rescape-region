@@ -10,7 +10,7 @@ from graphene import ObjectType, Schema
 from graphene_django.debug import DjangoDebug
 # from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import login_required
-from rescape_graphene import allowed_query_arguments
+from rescape_graphene import allowed_query_arguments, group_fields, GroupType
 from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
@@ -25,8 +25,17 @@ logger = logging.getLogger('rescape-region')
 
 class Query(ObjectType):
     # This causes problems with remote query introspection because of the __
-    #debug = graphene.Field(DjangoDebug, name='__debug')
-    users = graphene.List(UserType)
+    # debug = graphene.Field(DjangoDebug, name='__debug')
+    users = graphene.List(
+        UserType,
+        **allowed_query_arguments(user_fields, UserType)
+    )
+
+    groups = graphene.List(
+        UserType,
+        **allowed_query_arguments(group_fields, GroupType)
+    )
+
     viewer = graphene.Field(
         UserType,
         **allowed_query_arguments(user_fields, UserType)

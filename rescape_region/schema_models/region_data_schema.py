@@ -1,5 +1,5 @@
 from graphene.types.generic import GenericScalar
-from rescape_graphene import resolver_for_dict_field
+from rescape_graphene import resolver_for_dict_field, type_modify_fields
 from rescape_python_helpers import ramda as R
 from graphene import ObjectType, String, Float, List, Field, Int
 
@@ -19,10 +19,7 @@ region_location_data_fields = dict(
 RegionLocationDataType = type(
     'RegionLocationDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        region_location_data_fields)
+    type_modify_fields(region_location_data_fields)
 )
 
 region_data_fields = dict(
@@ -31,15 +28,12 @@ region_data_fields = dict(
         type=RegionLocationDataType,
         graphene_type=RegionLocationDataType,
         fields=region_location_data_fields,
-        type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field)
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
     )
 )
 
 RegionDataType = type(
     'RegionDataType',
     (ObjectType,),
-    R.map_with_obj(
-        # If we have a type_modifier function, pass the type to it, otherwise simply construct the type
-        lambda k, v: R.prop_or(lambda typ: typ(), 'type_modifier', v)(R.prop('type', v)),
-        region_data_fields)
+    type_modify_fields(region_data_fields)
 )
