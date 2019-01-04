@@ -3,14 +3,14 @@ import logging
 import sys
 import traceback
 from graphql import format_error
-from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs, allowed_query_and_read_arguments
 from rescape_python_helpers import ramda as R
 import graphql_jwt
 from graphene import ObjectType, Schema
 from graphene_django.debug import DjangoDebug
 # from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import login_required
-from rescape_graphene import allowed_query_arguments, group_fields, GroupType
+from rescape_graphene import group_fields, GroupType
 from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
 from django.contrib.auth import get_user_model, get_user
 
@@ -28,17 +28,27 @@ class Query(ObjectType):
     # debug = graphene.Field(DjangoDebug, name='__debug')
     users = graphene.List(
         UserType,
-        **allowed_query_arguments(user_fields, UserType)
+        **allowed_query_and_read_arguments(user_fields, UserType)
+    )
+
+    user = graphene.List(
+        UserType,
+        **allowed_query_and_read_arguments(user_fields, UserType)
+    )
+
+    current_user = graphene.Field(
+        UserType,
+        **allowed_query_and_read_arguments(user_fields, UserType)
     )
 
     groups = graphene.List(
         UserType,
-        **allowed_query_arguments(group_fields, GroupType)
+        **allowed_query_and_read_arguments(group_fields, GroupType)
     )
 
     viewer = graphene.Field(
         UserType,
-        **allowed_query_arguments(user_fields, UserType)
+        **allowed_query_and_read_arguments(user_fields, UserType)
     )
 
     @login_required
@@ -47,32 +57,32 @@ class Query(ObjectType):
 
     regions = graphene.List(
         RegionType,
-        **allowed_query_arguments(region_fields, RegionType)
+        **allowed_query_and_read_arguments(region_fields, RegionType)
     )
 
     region = graphene.Field(
         RegionType,
-        **allowed_query_arguments(region_fields, RegionType)
+        **allowed_query_and_read_arguments(region_fields, RegionType)
     )
 
     user_states = graphene.List(
         UserStateType,
-        **allowed_query_arguments(user_state_fields, UserStateType)
+        **allowed_query_and_read_arguments(user_state_fields, UserStateType)
     )
 
     user_state = graphene.Field(
         UserStateType,
-        **allowed_query_arguments(user_state_fields, UserStateType)
+        **allowed_query_and_read_arguments(user_state_fields, UserStateType)
     )
 
     group_states = graphene.List(
         GroupStateType,
-        **allowed_query_arguments(group_state_fields, GroupStateType)
+        **allowed_query_and_read_arguments(group_state_fields, GroupStateType)
     )
 
     group_state = graphene.Field(
         GroupStateType,
-        **allowed_query_arguments(group_state_fields, GroupStateType)
+        **allowed_query_and_read_arguments(group_state_fields, GroupStateType)
     )
 
     def resolve_users(self, info, **kwargs):

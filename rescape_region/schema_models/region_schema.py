@@ -3,7 +3,7 @@ from graphene import InputObjectType, Mutation, Field
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    resolver, DENY, FeatureCollectionDataType
+    DENY, FeatureCollectionDataType, resolver_for_dict_field
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
@@ -19,12 +19,12 @@ class RegionType(DjangoObjectType):
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-RegionType._meta.fields['data'] = Field(RegionDataType, resolver=resolver('data'))
+RegionType._meta.fields['data'] = Field(RegionDataType, resolver=resolver_for_dict_field)
 
 # Modify the geojson field to use the geometry collection resolver
 RegionType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
-    resolver=resolver('geojson')
+    resolver=resolver_for_dict_field
 )
 region_fields = merge_with_django_properties(RegionType, dict(
     id=dict(create=DENY, update=REQUIRE),

@@ -1,14 +1,10 @@
-from deepmerge import Merger
 from graphene import Field, Mutation, InputObjectType
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
-    enforce_unique_props
-from rescape_graphene import resolver
+    enforce_unique_props, resolver_for_dict_field, user_fields
 from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update
-from rescape_python_helpers.functional.ramda import to_dict_deep
-
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
 from rescape_python_helpers import ramda as R
@@ -26,7 +22,7 @@ class UserStateType(DjangoObjectType):
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-UserStateType._meta.fields['data'] = Field(UserStateDataType, resolver=resolver('data'))
+UserStateType._meta.fields['data'] = Field(UserStateDataType, resolver=resolver_for_dict_field)
 
 user_state_fields = merge_with_django_properties(UserStateType, dict(
     id=dict(create=DENY, update=REQUIRE),
@@ -34,7 +30,7 @@ user_state_fields = merge_with_django_properties(UserStateType, dict(
     # support our Mutation subclasses and query_argument generation
     # For simplicity we limit fields to id. Mutations can only use id, and a query doesn't need other
     # details of the User--it can query separately for that
-    user=dict(graphene_type=UserType, fields=merge_with_django_properties(UserType, dict(id=dict(create=REQUIRE)))),
+    user=dict(graphene_type=UserType, fields=user_fields),
     # This refers to the UserState, which is a representation of all the json fields of UserState.data
     data=dict(graphene_type=UserStateDataType, fields=user_state_data_fields, default=lambda: dict())
 ))

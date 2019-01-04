@@ -4,7 +4,7 @@ from rescape_graphene import merge_with_django_properties, REQUIRE, resolver_for
 from graphene import ObjectType, Float, List, Field, Int
 
 from rescape_region.models import Region
-from rescape_region.schema_models.region_schema import RegionType
+from rescape_region.schema_models.region_schema import RegionType, region_fields
 
 viewport_data_fields = dict(
     latitude=dict(type=Float),
@@ -43,8 +43,9 @@ user_region_data_fields = dict(
     region=dict(
         type=RegionType,
         graphene_type=RegionType,
-        fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))),
-        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=model_resolver_for_dict_field(Region))
+        fields=region_fields,
+        type_modifier=lambda *type_and_args: Field(*type_and_args,
+                                                   resolver=model_resolver_for_dict_field(Region))
     ),
     # The mapbox state for the user's use of this Region
     mapbox=dict(
