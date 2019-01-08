@@ -1,6 +1,10 @@
+from copy import deepcopy
+
 from django.db import transaction
+from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 from graphene import InputObjectType, Mutation, Field
 from graphene_django.types import DjangoObjectType
+from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field
@@ -58,8 +62,8 @@ class UpsertRegion(Mutation):
     region = Field(RegionType)
 
     @transaction.atomic
+    @login_required
     def mutate(self, info, region_data=None):
-
         # We must merge in existing region.data if we are updating data
         if R.has('id', region_data) and R.has('data', region_data):
             # New data gets priority, but this is a deep merge.

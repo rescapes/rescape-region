@@ -1,7 +1,7 @@
 """
 Django settings for the package. This is used to create migrations and run tests. It is not part of the build package
 """
-
+import datetime
 import os
 
 TEST_RUNNER = 'snapshottest.django.TestRunner'
@@ -207,8 +207,11 @@ AUTHENTICATION_BACKENDS = [
 GRAPHENE = {
     'SCHEMA': 'rescape_region.schema_models.schema.schema',
     'MIDDLEWARE': [
-        'graphql_jwt.middleware.JSONWebTokenMiddleware',
-        # This messes up schema remote introspection
-        #'graphene_django.debug.DjangoDebugMiddleware',
+        'graphql_jwt.middleware.JSONWebTokenMiddleware'
     ]
+}
+
+JWT_AUTH = {
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7)
 }
