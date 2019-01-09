@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+import graphene
 from django.db import transaction
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 from graphene import InputObjectType, Mutation, Field
@@ -15,22 +16,7 @@ from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_region.models.region import Region
 from .region_data_schema import RegionDataType, region_data_fields
 
-
-class RegionType(DjangoObjectType):
-    class Meta:
-        model = Region
-
-# Modify data field to use the resolver.
-# I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
-# Django model to generate the fields
-RegionType._meta.fields['data'] = Field(RegionDataType, resolver=resolver_for_dict_field)
-
-# Modify the geojson field to use the geometry collection resolver
-RegionType._meta.fields['geojson'] = Field(
-    FeatureCollectionDataType,
-    resolver=resolver_for_dict_field
-)
-region_fields = merge_with_django_properties(RegionType, dict(
+raw_region_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
     key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, 'key')),
     name=dict(create=REQUIRE),
@@ -43,7 +29,26 @@ region_fields = merge_with_django_properties(RegionType, dict(
         graphene_type=FeatureCollectionDataType,
         fields=feature_collection_data_type_fields
     )
-))
+)
+
+
+class RegionType(DjangoObjectType):
+
+    class Meta:
+        model = Region
+
+
+# Modify data field to use the resolver.
+# I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
+# Django model to generate the fields
+RegionType._meta.fields['data'] = Field(RegionDataType, resolver=resolver_for_dict_field)
+
+# Modify the geojson field to use the geometry collection resolver
+RegionType._meta.fields['geojson'] = Field(
+    FeatureCollectionDataType,
+    resolver=resolver_for_dict_field
+)
+region_fields = merge_with_django_properties(RegionType, raw_region_fields)
 
 region_mutation_config = dict(
     class_name='Region',

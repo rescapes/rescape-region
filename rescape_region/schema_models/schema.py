@@ -7,7 +7,7 @@ import traceback
 
 from graphene_django.filter.utils import get_filterset_class, get_filtering_args_from_filterset
 from graphql import format_error
-from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs, allowed_query_and_read_arguments
+from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs, allowed_filter_arguments, process_filter_kwargs
 from rescape_python_helpers import ramda as R
 import graphql_jwt
 from graphene import ObjectType, Schema, Field, List
@@ -58,41 +58,48 @@ class DjangoFilterField(Field):
 
 
 class LocalQuery(ObjectType):
-    regions = DjangoFilterField(
+    regions = graphene.List(
         RegionType,
-        **allowed_query_and_read_arguments(region_fields, RegionType)
+        **allowed_filter_arguments(region_fields, RegionType)
     )
 
     user_states = graphene.List(
         UserStateType,
-        **allowed_query_and_read_arguments(user_state_fields, UserStateType)
+        **allowed_filter_arguments(user_state_fields, UserStateType)
     )
 
     group_states = graphene.List(
         GroupStateType,
-        **allowed_query_and_read_arguments(group_state_fields, GroupStateType)
+        **allowed_filter_arguments(group_state_fields, GroupStateType)
     )
+
 
     @login_required
     def resolve_regions(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(kwargs)
+
         # Small correction here to change the data filter to data__contains to handle any json
         # https://docs.djangoproject.com/en/2.0/ref/contrib/postgres/fields/#std:fieldlookup-hstorefield.contains
         # This is just one way of filtering json. We can also do it with the argument structure
         return Region.objects.filter(
             deleted__isnull=True,
             **R.map_keys(lambda key: str.join('__', [key, 'contains']) if R.contains(key, ['data', 'geojson']) else key,
-                         kwargs))
+                         modified_kwargs))
 
     @login_required
     def resolve_user_states(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(kwargs)
+
         return UserState.objects.filter(
-            **stringify_query_kwargs(UserState, kwargs)
+            **stringify_query_kwargs(UserState, modified_kwargs)
         )
 
     @login_required
     def resolve_group_states(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(kwargs)
+
         return GroupState.objects.filter(
-            **stringify_query_kwargs(GroupState, kwargs)
+            **stringify_query_kwargs(GroupState, modified_kwargs)
         )
 
 
