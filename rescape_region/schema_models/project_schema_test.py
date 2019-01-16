@@ -1,18 +1,16 @@
 import logging
 
 import pytest
-from django.contrib.auth import get_user_model
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
 
 from rescape_region.schema_models.schema import schema
 from rescape_region.schema_models.user_sample import create_sample_users
-from .region_schema import graphql_query_regions, graphql_update_or_create_region
+from .project_schema import graphql_query_projects, graphql_update_or_create_project
 
-from graphene.test import Client
 from snapshottest import TestCase
 
-from .region_sample import create_sample_regions
+from .project_sample import create_sample_projects
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -20,30 +18,30 @@ omit_props = ['createdAt', 'updatedAt']
 
 
 @pytest.mark.django_db
-class RegionSchemaTestCase(TestCase):
+class ProjectSchemaTestCase(TestCase):
     client = None
 
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.regions = create_sample_regions()
+        self.projects = create_sample_projects()
 
     def test_query(self):
-        all_result = graphql_query_regions(self.client)
+        all_result = graphql_query_projects(self.client)
         assert not R.has('errors', all_result), R.dump_json(R.prop('errors', all_result))
-        result = graphql_query_regions(
+        result = graphql_query_projects(
             self.client,
-            variables=dict(name='Belgium')
+            variables=dict(name='Gare')
         )
         # Check against errors
         assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
         # Visual assertion that the query looks good
-        assert 1 == R.length(R.item_path(['data', 'regions'], result))
+        assert 1 == R.length(R.item_path(['data', 'projects'], result))
 
     def test_create(self):
         values = dict(
-            name='Luxembourg',
-            key='luxembourg',
+            name='Carre',
+            key='carre',
             geojson={
                 'type': 'FeatureCollection',
                 'features': [{
@@ -57,32 +55,26 @@ class RegionSchemaTestCase(TestCase):
                     }
                 }]
             },
-            data=dict(
-                locations=dict(
-                    params=dict(
-                        city='Luxembourg City'
-                    )
-                )
-            )
+            data=dict()
         )
-        result = graphql_update_or_create_region(self.client, values)
-        result_path_partial = R.item_path(['data', 'createRegion', 'region'])
+        result = graphql_update_or_create_project(self.client, values)
+        result_path_partial = R.item_path(['data', 'createProject', 'project'])
         assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
         created = result_path_partial(result)
         # look at the users added and omit the non-determinant dateJoined
         self.assertMatchSnapshot(R.omit_deep(omit_props, created))
-        # Try creating the same region again, because of the unique constraint on key and the unique_with property
+        # Try creating the same project again, because of the unique constraint on key and the unique_with property
         # on its field definition value, it will increment to luxembourg1
-        new_result = graphql_update_or_create_region(self.client, values)
+        new_result = graphql_update_or_create_project(self.client, values)
         assert not R.has('errors', new_result), R.dump_json(R.prop('errors', new_result))
         created_too = result_path_partial(new_result)
         assert created['id'] != created_too['id']
-        assert created_too['key'] == 'luxembourg1'
+        assert created_too['key'] == 'carre1'
 
     def test_update(self):
         values = dict(
-            name='Luxembourg',
-            key='luxembourg',
+            name='Carre',
+            key='carre',
             geojson={
                 'type': 'FeatureCollection',
                 'features': [{
@@ -98,14 +90,14 @@ class RegionSchemaTestCase(TestCase):
             },
             data=dict()
         )
-        result = graphql_update_or_create_region(self.client, values)
-        result_path_partial = R.item_path(['data', 'createRegion', 'region'])
+        result = graphql_update_or_create_project(self.client, values)
+        result_path_partial = R.item_path(['data', 'createProject', 'project'])
         assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
         created = result_path_partial(result)
         # look at the users added and omit the non-determinant dateJoined
         self.assertMatchSnapshot(R.omit_deep(omit_props, created))
-        # Try updating the region, changing the coordinates
-        updated_result = graphql_update_or_create_region(
+        # Try updating the project, changing the coordinates
+        updated_result = graphql_update_or_create_project(
             self.client,
             R.merge(
                 dict(id=int(created['id']),
@@ -126,7 +118,7 @@ class RegionSchemaTestCase(TestCase):
             )
         )
         assert not R.has('errors', updated_result), R.dump_json(R.prop('errors', updated_result))
-        result_path_partial = R.item_path(['data', 'updateRegion', 'region'])
+        result_path_partial = R.item_path(['data', 'updateProject', 'project'])
         updated = result_path_partial(updated_result)
         assert created['id'] == updated['id']
-        assert updated['key'] == 'luxembourg'
+        assert updated['key'] == 'carre'

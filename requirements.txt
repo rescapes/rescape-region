@@ -7,7 +7,7 @@ snapshottest==0.5.0
 inflection==0.3.1
 deepmerge==0.0.4
 bumpversion==0.5.3
-djangorestframework==3.9.0
+djangorestframework==3.9.1
 djangorestframework-jwt==1.11.0
 psycopg2-binary==2.7.6.1
 django-graphql-jwt==0.2.0
@@ -16,9 +16,9 @@ twine==1.12.1
 utils==0.9.0
 simplejson==3.16.0
 jsonfield===2.0.2
-rescape-graphene==0.2.64
-rescape-python-helpers==0.0.18
-pytest==4.1.0
+rescape-graphene==0.2.66
+rescape-python-helpers==0.0.21
+pytest==4.1.1
 pytest-cov==2.6.1
 pytest-django==3.4.5
 django-safedelete==0.5.1

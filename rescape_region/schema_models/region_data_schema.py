@@ -4,18 +4,15 @@ from rescape_python_helpers import ramda as R
 from graphene import ObjectType, String, Float, List, Field, Int
 
 
+# Params used to limit what locations are available to the Region
 region_location_data_fields = dict(
-    # References a Region.
-    # For simplicity we limit fields to id. Mutations can only use id, and a query doesn't need other
-    # details of the region--it can query separately for that. We could offer all fields in a query only
-    # version of these fields
     params=dict(
         type=GenericScalar,
         graphene_type=GenericScalar,
     ),
 )
 
-# References a Region location,
+# References a RegionLocation
 RegionLocationDataType = type(
     'RegionLocationDataType',
     (ObjectType,),

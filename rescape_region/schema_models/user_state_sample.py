@@ -19,6 +19,16 @@ sample_user_states = [
                         zoom=7
                     )),
                 )
+            ],
+            userProjects=[
+                dict(
+                    project=dict(key='gare'),  # key is converted to persisted Project's id
+                    mapbox=dict(viewport=dict(
+                        latitude=50.846127,
+                        longitude=4.358111,
+                        zoom=10
+                    )),
+                )
             ]
         )
     ),
@@ -32,6 +42,16 @@ sample_user_states = [
                         latitude=50.5915,
                         longitude=2.0165,
                         zoom=7
+                    )),
+                )
+            ],
+            userProjects=[
+                dict(
+                    project=dict(key='gare'),  # key is converted to persisted Project's id
+                    mapbox=dict(viewport=dict(
+                        latitude=50.846127,
+                        longitude=4.358111,
+                        zoom=10
                     )),
                 )
             ]

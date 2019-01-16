@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from django.contrib.auth.hashers import make_password
+from rescape_graphene import client_for_testing
 
 from rescape_python_helpers import ramda as R
 from graphene.test import Client
@@ -17,7 +18,7 @@ from .user_state_schema import graphql_query_user_states, graphql_update_or_crea
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-omit_props = ['created', 'updated']
+omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 
 
 @pytest.mark.django_db
@@ -27,7 +28,6 @@ class UserStateSchemaTestCase(TestCase):
     user_state = None
 
     def setUp(self):
-        self.client = Client(schema)
         delete_sample_user_states()
         self.user_states = create_sample_user_states()
         # Gather all unique sample users
@@ -35,6 +35,7 @@ class UserStateSchemaTestCase(TestCase):
             lambda user_state: user_state.user,
             self.user_states
         )))
+        self.client = client_for_testing(schema, self.users[0])
         # Gather all unique sample regions
         self.regions = R.compose(
             # Forth Resolve persisted Regions
@@ -57,7 +58,7 @@ class UserStateSchemaTestCase(TestCase):
         # I'd like this to just be UserReadInputType but Graphene forces us to use unique types for input classes
         # throughout the schema, even if they represent the same underlying model class or json blob structure
         results = graphql_query_user_states(self.client,
-                                            variable_values=dict(user=R.pick(['id'], self.users[0].__dict__)))
+                                            variables=dict(user=R.pick(['id'], self.users[0].__dict__)))
         # Check against errors
         assert not R.has('errors', results), R.dump_json(R.prop('errors', results))
         assert 1 == R.length(R.item_path(['data', 'userStates'], results))

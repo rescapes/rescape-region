@@ -1,21 +1,20 @@
-from functools import partial
-
 import graphene
 import logging
 import sys
 import traceback
 
-from graphene_django.filter.utils import get_filterset_class, get_filtering_args_from_filterset
 from graphql import format_error
-from rescape_graphene.graphql_helpers.schema_helpers import stringify_query_kwargs, allowed_filter_arguments, process_filter_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import allowed_filter_arguments, \
+    process_filter_kwargs
 from rescape_python_helpers import ramda as R
-import graphql_jwt
-from graphene import ObjectType, Schema, Field, List
+from graphene import ObjectType, Schema
 from graphql_jwt.decorators import login_required
-from rescape_graphene import group_fields, GroupType, Mutation, Query
-from rescape_graphene import CreateUser, UpdateUser, UserType, user_fields
-from rescape_region.models import Region, UserState, GroupState
-from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields
+from rescape_graphene import Mutation as UserGroupMutation, Query as UserGroupQuery
+from rescape_region.models import Region, UserState, GroupState, Project, Location
+from rescape_region.schema_models.group_state_schema import GroupStateType, group_state_fields, CreateGroupState, \
+    UpdateGroupState
+from rescape_region.schema_models.location_schema import location_fields, LocationType, CreateLocation, UpdateLocation
+from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.user_state_schema import user_state_fields, UserStateType, CreateUserState, \
     UpdateUserState
@@ -23,46 +22,51 @@ from rescape_region.schema_models.user_state_schema import user_state_fields, Us
 logger = logging.getLogger('rescape-region')
 
 
-class DjangoFilterField(Field):
-    """
-    Custom field to use django-filter with graphene object types (without relay).
-    """
-
-    def __init__(self, _type, fields=None, extra_filter_meta=None,
-                 filterset_class=None, *args, **kwargs):
-        _fields = _type._meta.filter_fields
-        _model = _type._meta.model
-        self.of_type = _type
-        self.fields = fields or _fields
-        meta = dict(model=_model, fields=self.fields)
-        if extra_filter_meta:
-            meta.update(extra_filter_meta)
-        self.filterset_class = get_filterset_class(filterset_class, **meta)
-        self.filtering_args = get_filtering_args_from_filterset(
-            self.filterset_class, _type)
-        kwargs.setdefault('args', {})
-        kwargs['args'].update(self.filtering_args)
-        super().__init__(List(_type), *args, **kwargs)
-
-    @staticmethod
-    def list_resolver(manager, filterset_class, filtering_args, root, info, *args, **kwargs):
-        filter_kwargs = {k: v for k,
-                                  v in kwargs.items() if k in filtering_args}
-        qs = manager.get_queryset()
-        qs = filterset_class(data=filter_kwargs, queryset=qs).qs
-        return qs
-
-    def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, self.of_type._meta.model._default_manager,
-                       self.filterset_class, self.filtering_args)
-
-
-class LocalQuery(ObjectType):
+class RegionQuery(ObjectType):
     regions = graphene.List(
         RegionType,
         **allowed_filter_arguments(region_fields, RegionType)
     )
 
+    @login_required
+    def resolve_regions(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(Region, kwargs)
+
+        return Region.objects.filter(
+            **modified_kwargs
+        )
+
+
+class ProjectQuery(ObjectType):
+    projects = graphene.List(
+        ProjectType,
+        **allowed_filter_arguments(project_fields, ProjectType)
+    )
+
+    @login_required
+    def resolve_projects(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(Project, kwargs)
+        return Project.objects.filter(
+            **modified_kwargs
+        )
+
+
+class LocationQuery(ObjectType):
+    locations = graphene.List(
+        LocationType,
+        **allowed_filter_arguments(location_fields, LocationType)
+    )
+
+    @login_required
+    def resolve_locations(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(Location, kwargs)
+
+        return Location.objects.filter(
+            **modified_kwargs
+        )
+
+
+class UserGroupStateQuery(ObjectType):
     user_states = graphene.List(
         UserStateType,
         **allowed_filter_arguments(user_state_fields, UserStateType)
@@ -73,66 +77,83 @@ class LocalQuery(ObjectType):
         **allowed_filter_arguments(group_state_fields, GroupStateType)
     )
 
-
-    @login_required
-    def resolve_regions(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(kwargs)
-
-        # Small correction here to change the data filter to data__contains to handle any json
-        # https://docs.djangoproject.com/en/2.0/ref/contrib/postgres/fields/#std:fieldlookup-hstorefield.contains
-        # This is just one way of filtering json. We can also do it with the argument structure
-        return Region.objects.filter(
-            deleted__isnull=True,
-            **R.map_keys(lambda key: str.join('__', [key, 'contains']) if R.contains(key, ['data', 'geojson']) else key,
-                         modified_kwargs))
-
     @login_required
     def resolve_user_states(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(kwargs)
+        modified_kwargs = process_filter_kwargs(UserState, kwargs)
 
         return UserState.objects.filter(
-            **stringify_query_kwargs(UserState, modified_kwargs)
+            **modified_kwargs
         )
 
     @login_required
     def resolve_group_states(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(kwargs)
+        modified_kwargs = process_filter_kwargs(GroupState, kwargs)
 
         return GroupState.objects.filter(
-            **stringify_query_kwargs(GroupState, modified_kwargs)
+            **modified_kwargs
         )
 
 
-class LocalMutation(graphene.ObjectType):
-    create_user = CreateUser.Field()
-    update_user = UpdateUser.Field()
-    # login = Login.Field()
-    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
-    verify_token = graphql_jwt.Verify.Field()
-    refresh_token = graphql_jwt.Refresh.Field()
-
+class RegionMutation(graphene.ObjectType):
     create_region = CreateRegion.Field()
     update_region = UpdateRegion.Field()
 
+
+class ProjectMutation(graphene.ObjectType):
+    create_project = CreateProject.Field()
+    update_project = UpdateProject.Field()
+
+
+class LocationMutation(graphene.ObjectType):
+    create_location = CreateLocation.Field()
+    update_location = UpdateLocation.Field()
+
+
+class UserGroupStateMutation(graphene.ObjectType):
     create_user_state = CreateUserState.Field()
     update_user_state = UpdateUserState.Field()
 
+    create_group_state = CreateGroupState.Field()
+    update_group_state = UpdateGroupState.Field()
 
-class Query(LocalQuery, Query):
+
+def create_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
     """
-        Merge the rescape-region query with our local query
+        Creates a schema from defaults or allows overrides of any of these schemas
+        Each arg if overriden must provide a dict with a query and mutation key, each pointing to the
+        override query and mutation graphene.ObjectType
+    :param user_group: Handles User and Group queries and mutations (defined in rescape_graphene)
+    :param user_group_state: Handles UserState and GroupState queries and mutations. See the default UserState
+    and GroupState for an example
+    :param region: Handles Region queries and mutations. See the default Region for an example
+    :param project: Handles Project queries and mutations. See the default Project for an example
+    :param location: Handles Location queries and mutations. See the default Location for an example
+    :return:
     """
-    pass
+
+    obj = R.merge(
+        dict(
+            user_group=dict(query=UserGroupQuery, mutation=UserGroupMutation),
+            user_group_state=dict(query=UserGroupStateQuery, mutation=UserGroupStateMutation),
+            region=dict(query=RegionQuery, mutation=RegionMutation),
+            project=dict(query=ProjectQuery, mutation=ProjectMutation),
+            location=dict(query=LocationQuery, mutation=LocationMutation)
+        ),
+        # Any non-null arguments take precedence
+        R.compact_dict(dict(user_group=user_group, user_group_state=user_group_state, region=region, project=project,
+                            location=location))
+    )
+
+    class Query(*R.map_with_obj_to_values(lambda k, v: R.prop('query', v), obj)):
+        pass
+
+    class Mutation(*R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), obj)):
+        pass
+
+    return Schema(query=Query, mutation=Mutation)
 
 
-class Mutation(LocalMutation, Mutation):
-    """
-        Merge the rescape-region mutation with our local mutations
-    """
-    pass
-
-
-schema = Schema(query=Query, mutation=Mutation)
+schema = create_schema()
 
 
 def dump_errors(result):
