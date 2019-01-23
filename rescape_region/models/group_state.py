@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import OneToOneField
 from django.contrib.gis.db.models import Model
-from rescape_region.model_helpers import group_state_default
+from rescape_region.model_helpers import group_state_data_default
 
 
 class GroupState(Model):
@@ -13,7 +13,7 @@ class GroupState(Model):
         have additional attributes that deal with groups
     """
     group = OneToOneField(Group, null=False, on_delete=models.CASCADE)
-    data = JSONField(null=False, default=group_state_default)
+    data = JSONField(null=False, default=group_state_data_default)
 
     class Meta:
         app_label = "rescape_region"

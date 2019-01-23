@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import Model
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.model_helpers import region_default, feature_collection_default
+from rescape_region.model_helpers import region_data_default, feature_collection_default
 
 
 class Region(SafeDeleteModel):
@@ -24,7 +24,7 @@ class Region(SafeDeleteModel):
     # and other meta data that we want to keep from Open Street Map. It should still be possible to do PostGIS
     # operations in the database if needed by extracting the geometry from the geojson and casting it
     geojson = JSONField(null=False, default=feature_collection_default)
-    data = JSONField(null=False, default=region_default)
+    data = JSONField(null=False, default=region_data_default)
 
     class Meta:
         app_label = "rescape_region"

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name='GroupState',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.group_state_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.group_state_data_default)),
                 ('group', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='auth.Group')),
             ],
         ),
@@ -35,14 +35,14 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('geojson', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.feature_collection_default)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_data_default)),
             ],
         ),
         migrations.CreateModel(
             name='UserState',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.user_state_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.user_state_data_default)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

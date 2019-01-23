@@ -1,8 +1,8 @@
-
 from django.contrib.auth import get_user_model
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import UserState
+from rescape_region.schema_models.project_sample import create_sample_projects
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.user_sample import create_sample_users
 
@@ -65,10 +65,11 @@ def delete_sample_user_states():
 
 
 @R.curry
-def create_sample_user_state(regions, user_state_dict):
+def create_sample_user_state(regions, projects, user_state_dict):
     """
     Persists sample user state data into a UserState
     :param {[Region]} regions: Persisted sample regions
+    :param {[Projects]} projects: Persisted sample projects
     :param user_state_dict: Sample data in the form: dict(
         username="lion",  # This will be mapped to the User id in create_sample_user_state
         data=dict(
@@ -95,6 +96,7 @@ def create_sample_user_state(regions, user_state_dict):
             user=user,
             data=form_sample_user_state_data(
                 regions,
+                projects,
                 R.prop(
                     'data',
                     user_state_dict
@@ -108,11 +110,50 @@ def create_sample_user_state(regions, user_state_dict):
     return user_state
 
 
-def form_sample_user_state_data(regions, data):
+def user_state_scope_instances(scope_key, user_scope_key, scope_instances, data):
+    """
+        Creates scope instance dicts for the given instances
+    :param scope_key: 'region', 'project', etc
+    :param user_scope_key: 'userRegions', 'userProjects', etc
+    :param scope_instances: regions or projects or ...
+    :param data: The userState data to put the instances in. E.g. data.userRegions gets mapped to include
+    the resolved regions
+    :return:
+    """
+
+    scope_instances_by_key = R.map_prop_value_as_index('key', scope_instances)
+    return R.map(
+        # Find the id of th scope instance that matches,
+        # returning dict(id=scope_instance_id). We can't return the whole scope instance
+        # because we are saving within json data, not the Django ORM
+        lambda user_scope_instance: R.merge(
+            # Other stuff like mapbox
+            R.omit([scope_key], user_scope_instance),
+            # Replace key with id
+            {
+                scope_key: dict(
+                    # Resolve the persisted Scope instance by key
+                    id=R.compose(
+                        # third get the id
+                        R.prop('id'),
+                        # second resolve the scope instance
+                        lambda k: R.prop(k, scope_instances_by_key),
+                        # first get the key
+                        R.item_str_path(f'{scope_key}.key')
+                    )(user_scope_instance)
+                )
+            }
+        ),
+        R.prop(user_scope_key, data)
+    )
+
+
+def form_sample_user_state_data(regions, projects, data):
     """
     Given data in the form dict(region_keys=[...], ...), converts region_keys to
     regions=[{id:x}, {id:y}, ...] by resolving the regions
     :param regions: Persisted regions
+    :param projects: Persisted projects
     :param {dict} data: Sample data in the form:
     dict(
         userRegions=[
@@ -128,34 +169,13 @@ def form_sample_user_state_data(regions, data):
     ),
     :return: Data in the form dict(userRegions=[dict(region=dict(id=x), mapbox=..., ...), ...])
     """
-    regions_by_key = R.map_prop_value_as_index('key', regions)
     return R.merge(
         # Rest of data that's not regions
-        R.omit(['userRegions'], data),
-        dict(userRegions=R.map(
-            # Find the id of th region that matches,
-            # returning dict(id=region_id). We can't return the whole region
-            # because we are saving within json data, not the Django ORM
-            lambda user_region: R.merge(
-                # Other stuff like mapbox
-                R.omit(['region'], user_region),
-                # Replace key with id
-                dict(
-                    region=dict(
-                        # Resolve the persisted Region by key
-                        id=R.compose(
-                            # third get the id
-                            R.prop('id'),
-                            # second resolve the region
-                            lambda k: R.prop(k, regions_by_key),
-                            # first get the key
-                            R.item_str_path('region.key')
-                        )(user_region)
-                    )
-                )
-            ),
-            R.prop('userRegions', data)
-        ))
+        R.omit(['userRegions', 'userProjects'], data),
+        dict(
+            userRegions=user_state_scope_instances('region', 'userRegions', regions, data),
+            userProjects=user_state_scope_instances('project', 'userProjects', projects, data)
+        )
     )
 
 
@@ -167,11 +187,12 @@ def create_sample_user_states():
     create_sample_users()
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
     regions = create_sample_regions()
+    projects = create_sample_projects(regions)
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user
     user_states = R.map(
-        lambda sample_user_state: create_sample_user_state(regions, sample_user_state),
+        lambda sample_user_state: create_sample_user_state(regions, projects, sample_user_state),
         sample_user_states
     )
     return user_states

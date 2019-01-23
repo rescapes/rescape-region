@@ -1,7 +1,6 @@
 from rescape_python_helpers import ewkt_from_feature
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
-
 def geos_feature_geometry_default():
     """
     The default geometry is a polygon of the earth's extent
@@ -39,13 +38,13 @@ def feature_collection_default():
     }
 
 
-def region_default():
+def region_data_default():
     return dict()
 
 
-def user_state_default():
+def user_state_data_default():
     return dict()
 
 
-def group_state_default():
+def group_state_data_default():
     return dict()

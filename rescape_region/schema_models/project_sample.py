@@ -26,10 +26,10 @@ sample_projects = [
 
 
 @transaction.atomic
-def create_sample_project(project_dict):
+def create_sample_project(region, project_dict):
     # Save the project with the complete data
 
-    project = Project(**project_dict)
+    project = Project(region=region, **project_dict)
     project.save()
     return project
 
@@ -38,16 +38,16 @@ def delete_sample_projects():
     Project.objects.all().delete()
 
 
-def create_sample_projects():
+def create_sample_projects(regions):
     """
         Create sample projects
-    :param users:
+    :param regions: Assign a region to each project
     :return:
     """
     delete_sample_projects()
     # Convert all sample project dicts to persisted Project instances
     # Give each reach an owner
     return R.map(
-        lambda kv: create_sample_project(kv[1]),
+        lambda kv: create_sample_project(regions[R.modulo(kv[0], R.length(regions))], kv[1]),
         enumerate(sample_projects)
     )

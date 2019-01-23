@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('geojson', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.feature_collection_default)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_data_default)),
             ],
         ),
         migrations.CreateModel(
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('geojson', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.feature_collection_default)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_default)),
+                ('data', django.contrib.postgres.fields.jsonb.JSONField(default=rescape_region.model_helpers.region_data_default)),
                 ('locations', models.ManyToManyField(blank=True, to='rescape_region.Location')),
             ],
         ),

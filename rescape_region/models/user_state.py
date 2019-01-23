@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import OneToOneField
 from django.contrib.gis.db.models import Model
 
-from rescape_region.model_helpers import user_state_default
+from rescape_region.model_helpers import user_state_data_default
 
 
 class UserState(Model):
@@ -15,7 +15,7 @@ class UserState(Model):
         users settings and to execute queries that limit the user's access to data
     """
     user = OneToOneField(User, null=False, on_delete=models.CASCADE)
-    data = JSONField(null=False, default=user_state_default)
+    data = JSONField(null=False, default=user_state_data_default)
 
     class Meta:
         app_label = "rescape_region"

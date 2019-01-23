@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 import pytest
 from django.contrib.auth.hashers import make_password
@@ -8,8 +9,10 @@ from rescape_python_helpers import ramda as R
 from graphene.test import Client
 from snapshottest import TestCase
 
-from rescape_region.models import Region
-from rescape_region.schema_models.schema import dump_errors, schema
+from rescape_region.models import Region, Project
+from rescape_region.schema_models.schema import dump_errors, create_schema
+from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+    quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
 
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
@@ -20,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 
-
+schema = create_schema()
 @pytest.mark.django_db
 class UserStateSchemaTestCase(TestCase):
     client = None
@@ -47,67 +50,35 @@ class UserStateSchemaTestCase(TestCase):
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userRegions', user_state.__dict__))
         )(self.user_states)
+        # Gather all unique sample projects
+        self.projects = R.compose(
+            # Forth Resolve persisted Projects
+            R.map(lambda id: Project.objects.get(id=id)),
+            # Third make ids unique
+            lambda ids: list(set(ids)),
+            # Second map each to the project id
+            R.map(R.item_str_path('project.id')),
+            # First flat map the user regions of all user_states
+            R.chain(lambda user_state: R.item_str_path('data.userProjects', user_state.__dict__))
+        )(self.user_states)
 
     def test_query(self):
-        all_results = graphql_query_user_states(self.client)
-        assert not R.has('errors', all_results), R.dump_json(R.prop('errors', all_results))
-
-    def test_filter_query(self):
-        # Make sure that we can filter. Here we are filtered on the User related to UserState
-        # That's why we need the complex class UserTypeofUserStateTypeRelatedReadInputType
-        # I'd like this to just be UserReadInputType but Graphene forces us to use unique types for input classes
-        # throughout the schema, even if they represent the same underlying model class or json blob structure
-        results = graphql_query_user_states(self.client,
-                                            variables=dict(user=R.pick(['id'], self.users[0].__dict__)))
-        # Check against errors
-        assert not R.has('errors', results), R.dump_json(R.prop('errors', results))
-        assert 1 == R.length(R.item_path(['data', 'userStates'], results))
+        quiz_model_query(self.client, graphql_query_user_states, 'userStates',
+                         dict(user=dict(id=R.prop('id', R.head(self.users)))))
 
     def test_create(self):
         # First add a new User
         margay = dict(username="margay", first_name='Upa', last_name='Tree',
                       password=make_password("merowgir", salt='not_random'))
         user = create_sample_user(margay)
-        # Now assign regions and persist the UserState
-        sample_user_data = form_sample_user_state_data(
-            self.regions,
-            dict(
-                userRegions=[
-                    dict(
-                        # Assign the first region
-                        region=dict(key=R.prop('key', R.head(self.regions))),
-                        mapbox=dict(viewport=dict(
-                            latitude=50.5915,
-                            longitude=2.0165,
-                            zoom=7
-                        ))
-                    )
-                ]
-            )
-        )
-
-        values = dict(
-            user=R.pick(['id'], user.__dict__),
-            data=sample_user_data
-        )
-        result = graphql_update_or_create_user_state(self.client, values)
-        dump_errors(result)
-        assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
-        # Don't worry about ids since they can be different as we write more tests
-        self.assertMatchSnapshot(R.omit_deep(omit_props + ['id'], result))
-
-    def test_update(self):
-        # Create the sample User
-        margay = dict(username="margay", first_name='Upa', last_name='Tree',
-                      password=make_password("merowgir", salt='not_random'))
-        user = create_sample_user(margay)
 
         # Now assign regions and persist the UserState
-        user_state = create_sample_user_state(
-            self.regions,
-            dict(
-                username=user.username,
-                data=dict(
+        sample_user_state_data = dict(
+            user=dict(id=user.id),
+            data=form_sample_user_state_data(
+                self.regions,
+                self.projects,
+                dict(
                     userRegions=[
                         dict(
                             # Assign the first region
@@ -115,7 +86,18 @@ class UserStateSchemaTestCase(TestCase):
                             mapbox=dict(viewport=dict(
                                 latitude=50.5915,
                                 longitude=2.0165,
-                                zoom=5
+                                zoom=7
+                            ))
+                        )
+                    ],
+                    userProjects=[
+                        dict(
+                            # Assign the first prjoect
+                            project=dict(key=R.prop('key', R.head(self.projects))),
+                            mapbox=dict(viewport=dict(
+                                latitude=50.5915,
+                                longitude=2.0165,
+                                zoom=7
                             ))
                         )
                     ]
@@ -123,21 +105,67 @@ class UserStateSchemaTestCase(TestCase):
             )
         )
 
-        user_state_values = dict(
-            user=R.pick(['id'], user_state.user.__dict__),
-            data=user_state.data,
-            id=user_state.id
+        quiz_model_mutation_create(
+            self.client,
+            graphql_update_or_create_user_state,
+            'createUserState.userState',
+            sample_user_state_data,
+            # The second create should update, since we can only have one userState per user
+            dict(),
+            True
         )
-        # Update the zoom
-        R.item_str_path('mapbox.viewport', R.head(R.item_str_path('data.userRegions', user_state_values)))['zoom'] = 7
-        update_result = graphql_update_or_create_user_state(self.client, user_state_values)
-        dump_errors(update_result)
-        assert not R.has('errors', update_result), R.dump_json(R.prop('errors', update_result))
-        # Assert same instance
-        updated_user_state = R.item_str_path('data.updateUserState.userState', update_result)
-        assert updated_user_state['id'] == str(user_state_values['id'])
-        # Assert the viewport updated
-        assert R.item_str_path('data.userRegions.0.mapbox.viewport.zoom', updated_user_state) == 7
+
+    def test_update(self):
+        # First add a new User
+        margay = dict(username="margay", first_name='Upa', last_name='Tree',
+                      password=make_password("merowgir", salt='not_random'))
+        user = create_sample_user(margay)
+
+        # Now assign regions and persist the UserState
+        sample_user_state_data = dict(
+            user=dict(id=user.id),
+            data=form_sample_user_state_data(
+                self.regions,
+                self.projects,
+                dict(
+                    userRegions=[
+                        dict(
+                            # Assign the first region
+                            region=dict(key=R.prop('key', R.head(self.regions))),
+                            mapbox=dict(viewport=dict(
+                                latitude=50.5915,
+                                longitude=2.0165,
+                                zoom=7
+                            ))
+                        )
+                    ],
+                    userProjects=[
+                        dict(
+                            # Assign the first prjoect
+                            project=dict(key=R.prop('key', R.head(self.projects))),
+                            mapbox=dict(viewport=dict(
+                                latitude=50.5915,
+                                longitude=2.0165,
+                                zoom=7
+                            ))
+                        )
+                    ]
+                )
+            )
+        )
+
+        # Update the zoom of the first userRegion
+        update_data = deepcopy(R.pick(['data'], sample_user_state_data))
+        R.item_str_path('mapbox.viewport', R.head(R.item_str_path('data.userRegions', (update_data))))['zoom'] = 15
+
+        quiz_model_mutation_update(
+            self.client,
+            graphql_update_or_create_user_state,
+            'createUserState.userState',
+            'updateUserState.userState',
+            sample_user_state_data,
+            update_data
+        )
 
     # def test_delete(self):
     #     self.assertMatchSnapshot(self.client.execute('''{

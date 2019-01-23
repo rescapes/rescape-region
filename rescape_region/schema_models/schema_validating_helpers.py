@@ -1,10 +1,12 @@
+import re
+
 from rescape_python_helpers.functional.ramda import pick_deep
 from rescape_python_helpers import ramda as R
 
 
-def test_model_query(client, model_query_function, result_name, variables):
+def quiz_model_query(client, model_query_function, result_name, variables):
     """
-        Tests a query for a model
+        Tests a query for a model with variables that produce exactly one result
     :param client: Apollo client
     :param model_query_function: Query function expecting the client and variables
     :param result_name: The name of the result object in the data object
@@ -19,11 +21,11 @@ def test_model_query(client, model_query_function, result_name, variables):
     )
     # Check against errors
     assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
-    # Visual assertion that the query looks good
+    # Simple assertion that the query looks good
     assert 1 == R.length(R.item_path(['data', result_name], result))
 
 
-def test_model_mutation_create(client, graphql_update_or_create_function, result_path, values,
+def quiz_model_mutation_create(client, graphql_update_or_create_function, result_path, values,
                                second_create_results=None, second_create_does_update=False):
     """
         Tests a create mutation for a model
@@ -54,7 +56,7 @@ def test_model_mutation_create(client, graphql_update_or_create_function, result
         assert second_create_results == pick_deep(second_create_results, created_too)
 
 
-def test_model_mutation_update(client, graphql_update_or_create_function, create_path, update_path, values,
+def quiz_model_mutation_update(client, graphql_update_or_create_function, create_path, update_path, values,
                                update_values):
     """
         Tests an update mutation for a model by calling a create with the given values then an update
@@ -76,5 +78,12 @@ def test_model_mutation_update(client, graphql_update_or_create_function, create
     new_result = graphql_update_or_create_function(client, R.merge(dict(id=int(created['id'])), update_values))
     assert not R.has('errors', new_result), R.dump_json(R.prop('errors', new_result))
     updated = R.item_str_path(f'data.{update_path}', new_result)
+    # Since graphql ID type outputs string ids, but our input type is an int, convert all non-nil ids
+    # Since OpenStreetMap can have actual string ids we want to leave those alone
+    pattern = re.compile("^\d+$")
+    updated_with_int_ids = R.map_with_obj_deep(lambda k, v: int(v) if R.equals('id', k) and pattern.search(v or '') else v, updated)
     assert created['id'] == updated['id']
-    assert update_values == pick_deep(update_values, updated)
+    assert update_values == pick_deep(
+        update_values,
+        updated_with_int_ids
+    )
