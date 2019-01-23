@@ -22,6 +22,24 @@ sample_locations = [
         },
         data=dict()
     ),
+    dict(
+        key='petitPlace',
+        name='Petit Place',
+        geojson={
+            'type': 'FeatureCollection',
+            'features': [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                         [51.4750237087, 6.15665815596],
+                         [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                }
+            }]
+        },
+        data=dict()
+    ),
 ]
 
 

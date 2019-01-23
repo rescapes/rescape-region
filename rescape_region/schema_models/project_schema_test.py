@@ -4,6 +4,7 @@ import pytest
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
 
+from rescape_region.schema_models.location_sample import create_sample_locations
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
@@ -30,6 +31,7 @@ class ProjectSchemaTestCase(TestCase):
         self.client = client_for_testing(schema, users[0])
         regions = create_sample_regions()
         self.projects = create_sample_projects(regions)
+        self.locations = create_sample_locations()
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_projects, 'projects', dict(name='Gare'))
@@ -53,7 +55,8 @@ class ProjectSchemaTestCase(TestCase):
                         }
                     }]
                 },
-                data=dict()
+                data=dict(),
+                locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
             ), dict(key='carre1'))
 
     def test_update(self):
@@ -78,9 +81,10 @@ class ProjectSchemaTestCase(TestCase):
                         }
                     }]
                 },
-                data=dict()
+                data=dict(),
+                locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
             ),
-            # Update the coords
+            # Update the coords and limit to one location
             dict(
                 geojson={
                     'features': [{
@@ -93,6 +97,7 @@ class ProjectSchemaTestCase(TestCase):
                                  [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
                         }
                     }]
-                }
+                },
+                locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), [R.head(self.locations)])
             )
         )

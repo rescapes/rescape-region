@@ -96,13 +96,15 @@ class UpsertProject(Mutation):
         )
 
         project, created = Project.objects.update_or_create(**update_or_create_values)
-        if not created and R.compose(R.lt(0), R.length, R.prop_or([], 'locations', modified_project_data)):
+        locations = R.prop_or([], 'locations', modified_project_data)
+        any_locations = R.compose(R.lt(0), R.length, locations)
+        if not created and any_locations:
             # If update and locations are specified, clear the existing ones
             project.locations.clear()
 
-        for location in R.prop_or([], 'locations', modified_project_data):
-            # Location objects come in as [{id:...}, {id:...}], so pass the id to Django
-            project.locations.add(R.map(R.prop('id'), location))
+        # Location objects come in as [{id:...}, {id:...}], so pass the id to Django
+        if any_locations:
+            project.locations.add(*R.map(R.prop('id'), locations))
 
         return UpsertProject(project=project)
 
