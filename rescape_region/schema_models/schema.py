@@ -117,7 +117,7 @@ class UserGroupStateMutation(graphene.ObjectType):
     update_group_state = UpdateGroupState.Field()
 
 
-def create_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
+def create_query_mutation_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
     """
         Creates a schema from defaults or allows overrides of any of these schemas
         Each arg if overriden must provide a dict with a query and mutation key, each pointing to the
@@ -150,7 +150,12 @@ def create_schema(user_group=None, user_group_state=None, region=None, project=N
     class Mutation(*R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), obj)):
         pass
 
-    return Schema(query=Query, mutation=Mutation)
+    schema = Schema(query=Query, mutation=Mutation)
+    return dict(query=Query, mutation=Mutation, schema=schema)
+
+
+def create_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
+    return R.prop('schema', create_query_mutation_schema(user_group, user_group_state, region, project, location))
 
 
 schema = create_schema()
