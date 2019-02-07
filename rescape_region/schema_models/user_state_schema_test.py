@@ -9,21 +9,43 @@ from rescape_python_helpers import ramda as R
 from graphene.test import Client
 from snapshottest import TestCase
 
-from rescape_region.models import Region, Project
+from rescape_region.models import Region, Project, Location
+from rescape_region.schema_models.location_schema import LocationType, location_fields
+from rescape_region.schema_models.project_schema import ProjectType, project_fields
+from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import dump_errors, create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
+from rescape_region.schema_models.user_state_schema import create_user_state_schema
 
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data, create_sample_user_state
-from .user_state_schema import graphql_query_user_states, graphql_update_or_create_user_state
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 
 schema = create_schema()
+default_class_config = dict(
+    region=dict(
+        model_class=Region,
+        graphene_class=RegionType,
+        fields=region_fields
+    ),
+    project=dict(
+        model_class=Project,
+        graphene_class=ProjectType,
+        fields=project_fields
+    ),
+    location=dict(
+        model_class=Location,
+        graphene_class=LocationType,
+        fields=location_fields
+    )
+)
+user_state_schema = create_user_state_schema(default_class_config)
+
 @pytest.mark.django_db
 class UserStateSchemaTestCase(TestCase):
     client = None
@@ -63,8 +85,12 @@ class UserStateSchemaTestCase(TestCase):
         )(self.user_states)
 
     def test_query(self):
-        quiz_model_query(self.client, graphql_query_user_states, 'userStates',
-                         dict(user=dict(id=R.prop('id', R.head(self.users)))))
+        quiz_model_query(
+            self.client,
+            R.prop('graphql_query', user_state_schema),
+            'userStates',
+            dict(user=dict(id=R.prop('id', R.head(self.users))))
+        )
 
     def test_create(self):
         # First add a new User
@@ -82,7 +108,9 @@ class UserStateSchemaTestCase(TestCase):
                     userRegions=[
                         dict(
                             # Assign the first region
-                            region=dict(key=R.prop('key', R.head(self.regions))),
+                            region=dict(
+                                key=R.prop('key', R.head(self.regions))
+                            ),
                             mapbox=dict(viewport=dict(
                                 latitude=50.5915,
                                 longitude=2.0165,
@@ -107,7 +135,7 @@ class UserStateSchemaTestCase(TestCase):
 
         quiz_model_mutation_create(
             self.client,
-            graphql_update_or_create_user_state,
+            R.prop('graphql_mutation', user_state_schema),
             'createUserState.userState',
             sample_user_state_data,
             # The second create should update, since we can only have one userState per user
@@ -160,7 +188,7 @@ class UserStateSchemaTestCase(TestCase):
 
         quiz_model_mutation_update(
             self.client,
-            graphql_update_or_create_user_state,
+            R.prop('graphql_mutation', user_state_schema),
             'createUserState.userState',
             'updateUserState.userState',
             sample_user_state_data,
