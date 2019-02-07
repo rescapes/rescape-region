@@ -17,7 +17,7 @@ from rescape_region.schema_models.schema import dump_errors, create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
-from rescape_region.schema_models.user_state_schema import create_user_state_schema
+from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data, create_sample_user_state
@@ -44,7 +44,7 @@ default_class_config = dict(
         fields=location_fields
     )
 )
-user_state_schema = create_user_state_schema(default_class_config)
+user_state_schema = create_user_state_config(default_class_config)
 
 @pytest.mark.django_db
 class UserStateSchemaTestCase(TestCase):

@@ -10,7 +10,7 @@ from rescape_region.schema_models.user_state_data_schema import UserStateDataTyp
 from rescape_python_helpers import ramda as R
 
 
-def create_user_state_schema(class_config):
+def create_user_state_config(class_config):
     """
         Creates the UserStateType based on specific class_config
     :param class_config: A dict containing class configurations. Right now it's only region in the form

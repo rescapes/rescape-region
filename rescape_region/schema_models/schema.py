@@ -15,37 +15,9 @@ from rescape_region.schema_models.group_state_schema import create_group_state_c
 from rescape_region.schema_models.location_schema import location_fields, LocationType, CreateLocation, UpdateLocation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.schema_models.user_state_schema import create_user_state_schema
+from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape-region')
-
-# We construct the Graphene GroupState class using the Region defined in this package
-group_state_schema = create_group_state_config(dict(
-    region=dict(
-        model_class=Region,
-        graphene_class=RegionType,
-        fields=region_fields
-    )
-))
-
-# We construct the Graphene GroupState class using the Region and Project defined in this package
-user_state_schema = create_user_state_schema(dict(
-    region=dict(
-        model_class=Region,
-        graphene_class=RegionType,
-        fields=region_fields
-    ),
-    project=dict(
-        model_class=Project,
-        graphene_class=ProjectType,
-        fields=project_fields
-    ),
-    location=dict(
-        model_class=Location,
-        graphene_class=LocationType,
-        fields=location_fields
-    )
-))
 
 
 class RegionQuery(ObjectType):
@@ -92,34 +64,58 @@ class LocationQuery(ObjectType):
         )
 
 
-class UserStateQuery(ObjectType):
-    user_states = graphene.List(
-        R.prop('graphene_class', user_state_schema),
-        **allowed_filter_arguments(R.prop('fields', user_state_schema), R.prop('graphene_class', user_state_schema))
-    )
-
-    @login_required
-    def resolve_user_states(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(UserState, kwargs)
-
-        return UserState.objects.filter(
-            **modified_kwargs
+def create_user_state_query(user_state_config):
+    class UserStateQuery(ObjectType):
+        user_states = graphene.List(
+            R.prop('graphene_class', user_state_config),
+            **allowed_filter_arguments(R.prop('fields', user_state_config), R.prop('graphene_class', user_state_config))
         )
 
+        @login_required
+        def resolve_user_states(self, info, **kwargs):
+            modified_kwargs = process_filter_kwargs(UserState, kwargs)
 
-class GroupStateQuery(ObjectType):
-    group_states = graphene.List(
-        R.prop('graphene_class', group_state_schema),
-        **allowed_filter_arguments(R.prop('fields', group_state_schema), R.prop('graphene_class', group_state_schema))
+            return UserState.objects.filter(
+                **modified_kwargs
+            )
+
+    return UserStateQuery
+
+
+def create_user_state_query_and_mutation_classes(class_config):
+    user_state_config = create_user_state_config(class_config)
+    return dict(
+        query=create_user_state_query(user_state_config),
+        mutation=create_user_state_mutation(user_state_config)
     )
 
-    @login_required
-    def resolve_group_states(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(GroupState, kwargs)
 
-        return R.prop('model_class', group_state_schema).objects.filter(
-            **modified_kwargs
+def create_group_state_query(group_state_config):
+
+    class GroupStateQuery(ObjectType):
+        group_states = graphene.List(
+            R.prop('graphene_class', group_state_config),
+            **allowed_filter_arguments(R.prop('fields', group_state_config),
+                                       R.prop('graphene_class', group_state_config))
         )
+
+        @login_required
+        def resolve_group_states(self, info, **kwargs):
+            modified_kwargs = process_filter_kwargs(GroupState, kwargs)
+
+            return R.prop('model_class', group_state_config).objects.filter(
+                **modified_kwargs
+            )
+
+    return GroupStateQuery
+
+
+def create_group_state_query_and_mutation_classes(class_config):
+    group_state_config = create_group_state_config(class_config)
+    return dict(
+        query=create_group_state_query(group_state_config),
+        mutation=create_group_state_mutation(group_state_config)
+    )
 
 
 class RegionMutation(graphene.ObjectType):
@@ -137,80 +133,110 @@ class LocationMutation(graphene.ObjectType):
     update_location = UpdateLocation.Field()
 
 
-class UserStateMutation(graphene.ObjectType):
-    create_group_state = R.prop('create_mutation_class', group_state_schema).Field()
-    update_group_state = R.prop('update_mutation_class', group_state_schema).Field()
+def create_user_state_mutation(user_state_config):
+    class UserStateMutation(graphene.ObjectType):
+        create_user_state = R.prop('create_mutation_class', user_state_config).Field()
+        update_user_state = R.prop('update_mutation_class', user_state_config).Field()
+
+    return UserStateMutation
 
 
-class GroupStateMutation(graphene.ObjectType):
-    create_user_state = R.prop('create_mutation_class', user_state_schema).Field()
-    update_user_state = R.prop('update_mutation_class', user_state_schema).Field()
+def create_group_state_mutation(group_state_config):
+    class GroupStateMutation(graphene.ObjectType):
+        create_user_state = R.prop('create_mutation_class', group_state_config).Field()
+        update_user_state = R.prop('update_mutation_class', group_state_config).Field()
+
+    return GroupStateMutation
 
 
-def create_query_and_mutation_classes(user=None, user_state=None, group_state=None, region=None, project=None,
-                                      location=None):
+default_class_config = dict(
+    region=dict(
+        model_class=Region,
+        graphene_class=RegionType,
+        fields=region_fields,
+        query=RegionQuery,
+        mutation=RegionMutation
+    ),
+    project=dict(
+        model_class=Project,
+        graphene_class=ProjectType,
+        fields=project_fields,
+        query=ProjectQuery,
+        mutation=ProjectMutation
+    ),
+    location=dict(
+        model_class=Location,
+        graphene_class=LocationType,
+        fields=location_fields,
+        query=LocationQuery,
+        mutation=LocationMutation
+    )
+)
+
+
+def create_query_and_mutation_classes(class_config):
     """
         Creates a Query class and Mutation classs from defaults or allows overrides of any of these schemas
         Each arg if overriden must provide a dict with a query and mutation key, each pointing to the
         override query and mutation graphene.ObjectType
-    :param user: Handles User and Group queries and mutations (defined in rescape_graphene)
-    :param user_state: Handles UserState queries and mutations. See the default UserState for an example
-    :param group_state: Handles GroupState queries and mutations. See the default GroupState for an example
-    :param region: Handles Region queries and mutations. See the default Region for an example
-    :param project: Handles Project queries and mutations. See the default Project for an example
-    :param location: Handles Location queries and mutations. See the default Location for an example
+    :param class_config: Handles User and Group queries and mutations (defined in rescape_graphene)
+    :param class_config.region: Handles Region queries and mutations. See the default Region for an example
+    :param class_config.project: Handles Project queries and mutations. See the default Project for an example
+    :param class_config.location: Handles Location queries and mutations. See the default Location for an example
     :return: A dict with query and mutation for the two dynamic classes
     """
-    obj = R.merge(
+
+    merged_class_config = R.merge(
+        default_class_config,
+        class_config
+    )
+    # We use region, project, and location to create user_state and group_state
+    # This is because user_state and group_state store settings for a user or group about those enties
+    # For instance, what regions does a group have access to or what location is selected by a user
+    user_state = create_user_state_query_and_mutation_classes(merged_class_config)
+    group_state = create_group_state_query_and_mutation_classes(merged_class_config)
+
+    query_and_mutation_class_lookups = R.merge(
+        merged_class_config,
         dict(
-            user=dict(query=GrapheneQuery, mutation=GrapheneMutation),
-            user_state=dict(query=UserStateQuery, mutation=UserStateMutation),
-            group_state=dict(query=GroupStateQuery, mutation=GroupStateMutation),
-            region=dict(query=RegionQuery, mutation=RegionMutation),
-            project=dict(query=ProjectQuery, mutation=ProjectMutation),
-            location=dict(query=LocationQuery, mutation=LocationMutation)
-        ),
-        # Any non-null arguments take precedence
-        R.compact_dict(dict(
-            user=user,
             user_state=user_state,
-            group_state=group_state,
-            region=region,
-            project=project,
-            location=location)
+            group_state=group_state
         )
     )
 
-    class Query(*R.map_with_obj_to_values(lambda k, v: R.prop('query', v), obj)):
+    class Query(GrapheneQuery,
+                *R.map_with_obj_to_values(lambda k, v: R.prop('query', v), query_and_mutation_class_lookups)):
         pass
 
-    class Mutation(*R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), obj)):
+    class Mutation(GrapheneMutation,
+                   *R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups)):
         pass
 
     return dict(query=Query, mutation=Mutation)
 
 
-def create_query_mutation_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
+def create_query_mutation_schema(class_config):
     """
         Creates a schema from defaults or allows overrides of any of these schemas
         Each arg if overridden must provide a dict with a query and mutation key, each pointing to the
         override query and mutation graphene.ObjectType
-    :param user_group: Handles User and Group queries and mutations (defined in rescape_graphene)
-    :param user_group_state: Handles UserState and GroupState queries and mutations. See the default UserState
-    and GroupState for an example
-    :param region: Handles Region queries and mutations. See the default Region for an example
-    :param project: Handles Project queries and mutations. See the default Project for an example
-    :param location: Handles Location queries and mutations. See the default Location for an example
-    :return:
+        :param class_config
+        :param class_config.user_group: Handles User and Group queries and mutations (defined in rescape_graphene)
+        :param class_config.user_group_state: Handles UserState and GroupState queries and mutations. See the default UserState
+        and GroupState for an example
+        :param class_config.region: Handles Region queries and mutations. See the default Region for an example
+        :param class_config.project: Handles Project queries and mutations. See the default Project for an example
+        :param class_config.location: Handles Location queries and mutations. See the default Location for an example
+        :return:
     """
 
-    obj = create_query_and_mutation_classes(user_group, user_group_state, region, project, location)
+    obj = create_query_and_mutation_classes(class_config)
     schema = Schema(query=R.prop('query', obj), mutation=R.prop('mutation', obj))
     return dict(query=R.prop('query', obj), mutation=R.prop('mutation', obj), schema=schema)
 
 
-def create_schema(user_group=None, user_group_state=None, region=None, project=None, location=None):
-    return R.prop('schema', create_query_mutation_schema(user_group, user_group_state, region, project, location))
+def create_schema(class_config={}):
+    return R.prop('schema', create_query_mutation_schema(class_config))
 
 
 schema = create_schema()
