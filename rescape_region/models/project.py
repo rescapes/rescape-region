@@ -22,7 +22,10 @@ class Project(SafeDeleteModel):
     geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=region_data_default)
     # The optional Region of the Project.
-    region = ForeignKey('Region', null=True, on_delete=SET_NULL)
+    # Don't create a related name. It leads Graphene to register classes by following the reverse relationship.
+    # We don't want this because we might use Region but have our own Project class. This prevents Graphene from
+    # reaching Project from Region
+    region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+',)
     # Locations in the project. It might be better in some cases to leave this empty and specify locations by queries
     locations = ManyToManyField('Location', blank=True)
 
