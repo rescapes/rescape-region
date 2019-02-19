@@ -1,8 +1,6 @@
 from rescape_python_helpers import ramda as R
 from django.db import transaction
 
-from rescape_region.models.region import Region
-
 sample_regions = [
     dict(
         key='belgium',
@@ -26,28 +24,28 @@ sample_regions = [
 
 
 @transaction.atomic
-def create_sample_region(region_dict):
+def create_sample_region(cls, region_dict):
     # Save the region with the complete data
 
-    region = Region(**region_dict)
+    region = cls(**region_dict)
     region.save()
     return region
 
 
-def delete_sample_regions():
-    Region.objects.all().delete()
+def delete_sample_regions(cls):
+    cls.objects.all().delete()
 
 
-def create_sample_regions():
+def create_sample_regions(cls):
     """
         Create sample regions
-    :param users:
+    :param cls The Region class
     :return:
     """
-    delete_sample_regions()
+    delete_sample_regions(cls)
     # Convert all sample region dicts to persisted Region instances
     # Give each reach an owner
     return R.map(
-        lambda kv: create_sample_region(kv[1]),
+        lambda kv: create_sample_region(cls, kv[1]),
         enumerate(sample_regions)
     )

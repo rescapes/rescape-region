@@ -2,6 +2,8 @@ import logging
 
 import pytest
 from rescape_graphene import client_for_testing
+
+from rescape_region.models import Region
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
@@ -22,7 +24,7 @@ class RegionSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.regions = create_sample_regions()
+        self.regions = create_sample_regions(Region)
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_regions, 'regions', dict(name='Belgium'))

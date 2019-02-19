@@ -9,7 +9,7 @@ from rescape_python_helpers import ramda as R
 from graphene.test import Client
 from snapshottest import TestCase
 
-from rescape_region.models import Region, Project, Location
+from rescape_region.models import Region, Project, Location, UserState
 from rescape_region.schema_models.location_schema import LocationType, location_fields
 from rescape_region.schema_models.project_schema import ProjectType, project_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
@@ -54,7 +54,7 @@ class UserStateSchemaTestCase(TestCase):
 
     def setUp(self):
         delete_sample_user_states()
-        self.user_states = create_sample_user_states()
+        self.user_states = create_sample_user_states(UserState, Region, Project)
         # Gather all unique sample users
         self.users = list(set(R.map(
             lambda user_state: user_state.user,

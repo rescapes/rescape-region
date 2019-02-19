@@ -4,6 +4,7 @@ import pytest
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
 
+from rescape_region.models import Region, Project, Location
 from rescape_region.schema_models.location_sample import create_sample_locations
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
@@ -29,9 +30,9 @@ class ProjectSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        regions = create_sample_regions()
-        self.projects = create_sample_projects(regions)
-        self.locations = create_sample_locations()
+        regions = create_sample_regions(Region)
+        self.projects = create_sample_projects(Project, regions)
+        self.locations = create_sample_locations(Location)
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_projects, 'projects', dict(name='Gare'))

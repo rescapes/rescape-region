@@ -1,7 +1,6 @@
 from rescape_python_helpers import ramda as R
 from django.db import transaction
 
-from rescape_region.models import Project
 
 sample_projects = [
     dict(
@@ -26,28 +25,29 @@ sample_projects = [
 
 
 @transaction.atomic
-def create_sample_project(region, project_dict):
+def create_sample_project(cls, region, project_dict):
     # Save the project with the complete data
 
-    project = Project(region=region, **project_dict)
+    project = cls(region=region, **project_dict)
     project.save()
     return project
 
 
-def delete_sample_projects():
-    Project.objects.all().delete()
+def delete_sample_projects(cls):
+    cls.objects.all().delete()
 
 
-def create_sample_projects(regions):
+def create_sample_projects(cls, regions):
     """
         Create sample projects
+    :param cls: The Project class
     :param regions: Assign a region to each project
     :return:
     """
-    delete_sample_projects()
+    delete_sample_projects(cls)
     # Convert all sample project dicts to persisted Project instances
     # Give each reach an owner
     return R.map(
-        lambda kv: create_sample_project(regions[R.modulo(kv[0], R.length(regions))], kv[1]),
+        lambda kv: create_sample_project(cls, regions[R.modulo(kv[0], R.length(regions))], kv[1]),
         enumerate(sample_projects)
     )

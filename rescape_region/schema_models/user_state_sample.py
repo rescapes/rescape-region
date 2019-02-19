@@ -65,9 +65,10 @@ def delete_sample_user_states():
 
 
 @R.curry
-def create_sample_user_state(regions, projects, user_state_dict):
+def create_sample_user_state(cls, regions, projects, user_state_dict):
     """
     Persists sample user state data into a UserState
+    :param cls: The UserState class
     :param {[Region]} regions: Persisted sample regions
     :param {[Projects]} projects: Persisted sample projects
     :param user_state_dict: Sample data in the form: dict(
@@ -105,7 +106,7 @@ def create_sample_user_state(regions, projects, user_state_dict):
         )
     )
     # Save the user_state with the complete data
-    user_state = UserState(**user_state_values)
+    user_state = cls(**user_state_values)
     user_state.save()
     return user_state
 
@@ -179,20 +180,20 @@ def form_sample_user_state_data(regions, projects, data):
     )
 
 
-def create_sample_user_states():
+def create_sample_user_states(cls, region_cls, project_cls):
     """
         Creates sample persisted users that contain references to persisted regions
     :return:
     """
     create_sample_users()
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
-    regions = create_sample_regions()
-    projects = create_sample_projects(regions)
+    regions = create_sample_regions(region_cls)
+    projects = create_sample_projects(project_cls, regions)
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user
     user_states = R.map(
-        lambda sample_user_state: create_sample_user_state(regions, projects, sample_user_state),
+        lambda sample_user_state: create_sample_user_state(cls, regions, projects, sample_user_state),
         sample_user_states
     )
     return user_states
