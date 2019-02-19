@@ -42,6 +42,10 @@ def region_data_default():
     return dict()
 
 
+def project_data_default():
+    return dict()
+
+
 def user_state_data_default():
     return dict()
 

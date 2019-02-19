@@ -1,12 +1,12 @@
-from django.db import models
 from django.db.models import (
     CharField,
     DateTimeField, ForeignKey, ManyToManyField)
 from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import Model, SET_DEFAULT, SET_NULL
+from django.contrib.gis.db.models import SET_NULL
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.model_helpers import region_data_default, feature_collection_default
+from rescape_region.model_helpers import feature_collection_default, project_data_default
+
 
 class Project(SafeDeleteModel):
     """
@@ -20,7 +20,7 @@ class Project(SafeDeleteModel):
     updated_at = DateTimeField(auto_now=True)
     # TODO probably unneeded. Locations have geojson
     geojson = JSONField(null=False, default=feature_collection_default)
-    data = JSONField(null=False, default=region_data_default)
+    data = JSONField(null=False, default=project_data_default)
     # The optional Region of the Project.
     # Don't create a related name. It leads Graphene to register classes by following the reverse relationship.
     # We don't want this because we might use Region but have our own Project class. This prevents Graphene from
