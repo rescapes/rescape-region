@@ -10,14 +10,30 @@ from rescape_python_helpers import ramda as R
 from graphene import ObjectType, Schema
 from graphql_jwt.decorators import login_required
 from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
-from rescape_region.models import Region, UserState, GroupState, Project, Location
+from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
 from rescape_region.schema_models.group_state_schema import create_group_state_config
 from rescape_region.schema_models.location_schema import location_fields, LocationType, CreateLocation, UpdateLocation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
+from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape-region')
+
+
+class SettingsQuery(ObjectType):
+    settings = graphene.List(
+        SettingsType,
+        **allowed_filter_arguments(settings_fields, RegionType)
+    )
+
+    @login_required
+    def resolve_settings(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(Settings, kwargs)
+
+        return Settings.objects.filter(
+            **modified_kwargs
+        )
 
 
 class RegionQuery(ObjectType):
@@ -91,7 +107,6 @@ def create_user_state_query_and_mutation_classes(class_config):
 
 
 def create_group_state_query(group_state_config):
-
     class GroupStateQuery(ObjectType):
         group_states = graphene.List(
             R.prop('graphene_class', group_state_config),
@@ -116,6 +131,11 @@ def create_group_state_query_and_mutation_classes(class_config):
         query=create_group_state_query(group_state_config),
         mutation=create_group_state_mutation(group_state_config)
     )
+
+
+class SettingsMutation(graphene.ObjectType):
+    create_settings = CreateSettings.Field()
+    update_settings = UpdateSettings.Field()
 
 
 class RegionMutation(graphene.ObjectType):
@@ -150,6 +170,13 @@ def create_group_state_mutation(group_state_config):
 
 
 default_class_config = dict(
+    settings=dict(
+        model_class=Settings,
+        graphene_class=SettingsType,
+        fields=settings_fields,
+        query=SettingsQuery,
+        mutation=SettingsMutation
+    ),
     region=dict(
         model_class=Region,
         graphene_class=RegionType,
@@ -204,12 +231,14 @@ def create_query_and_mutation_classes(class_config):
         )
     )
 
-    class Query(GrapheneQuery,
-                *R.map_with_obj_to_values(lambda k, v: R.prop('query', v), query_and_mutation_class_lookups)):
+    class Query(
+        GrapheneQuery,
+        *R.map_with_obj_to_values(lambda k, v: R.prop('query', v), query_and_mutation_class_lookups)):
         pass
 
-    class Mutation(GrapheneMutation,
-                   *R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups)):
+    class Mutation(
+        GrapheneMutation,
+        *R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups)):
         pass
 
     return dict(query=Query, mutation=Mutation)

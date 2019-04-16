@@ -3,8 +3,6 @@ from rescape_graphene import resolver_for_dict_field, \
     resolver_for_dict_list, model_resolver_for_dict_field, type_modify_fields
 from graphene import ObjectType, Float, List, Field, Int, Boolean
 
-from rescape_region.schema_models.location_schema import LocationType
-
 viewport_data_fields = dict(
     latitude=dict(type=Float),
     longitude=dict(type=Float),

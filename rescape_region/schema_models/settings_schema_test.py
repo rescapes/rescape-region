@@ -1,0 +1,91 @@
+import logging
+
+import pytest
+from rescape_graphene import client_for_testing
+
+from rescape_region.models.settings import Settings
+from rescape_region.schema_models.schema import create_schema
+from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+    quiz_model_mutation_update
+from rescape_region.schema_models.setttings_sample import create_sample_settings_sets
+from rescape_region.schema_models.user_sample import create_sample_users
+from .settings_schema import graphql_query_settings, graphql_update_or_create_settings
+from snapshottest import TestCase
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+omit_props = ['createdAt', 'updatedAt']
+
+schema = create_schema()
+
+
+@pytest.mark.django_db
+class SettingsSchemaTestCase(TestCase):
+    client = None
+
+    def setUp(self):
+        users = create_sample_users()
+        self.client = client_for_testing(schema, users[0])
+        self.settings = create_sample_settings_sets(Settings)
+
+    def test_query(self):
+        quiz_model_query(self.client, graphql_query_settings, 'settings', dict(key='global'))
+
+    def test_create(self):
+        quiz_model_mutation_create(
+            self.client, graphql_update_or_create_settings, 'createSettings.settings',
+            dict(key='mars',
+                 data=dict(
+                     domain='localhost',
+                     api=dict(
+                         protocol='http',
+                         host='localhost',
+                         port='8008',
+                         path='/graphql/'
+                     ),
+                     overpass=dict(
+                         cellSize=100,
+                         sleepBetweenCalls=1000
+                     ),
+                     mapbox=dict(
+                         viewport={},
+                     )
+                 )
+                 )
+        )
+
+    def test_update(self):
+        quiz_model_mutation_update(
+            self.client,
+            graphql_update_or_create_settings,
+            'createSettings.settings',
+            'updateSettings.settings',
+            dict(
+                key='mars',
+                data=dict(
+                    domain='localhost',
+                    api=dict(
+                        protocol='http',
+                        host='localhost',
+                        port='8008',
+                        path='/graphql/'
+                    ),
+                    overpass=dict(
+                        cellSize=100,
+                        sleepBetweenCalls=1000
+                    ),
+                    mapbox=dict(
+                        viewport={},
+                    )
+                )
+            ),
+            # Update the coords
+            dict(
+                data=dict(
+                    domain='alienhost',
+                    api=dict(
+                        host='alienhost',
+                    )
+                )
+            )
+        )
