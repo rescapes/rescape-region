@@ -34,24 +34,25 @@ class SettingsSchemaTestCase(TestCase):
     def test_create(self):
         quiz_model_mutation_create(
             self.client, graphql_update_or_create_settings, 'createSettings.settings',
-            dict(key='mars',
-                 data=dict(
-                     domain='localhost',
-                     api=dict(
-                         protocol='http',
-                         host='localhost',
-                         port='8008',
-                         path='/graphql/'
-                     ),
-                     overpass=dict(
-                         cellSize=100,
-                         sleepBetweenCalls=1000
-                     ),
-                     mapbox=dict(
-                         viewport={},
-                     )
-                 )
-                 )
+            dict(
+                key='mars',
+                data=dict(
+                    domain='localhost',
+                    api=dict(
+                        protocol='http',
+                        host='localhost',
+                        port='8008',
+                        path='/graphql/'
+                    ),
+                    overpass=dict(
+                        cellSize=100,
+                        sleepBetweenCalls=1000
+                    ),
+                    mapbox=dict(
+                        viewport={},
+                    )
+                )
+            )
         )
 
     def test_update(self):

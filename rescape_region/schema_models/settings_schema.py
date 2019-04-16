@@ -13,6 +13,7 @@ from rescape_region.models.settings import Settings
 from .settings_data_schema import SettingsDataType, settings_data_fields
 
 raw_settings_fields = dict(
+    id=dict(create=DENY, update=REQUIRE),
     key=dict(create=REQUIRE),
     # This refers to the SettingsDataType, which is a representation of all the json fields of Settings.data
     data=dict(graphene_type=SettingsDataType, fields=settings_data_fields, default=lambda: dict()),
