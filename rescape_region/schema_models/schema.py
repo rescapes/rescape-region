@@ -268,7 +268,6 @@ def create_schema(class_config={}):
     return R.prop('schema', create_query_mutation_schema(class_config))
 
 
-schema = create_schema()
 
 
 def dump_errors(result):
