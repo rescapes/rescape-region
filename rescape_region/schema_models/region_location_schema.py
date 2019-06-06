@@ -13,12 +13,12 @@ from rescape_graphene.schema_models.geojson.types.feature_collection import feat
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
-from rescape_region.models import Location
+from rescape_region.models import RegionLocation
 from .location_data_schema import RegionLocationDataType, region_location_data_fields
 
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(RegionLocation, None, 'key')),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
@@ -32,23 +32,23 @@ raw_location_fields = dict(
 )
 
 
-class LocationType(DjangoObjectType):
+class RegionLocationType(DjangoObjectType):
 
     class Meta:
-        model = Location
+        model = RegionLocation
 
 
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-LocationType._meta.fields['data'] = Field(RegionLocationDataType, resolver=resolver_for_dict_field)
+RegionLocationType._meta.fields['data'] = Field(RegionLocationDataType, resolver=resolver_for_dict_field)
 
 # Modify the geojson field to use the geometry collection resolver
-LocationType._meta.fields['geojson'] = Field(
+RegionLocationType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
     resolver=resolver_for_dict_field
 )
-location_fields = merge_with_django_properties(LocationType, raw_location_fields)
+location_fields = merge_with_django_properties(RegionLocationType, raw_location_fields)
 
 location_mutation_config = dict(
     class_name='Location',
@@ -64,7 +64,7 @@ class UpsertLocation(Mutation):
     """
         Abstract base class for mutation
     """
-    location = Field(LocationType)
+    location = Field(RegionLocationType)
 
     @transaction.atomic
     @login_required
@@ -73,7 +73,7 @@ class UpsertLocation(Mutation):
         if R.has('id', location_data) and R.has('data', location_data):
             # New data gets priority, but this is a deep merge.
             location_data['data'] = R.merge_deep(
-                Location.objects.get(id=location_data['id']).data,
+                RegionLocation.objects.get(id=location_data['id']).data,
                 location_data['data']
             )
 
@@ -81,7 +81,7 @@ class UpsertLocation(Mutation):
         modified_location_data = enforce_unique_props(location_fields, location_data)
         update_or_create_values = input_type_parameters_for_update_or_create(location_fields, modified_location_data)
 
-        location, created = Location.objects.update_or_create(**update_or_create_values)
+        location, created = RegionLocation.objects.update_or_create(**update_or_create_values)
         return UpsertLocation(location=location)
 
 
@@ -92,7 +92,7 @@ class CreateLocation(UpsertLocation):
 
     class Arguments:
         location_data = type('CreateLocationInputType', (InputObjectType,),
-                           input_type_fields(location_fields, CREATE, LocationType))(required=True)
+                             input_type_fields(location_fields, CREATE, RegionLocationType))(required=True)
 
 
 class UpdateLocation(UpsertLocation):
@@ -102,8 +102,8 @@ class UpdateLocation(UpsertLocation):
 
     class Arguments:
         location_data = type('UpdateLocationInputType', (InputObjectType,),
-                           input_type_fields(location_fields, UPDATE, LocationType))(required=True)
+                             input_type_fields(location_fields, UPDATE, RegionLocationType))(required=True)
 
 
-graphql_update_or_create_location = graphql_update_or_create(location_mutation_config, location_fields)
-graphql_query_locations = graphql_query(LocationType, location_fields, 'locations')
+graphql_update_or_create_region_location = graphql_update_or_create(location_mutation_config, location_fields)
+graphql_query_region_locations = graphql_query(RegionLocationType, location_fields, 'locations')

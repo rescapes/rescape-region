@@ -10,9 +10,9 @@ from rescape_python_helpers import ramda as R
 from graphene import ObjectType, Schema
 from graphql_jwt.decorators import login_required
 from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
-from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
+from rescape_region.models import Region, UserState, GroupState, Project, RegionLocation, Settings
 from rescape_region.schema_models.group_state_schema import create_group_state_config
-from rescape_region.schema_models.location_schema import location_fields, LocationType, CreateLocation, UpdateLocation
+from rescape_region.schema_models.location_schema import location_fields, RegionLocationType, CreateLocation, UpdateLocation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
@@ -67,15 +67,15 @@ class ProjectQuery(ObjectType):
 
 class LocationQuery(ObjectType):
     locations = graphene.List(
-        LocationType,
-        **allowed_filter_arguments(location_fields, LocationType)
+        RegionLocationType,
+        **allowed_filter_arguments(location_fields, RegionLocationType)
     )
 
     @login_required
     def resolve_locations(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(Location, kwargs)
+        modified_kwargs = process_filter_kwargs(RegionLocation, kwargs)
 
-        return Location.objects.filter(
+        return RegionLocation.objects.filter(
             **modified_kwargs
         )
 
@@ -192,8 +192,8 @@ default_class_config = dict(
         mutation=ProjectMutation
     ),
     location=dict(
-        model_class=Location,
-        graphene_class=LocationType,
+        model_class=RegionLocation,
+        graphene_class=RegionLocationType,
         fields=location_fields,
         query=LocationQuery,
         mutation=LocationMutation

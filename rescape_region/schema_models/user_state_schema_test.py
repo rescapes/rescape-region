@@ -9,8 +9,8 @@ from rescape_python_helpers import ramda as R
 from graphene.test import Client
 from snapshottest import TestCase
 
-from rescape_region.models import Region, Project, Location, UserState
-from rescape_region.schema_models.location_schema import LocationType, location_fields
+from rescape_region.models import Region, Project, RegionLocation, UserState
+from rescape_region.schema_models.location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.project_schema import ProjectType, project_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import dump_errors, create_schema
@@ -39,8 +39,8 @@ default_class_config = dict(
         fields=project_fields
     ),
     location=dict(
-        model_class=Location,
-        graphene_class=LocationType,
+        model_class=RegionLocation,
+        graphene_class=RegionLocationType,
         fields=location_fields
     )
 )

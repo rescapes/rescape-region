@@ -1,7 +1,7 @@
 from rescape_python_helpers import ramda as R
 from django.db import transaction
 
-sample_locations = [
+sample_region_locations = [
     dict(
         key='grandPlace',
         name='Grand Place',
@@ -42,7 +42,7 @@ sample_locations = [
 
 
 @transaction.atomic
-def create_sample_location(cls, location_dict):
+def create_sample_region_location(cls, location_dict):
     # Save the location with the complete data
 
     location = cls(**location_dict)
@@ -50,20 +50,20 @@ def create_sample_location(cls, location_dict):
     return location
 
 
-def delete_sample_locations(cls):
+def delete_sample_region_locations(cls):
     cls.objects.all().delete()
 
 
-def create_sample_locations(cls):
+def create_sample_region_locations(cls):
     """
         Create sample locations
     :param cls: THe Location class
     :return:
     """
-    delete_sample_locations(cls)
+    delete_sample_region_locations(cls)
     # Convert all sample location dicts to persisted Location instances
     # Give each reach an owner
     return R.map(
-        lambda kv: create_sample_location(cls, kv[1]),
-        enumerate(sample_locations)
+        lambda kv: create_sample_region_location(cls, kv[1]),
+        enumerate(sample_region_locations)
     )

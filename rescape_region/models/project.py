@@ -6,6 +6,7 @@ from django.contrib.gis.db.models import SET_NULL
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import feature_collection_default, project_data_default
+from rescape_region.models.region_location import RegionLocation
 
 
 class Project(SafeDeleteModel):
@@ -27,7 +28,7 @@ class Project(SafeDeleteModel):
     # reaching Project from Region
     region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+',)
     # Locations in the project. It might be better in some cases to leave this empty and specify locations by queries
-    locations = ManyToManyField('Location', blank=True)
+    locations = ManyToManyField(RegionLocation, blank=True)
 
     class Meta:
         app_label = "rescape_region"

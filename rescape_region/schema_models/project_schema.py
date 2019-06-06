@@ -15,7 +15,7 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.project import Project
-from rescape_region.schema_models.location_schema import LocationType, location_fields
+from rescape_region.schema_models.location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
 
@@ -34,7 +34,7 @@ raw_project_fields = dict(
     ),
     region=dict(graphene_type=RegionType, fields=region_fields),
     locations=dict(
-        graphene_type=LocationType,
+        graphene_type=RegionLocationType,
         fields=location_fields,
         type_modifier=lambda *type_and_args: List(*type_and_args)
     )
