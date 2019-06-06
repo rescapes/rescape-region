@@ -1,21 +1,16 @@
-from copy import deepcopy
-
-import graphene
 from django.db import transaction
-from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 from graphene import InputObjectType, Mutation, Field, List
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, type_modify_fields
-from rescape_graphene.graphql_helpers.json_field_helpers import apply_type
+    DENY, FeatureCollectionDataType, resolver_for_dict_field
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.project import Project
-from rescape_region.schema_models.location_schema import RegionLocationType, location_fields
+from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
 

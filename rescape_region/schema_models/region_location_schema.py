@@ -14,7 +14,7 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models import RegionLocation
-from .location_data_schema import RegionLocationDataType, region_location_data_fields
+from .region_location_data_schema import RegionLocationDataType, region_location_data_fields
 
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
