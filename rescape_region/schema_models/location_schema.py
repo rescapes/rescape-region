@@ -14,7 +14,7 @@ from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models import Location
-from .location_data_schema import LocationDataType, location_data_fields
+from .location_data_schema import RegionLocationDataType, region_location_data_fields
 
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
@@ -22,8 +22,8 @@ raw_location_fields = dict(
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
-    # This refers to the LocationDataType, which is a representation of all the json fields of Location.data
-    data=dict(graphene_type=LocationDataType, fields=location_data_fields, default=lambda: dict()),
+    # This refers to the RegionLocationDataType, which is a representation of all the json fields of Location.data
+    data=dict(graphene_type=RegionLocationDataType, fields=region_location_data_fields, default=lambda: dict()),
     # This is the OSM geojson
     geojson=dict(
         graphene_type=FeatureCollectionDataType,
@@ -41,7 +41,7 @@ class LocationType(DjangoObjectType):
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-LocationType._meta.fields['data'] = Field(LocationDataType, resolver=resolver_for_dict_field)
+LocationType._meta.fields['data'] = Field(RegionLocationDataType, resolver=resolver_for_dict_field)
 
 # Modify the geojson field to use the geometry collection resolver
 LocationType._meta.fields['geojson'] = Field(
