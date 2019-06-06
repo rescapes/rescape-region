@@ -12,7 +12,8 @@ from graphql_jwt.decorators import login_required
 from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
 from rescape_region.models import Region, UserState, GroupState, Project, RegionLocation, Settings
 from rescape_region.schema_models.group_state_schema import create_group_state_config
-from rescape_region.schema_models.location_schema import location_fields, RegionLocationType, CreateLocation, UpdateLocation
+from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
+    UpdateLocation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
@@ -266,8 +267,6 @@ def create_query_mutation_schema(class_config):
 
 def create_schema(class_config={}):
     return R.prop('schema', create_query_mutation_schema(class_config))
-
-
 
 
 def dump_errors(result):
