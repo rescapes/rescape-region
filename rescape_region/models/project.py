@@ -32,7 +32,7 @@ class Project(SafeDeleteModel):
     locations = ManyToManyField(RegionLocation, blank=True)
 
     # Projects must be owned by someone
-    user = ForeignKey(get_user_model(), on_delete=CASCADE)
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='+',)
 
     class Meta:
         app_label = "rescape_region"
