@@ -6,11 +6,10 @@ from django.contrib.auth.hashers import make_password
 from rescape_graphene import client_for_testing
 
 from rescape_python_helpers import ramda as R
-from graphene.test import Client
 from snapshottest import TestCase
 
 from rescape_region.models import Region, Project, RegionLocation, UserState
-from rescape_region.schema_models.location_schema import RegionLocationType, location_fields
+from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.project_schema import ProjectType, project_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import dump_errors, create_schema
@@ -91,6 +90,7 @@ class UserStateSchemaTestCase(TestCase):
             'userStates',
             dict(user=dict(id=R.prop('id', R.head(self.users))))
         )
+
 
     def test_create(self):
         # First add a new User

@@ -5,7 +5,8 @@ from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Region, Project, RegionLocation
-from rescape_region.schema_models.location_sample import create_sample_locations
+
+from rescape_region.schema_models.region_location_sample import create_sample_region_locations
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
@@ -23,16 +24,17 @@ omit_props = ['createdAt', 'updatedAt']
 
 schema = create_schema()
 
+
 @pytest.mark.django_db
 class ProjectSchemaTestCase(TestCase):
     client = None
 
     def setUp(self):
-        users = create_sample_users()
-        self.client = client_for_testing(schema, users[0])
+        self.users = create_sample_users()
+        self.client = client_for_testing(schema, self.users[0])
         regions = create_sample_regions(Region)
-        self.projects = create_sample_projects(Project, regions)
-        self.locations = create_sample_locations(RegionLocation)
+        self.projects = create_sample_projects(Project, self.users, regions)
+        self.locations = create_sample_region_locations(RegionLocation)
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_projects, 'projects', dict(name='Gare'))
@@ -58,6 +60,7 @@ class ProjectSchemaTestCase(TestCase):
                 },
                 data=dict(),
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
+                user=R.pick(['id'], R.head(self.users)),
             ), dict(key='carre1'))
 
     def test_update(self):
@@ -84,6 +87,7 @@ class ProjectSchemaTestCase(TestCase):
                 },
                 data=dict(),
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
+                user=R.pick(['id'], R.head(self.users)),
             ),
             # Update the coords and limit to one location
             dict(

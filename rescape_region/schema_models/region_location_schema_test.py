@@ -26,7 +26,7 @@ class LocationSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.locations = create_sample_locations(RegionLocation)
+        self.locations = create_sample_region_locations(RegionLocation)
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_region_locations, 'locations', dict(name='Grand Place'))

@@ -4,7 +4,7 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
@@ -32,12 +32,16 @@ raw_project_fields = dict(
         graphene_type=RegionLocationType,
         fields=location_fields,
         type_modifier=lambda *type_and_args: List(*type_and_args)
-    )
+    ),
+    # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
+    # support our Mutation subclasses and query_argument generation
+    # For simplicity we limit fields to id. Mutations can only use id, and a query doesn't need other
+    # details of the User--it can query separately for that
+    user=dict(graphene_type=UserType, fields=user_fields),
 )
 
 
 class ProjectType(DjangoObjectType):
-
     class Meta:
         model = Project
 
@@ -111,7 +115,7 @@ class CreateProject(UpsertProject):
 
     class Arguments:
         project_data = type('CreateProjectInputType', (InputObjectType,),
-                           input_type_fields(project_fields, CREATE, ProjectType))(required=True)
+                            input_type_fields(project_fields, CREATE, ProjectType))(required=True)
 
 
 class UpdateProject(UpsertProject):
@@ -121,7 +125,7 @@ class UpdateProject(UpsertProject):
 
     class Arguments:
         project_data = type('UpdateProjectInputType', (InputObjectType,),
-                           input_type_fields(project_fields, UPDATE, ProjectType))(required=True)
+                            input_type_fields(project_fields, UPDATE, ProjectType))(required=True)
 
 
 graphql_update_or_create_project = graphql_update_or_create(project_mutation_config, project_fields)
