@@ -19,7 +19,7 @@ from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 
-logger = logging.getLogger('rescape-region')
+logger = logging.getLogger('rescape_region')
 
 
 class SettingsQuery(ObjectType):
@@ -277,6 +277,6 @@ def dump_errors(result):
     """
     if R.has('errors', result):
         for error in result['errors']:
-            logger.error(format_error(error))
+            logger.exception(format_error(error))
             if 'stack' in error:
                 traceback.print_tb(error['stack'], limit=10, file=sys.stderr)

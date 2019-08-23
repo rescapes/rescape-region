@@ -40,7 +40,7 @@ Add the following to the bottom $VIRTUAL_ENV/bin/activate to setup the PYTHONPAT
 Replace the path with your code directory
 
 ```bash
-export RESCAPE_REGION_BASE_DIR=/Users/andy/code/rescape-graphene
+export RESCAPE_REGION_BASE_DIR=/Users/andy/code/rescape-region
 export RESCAPE_REGION_PROJECT_DIR=$RESCAPE_REGION_BASE_DIR/urbinsight
 export PYTHONPATH=.:$RESCAPE_REGION_BASE_DIR:$RESCAPE_REGION_PROJECT_DIR
 ```

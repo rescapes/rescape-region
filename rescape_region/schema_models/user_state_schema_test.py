@@ -12,7 +12,7 @@ from rescape_region.models import Region, Project, RegionLocation, UserState
 from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.project_schema import ProjectType, project_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
-from rescape_region.schema_models.schema import dump_errors, create_schema
+from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
@@ -44,6 +44,7 @@ default_class_config = dict(
     )
 )
 user_state_schema = create_user_state_config(default_class_config)
+
 
 @pytest.mark.django_db
 class UserStateSchemaTestCase(TestCase):
@@ -91,7 +92,6 @@ class UserStateSchemaTestCase(TestCase):
             dict(user=dict(id=R.prop('id', R.head(self.users))))
         )
 
-
     def test_create(self):
         # First add a new User
         margay = dict(username="margay", first_name='Upa', last_name='Tree',
@@ -105,6 +105,13 @@ class UserStateSchemaTestCase(TestCase):
                 self.regions,
                 self.projects,
                 dict(
+                    userGlobal=dict(
+                        mapbox=dict(viewport=dict(
+                            latitude=50.5915,
+                            longitude=2.0165,
+                            zoom=7
+                        ))
+                    ),
                     userRegions=[
                         dict(
                             # Assign the first region

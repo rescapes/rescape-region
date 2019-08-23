@@ -129,7 +129,7 @@ TEMPLATES = [
     },
 ]
 
-LOG_PATH = os.path.join(BASE_DIR, "log/")
+LOG_PATH = '/usr/local/var/log/'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -142,13 +142,13 @@ LOGGING = {
         'django_error': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_PATH, "django_error.log"),
+            'filename': os.path.join(LOG_PATH, "rescape_region_django_error.log"),
             'formatter': 'standard'
         },
         'django_info': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_PATH, "django_info.log"),
+            'filename': os.path.join(LOG_PATH, "rescape_region_django_info.log"),
             'formatter': 'standard'
         },
         'console': {
@@ -182,19 +182,19 @@ LOGGING = {
             'propagate': True
         },
         'graphene': {
-            'handlers': ['django_info', 'console'],
+            'handlers': ['django_error', 'console'],
             'propagate': True,
-            'level': 'INFO',
+            'level': 'WARNING',
         },
         'graphql': {
-            'handlers': ['django_info', 'console'],
+            'handlers': ['django_error', 'console'],
             'propagate': True,
-            'level': 'INFO',
+            'level': 'WARNING',
         },
-        'rescape_graphene': {
+        'rescape_region': {
             'handlers': ['django_info', 'console'],
             'propagate': True,
-            'level': 'DEBUG',
+            'level': 'WARNING',
         }
     },
 }
@@ -207,7 +207,8 @@ AUTHENTICATION_BACKENDS = [
 GRAPHENE = {
     'SCHEMA': 'rescape_region.schema_models.schema_creator.schema',
     'MIDDLEWARE': [
-        'graphql_jwt.middleware.JSONWebTokenMiddleware'
+        'graphql_jwt.middleware.JSONWebTokenMiddleware',
+        'rescape_region.middleware.debug_middleware.DebugMiddleware'
     ]
 }
 

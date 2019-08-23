@@ -33,6 +33,29 @@ MapboxDataType = type(
 )
 
 
+def user_global_data_fields(class_config):
+    return {
+        # The mapbox state for the user's Global settings
+        'mapbox':dict(
+            type=MapboxDataType,
+            graphene_type=MapboxDataType,
+            fields=mapbox_data_fields,
+            type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        ),
+    }
+
+
+# References the Global instance, dictating settings imposed on or chosen by a user globally
+# to which they have some level of access. This also adds settings like mapbox that are particular to the User's use
+# of the Region but that the Region itself doesn't care about
+def UserGlobalDataType(class_config):
+    return type(
+        'UserGlobalDataType',
+        (ObjectType,),
+        type_modify_fields(user_global_data_fields(class_config))
+    )
+
+
 def user_region_data_fields(class_config):
     region_class_config = R.prop('region', class_config)
     location_class_config = R.prop('location', class_config)
@@ -117,6 +140,12 @@ def UserProjectDataType(class_config):
 # User State for their use of Regions, Projects, etc
 def user_state_data_fields(class_config):
     return dict(
+        userGlobal=dict(
+            type=UserGlobalDataType(class_config),
+            graphene_type=UserGlobalDataType(class_config),
+            fields=user_global_data_fields(class_config),
+            type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
+        ),
         userRegions=dict(
             type=UserRegionDataType(class_config),
             graphene_type=UserRegionDataType(class_config),

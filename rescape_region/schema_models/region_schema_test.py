@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 omit_props = ['createdAt', 'updatedAt']
 
 schema = create_schema()
+
+
 @pytest.mark.django_db
 class RegionSchemaTestCase(TestCase):
     client = None
@@ -52,6 +54,14 @@ class RegionSchemaTestCase(TestCase):
                     locations=dict(
                         params=dict(
                             city='Luxembourg City'
+                        )
+                    ),
+                    # Optional default mapbox settings for the region
+                    mapbox=dict(
+                        viewport=dict(
+                            latitude=51.4750237087,
+                            longitude=6.15665815596,
+                            zoom=7
                         )
                     )
                 )

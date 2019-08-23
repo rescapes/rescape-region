@@ -10,6 +10,13 @@ sample_user_states = [
     dict(
         username="lion",  # This is converted to a user=persisted User
         data=dict(
+            userGlobal=dict(
+                mapbox=dict(viewport=dict(
+                    latitude=50.5915,
+                    longitude=2.0165,
+                    zoom=7
+                )),
+            ),
             userRegions=[
                 dict(
                     region=dict(key='belgium'),  # key is converted to persisted Region's id
@@ -35,6 +42,13 @@ sample_user_states = [
     dict(
         username="cat",  # This is converted to a user=persisted User
         data=dict(
+            userGlobal=dict(
+                mapbox=dict(viewport=dict(
+                    latitude=50.5915,
+                    longitude=2.0165,
+                    zoom=7
+                )),
+            ),
             userRegions=[
                 dict(
                     region=dict(key='belgium'),  # key is converted to persisted Region's id

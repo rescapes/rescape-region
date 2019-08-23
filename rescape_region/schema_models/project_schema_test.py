@@ -60,7 +60,7 @@ class ProjectSchemaTestCase(TestCase):
                 },
                 data=dict(),
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
-                user=R.pick(['id'], R.head(self.users)),
+                user=R.pick(['id'], R.head(self.users).__dict__),
             ), dict(key='carre1'))
 
     def test_update(self):
@@ -87,7 +87,7 @@ class ProjectSchemaTestCase(TestCase):
                 },
                 data=dict(),
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
-                user=R.pick(['id'], R.head(self.users)),
+                user=R.pick(['id'], R.head(self.users).__dict__),
             ),
             # Update the coords and limit to one location
             dict(
