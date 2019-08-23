@@ -277,6 +277,15 @@ def dump_errors(result):
     """
     if R.has('errors', result):
         for error in result['errors']:
+            logging.exception(traceback)
+            if hasattr(error, 'stack'):
+                # Syncrounous calls or something
+                # See https://github.com/graphql-python/graphql-core/issues/237
+                tb = error['stack']
+            else:
+                # Promises
+                tb = error.__traceback__
+            formatted_tb = traceback.format_tb(tb)
+            error.stack = error.__traceback__
+            # This hopefully includes the traceback
             logger.exception(format_error(error))
-            if 'stack' in error:
-                traceback.print_tb(error['stack'], limit=10, file=sys.stderr)
