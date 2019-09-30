@@ -53,7 +53,7 @@ class ResourceSchemaTestCase(TestCase):
                     sample_settings,
                     dict(
                         material='Candy',
-                        raw_data=[
+                        rawData=[
                             'Other Global Imports;Shipments, location generalized;51.309933, 3.055030;Source;22,469,843',
                             'Knauf (Danilith) BE;Waregemseweg 156-142 9790 Wortegem-Petegem, Belgium;50.864762, 3.479308;Conversion;657,245',
                             "MPRO Bruxelles;Avenue du Port 67 1000 Bruxelles, Belgium;50.867486, 4.352543;Distribution;18,632",
@@ -76,14 +76,15 @@ class ResourceSchemaTestCase(TestCase):
             graphql_update_or_create_resource,
             'createResource.resource',
             'updateResource.resource',
-            values=dict(
+            dict(
+                key='candy',
                 name='Candy',
                 region=dict(id=R.head(self.regions).id),
                 data=R.merge(
                     sample_settings,
                     dict(
                         material='Candy',
-                        raw_data=[
+                        rawData=[
                             'Other Global Imports;Shipments, location generalized;51.309933, 3.055030;Source;22,469,843',
                             'Knauf (Danilith) BE;Waregemseweg 156-142 9790 Wortegem-Petegem, Belgium;50.864762, 3.479308;Conversion;657,245',
                             "MPRO Bruxelles;Avenue du Port 67 1000 Bruxelles, Belgium;50.867486, 4.352543;Distribution;18,632",
@@ -97,5 +98,9 @@ class ResourceSchemaTestCase(TestCase):
                         ]
                     )
                 )
+            ),
+            dict(
+                key='popcorn',
+                name='Popcorn'
             )
         )

@@ -29,7 +29,8 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     # support our Mutation subclasses and query_argument generation
     # For simplicity we limit fields to id. Mutations can only us id, and a query doesn't need other
     # details of the resource--it can query separately for that
-    region=dict(graphene_type=RegionType, fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))))
+    region=dict(graphene_type=RegionType,
+                fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))))
 ))
 
 # Modify data field to use the resolver.
@@ -76,7 +77,13 @@ class UpsertResource(Mutation):
         # Make sure that all props are unique that must be, either by modifying values or erring.
         modified_resource_data = enforce_unique_props(resource_fields, resource_data)
         update_or_create_values = input_type_parameters_for_update_or_create(resource_fields, modified_resource_data)
-        update_or_create_values_with_sankey_data = add_sankey_graph_to_resource_dict(update_or_create_values['defaults'])
+
+        # Add the sankey data unless we are updating the instance without updating instance.data
+        update_or_create_values_with_sankey_data = R.merge(update_or_create_values, dict(
+            defaults=add_sankey_graph_to_resource_dict(
+                update_or_create_values['defaults']
+            )
+        )) if R.has('data', update_or_create_values['defaults']) else update_or_create_values
 
         resource, created = Resource.objects.update_or_create(**update_or_create_values_with_sankey_data)
         return UpsertResource(resource=resource)
