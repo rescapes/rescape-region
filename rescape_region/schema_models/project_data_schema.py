@@ -1,7 +1,5 @@
-from graphene.types.generic import GenericScalar
 from rescape_graphene import resolver_for_dict_field, type_modify_fields
-from rescape_python_helpers import ramda as R
-from graphene import ObjectType, String, Float, List, Field, Int
+from graphene import ObjectType, Field
 
 from rescape_region.schema_models.location_data_schema import LocationDataType, location_data_fields
 from rescape_region.schema_models.user_state_data_schema import MapboxDataType, mapbox_data_fields

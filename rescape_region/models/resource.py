@@ -46,7 +46,7 @@ class Resource(Model):
     region = ForeignKey('Region', related_name='resources', null=False, on_delete=models.DO_NOTHING)
 
     class Meta:
-        app_label = "app"
+        app_label = "rescape_region"
 
     def __str__(self):
         return self.name

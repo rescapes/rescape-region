@@ -110,7 +110,7 @@ def create_user_state_config(class_config):
 
         class Arguments:
             user_state_data = type('CreateUserStateInputType', (InputObjectType,),
-                                   input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
+                                  input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
 
 
     class UpdateUserState(UpsertUserState):

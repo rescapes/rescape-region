@@ -17,6 +17,7 @@ SECRET_KEY = 'dp&=7jt@y*^3kwfxh&!xufl9pu$!!t2vhvxozgf5y$xd(*(7w*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'true' == (os.environ.get('DJANGO_DEBUG', 'true')).lower()
+TESTING = False
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,8 +41,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # After django.contrib.auth.middleware.AuthenticationMiddleware...
-    'graphql_jwt.middleware.JSONWebTokenMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]

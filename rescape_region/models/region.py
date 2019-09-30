@@ -1,9 +1,7 @@
-from django.db import models
 from django.db.models import (
     CharField,
-    DateTimeField, ForeignKey)
+    DateTimeField)
 from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import Model
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default

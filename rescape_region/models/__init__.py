@@ -4,6 +4,7 @@ from .user_state import UserState
 from .group_state import GroupState
 from .settings import Settings
 from .region_location import RegionLocation
+from .resource import Resource
 
 __all__ = [
     'region.Region',

@@ -18,6 +18,8 @@ from rescape_region.schema_models.project_schema import ProjectType, project_fie
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
 from rescape_region.schema_models.user_state_schema import create_user_state_config
+from rescape_region.models.resource import Resource
+from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource
 
 logger = logging.getLogger('rescape_region')
 
@@ -62,6 +64,26 @@ class ProjectQuery(ObjectType):
     def resolve_projects(self, info, **kwargs):
         modified_kwargs = process_filter_kwargs(Project, kwargs)
         return Project.objects.filter(
+            **modified_kwargs
+        )
+
+
+class ResourceQuery(ObjectType):
+    resources = graphene.List(
+        ResourceType,
+        **allowed_filter_arguments(resource_fields, ResourceType)
+    )
+
+    resource = graphene.Field(
+        ResourceType,
+        **allowed_filter_arguments(resource_fields, ResourceType)
+    )
+
+    @login_required
+    def resolve_resources(self, info, **kwargs):
+        modified_kwargs = process_filter_kwargs(RegionLocation, kwargs)
+
+        return Resource.objects.filter(
             **modified_kwargs
         )
 
@@ -149,6 +171,11 @@ class ProjectMutation(graphene.ObjectType):
     update_project = UpdateProject.Field()
 
 
+class ResourceMutation(graphene.ObjectType):
+    create_resource = CreateResource.Field()
+    update_resource = UpdateResource.Field()
+
+
 class LocationMutation(graphene.ObjectType):
     create_location = CreateLocation.Field()
     update_location = UpdateLocation.Field()
@@ -192,6 +219,13 @@ default_class_config = dict(
         query=ProjectQuery,
         mutation=ProjectMutation
     ),
+    resource=dict(
+        model_class=Resource,
+        graphene_class=ResourceType,
+        fields=resource_fields,
+        query=ResourceQuery,
+        mutation=ResourceMutation
+    ),
     location=dict(
         model_class=RegionLocation,
         graphene_class=RegionLocationType,
@@ -234,12 +268,18 @@ def create_query_and_mutation_classes(class_config):
 
     class Query(
         GrapheneQuery,
-        *R.map_with_obj_to_values(lambda k, v: R.prop('query', v), query_and_mutation_class_lookups)):
+        *R.map_with_obj_to_values(
+            lambda k, v: R.prop('query', v), query_and_mutation_class_lookups
+        )
+    ):
         pass
 
     class Mutation(
         GrapheneMutation,
-        *R.map_with_obj_to_values(lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups)):
+        *R.map_with_obj_to_values(
+            lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups
+        )
+    ):
         pass
 
     return dict(query=Query, mutation=Mutation)
