@@ -4,9 +4,11 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
 from rescape_python_helpers import ramda as R
-from rescape_graphene import increment_prop_until_unique, enforce_unique_props
+from rescape_graphene import enforce_unique_props
+
+from rescape_region.helpers.sankey_helpers import add_sankey_graph_to_resource_dict
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.region_schema import RegionType
 from .resource_data_schema import ResourceDataType, resource_data_fields
@@ -19,6 +21,7 @@ class ResourceType(DjangoObjectType):
 
 raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     id=dict(create=DENY, update=REQUIRE),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Resource, None, 'key')),
     name=dict(create=REQUIRE),
     # This refers to the Resource, which is a representation of all the json fields of Resource.data
     data=dict(graphene_type=ResourceDataType, fields=resource_data_fields, default=lambda: dict()),
@@ -26,8 +29,7 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     # support our Mutation subclasses and query_argument generation
     # For simplicity we limit fields to id. Mutations can only us id, and a query doesn't need other
     # details of the resource--it can query separately for that
-    region=dict(graphene_type=RegionType,
-                fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))))
+    region=dict(graphene_type=RegionType, fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))))
 ))
 
 # Modify data field to use the resolver.
@@ -68,12 +70,15 @@ class UpsertResource(Mutation):
                 Resource.objects.get(id=resource_data['id']).data,
                 resource_data['data']
             )
+            # Modifies defaults value to add .data.graph
+            # We could decide in the future to generate this derived data on the client, but it's easy enough to do here
 
         # Make sure that all props are unique that must be, either by modifying values or erring.
         modified_resource_data = enforce_unique_props(resource_fields, resource_data)
         update_or_create_values = input_type_parameters_for_update_or_create(resource_fields, modified_resource_data)
+        update_or_create_values_with_sankey_data = add_sankey_graph_to_resource_dict(update_or_create_values['defaults'])
 
-        resource, created = Resource.objects.update_or_create(**update_or_create_values)
+        resource, created = Resource.objects.update_or_create(**update_or_create_values_with_sankey_data)
         return UpsertResource(resource=resource)
 
 

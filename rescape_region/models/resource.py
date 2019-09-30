@@ -13,11 +13,11 @@ def default():
             # The column names of the raw data. Used to key columns to meanings
             columns=[],
             # The column name that stores the Sankey stage of the node
-            stage_key=None,
+            stageKey=None,
             # The column name that stores the value of the node
-            value_key=None,
+            valueVey=None,
             # The column name that stores the name of the node
-            node_name_key=None,
+            nodeNameKey=None,
             # A list of stages. Each stage is a dict with key name and targets array
             # The key is used to list targets in the targes array. The name is the readable name
             # Targets is a list of keys of other stages
@@ -38,6 +38,7 @@ class Resource(Model):
     """
         Models a resource, such as water
     """
+    key = CharField(max_length=50, unique=True, null=False)
     name = CharField(max_length=50, null=False)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)

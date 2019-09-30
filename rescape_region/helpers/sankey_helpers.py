@@ -52,7 +52,7 @@ def create_raw_nodes(resource):
     :return: Raw node data
     """
     columns = R.item_path(['data', 'settings', 'columns'], resource)
-    raw_data = R.item_path(['data', 'raw_data'], resource)
+    raw_data = R.item_path(['data', 'rawData'], resource)
     return R.map(
         lambda line: R.from_pairs(
             zip(
@@ -74,12 +74,12 @@ def resolve_location(default_location, coordinates, i):
     """
     if coordinates == 'NA':
         return dict(
-            is_generalized=True,
+            isGeneralized=True,
             location=aberrate_location(i, default_location)
         )
     else:
         return dict(
-            is_generalized=False,
+            isGeneralized=False,
             location=list(reversed(R.map(lambda coord: string_to_float(coord), coordinates.split(','))))
         )
 
@@ -117,7 +117,7 @@ def create_links(stages, value_key, nodes_by_stages):
         targets = nodes_by_stages[R.prop('key', target_stage)]
 
         def prop_lookup(node, prop):
-            return R.prop(prop, dict(zip(node['properties'], node['property_values'])))
+            return R.prop(prop, dict(zip(node['properties'], node['propertyValues'])))
 
         # Create the link with the source_node and target_node. Later we'll add
         # in source and target that points to the nodes overall index in the graph,
@@ -146,11 +146,11 @@ def generate_sankey_data(resource):
 
     settings = R.item_path(['data', 'settings'], resource)
     stages = R.prop('stages', settings)
-    stage_key = R.prop('stage_key', settings)
-    value_key = R.prop('value_key', settings)
-    location_key = R.prop('location_key', settings)
-    node_name_key = R.prop('node_name_key', settings)
-    default_location = R.prop('default_location', settings)
+    stage_key = R.prop('stageKey', settings)
+    value_key = R.prop('valueKey', settings)
+    location_key = R.prop('locationKey', settings)
+    node_name_key = R.prop('nodeNameKey', settings)
+    default_location = R.prop('defaultLocation', settings)
     # A dct of stages by name
     stage_by_name = stages_by_name(stages)
 
@@ -165,16 +165,16 @@ def generate_sankey_data(resource):
         """
         location_obj = resolve_location(default_location, R.prop(location_key, raw_node), i)
         location = R.prop('location', location_obj)
-        is_generalized = R.prop('is_generalized', location_obj)
+        is_generalized = R.prop('isGeneralized', location_obj)
         # The key where then node is stored is the stage key
         key = R.prop('key', stage_by_name[raw_node[stage_key]])
 
         # Copy all properties from resource.data  except settings and raw_data
         # Also grab raw_node properties
         # This is for arbitrary properties defined in the data
-        # We put them in properties and property_values since graphql hates arbitrary key/values
+        # We put them in properties and propertyValues since graphql hates arbitrary key/values
         properties = R.merge(
-            R.omit(['settings', 'raw_data'], R.prop('data', resource)),
+            R.omit(['settings', 'rawData'], R.prop('data', resource)),
             raw_node
         )
         return R.merge(
@@ -194,9 +194,9 @@ def generate_sankey_data(resource):
                                 coordinates=location
                             ),
                             name=R.prop(node_name_key, raw_node),
-                            is_generalized=is_generalized,
+                            isGeneralized=is_generalized,
                             properties=list(R.keys(properties)),
-                            property_values=list(R.values(properties))
+                            propertyValues=list(R.values(properties))
                         )
                     ]
                 )
@@ -246,6 +246,7 @@ def index_sankey_graph(graph):
     :param graph:
     :return: Updates graph.nodes, adding an index to each
     """
+
     nodes = R.prop('nodes', graph)
     for (i, node) in enumerate(nodes):
         node['index'] = i
@@ -270,11 +271,11 @@ def create_sankey_graph_from_resources(resources):
 
 def add_sankey_graph_to_resource_dict(resource_dict):
     """
-        Generate a sankey graph and attach it to resource.data['graph']
-    :param resource_dict: A resource instannce with enough data to generate a graph
-    :return:
+        Generate a sankey graph and "set" resource_dict.data.graph to it
+    :param resource_dict: A resource instance with enough data to generate a graph
+    :return: The copied resource_dict with data.graph set
     """
     graph = generate_sankey_data(resource_dict)
+    # Updates the graph
     index_sankey_graph(graph)
-    resource_dict['data']['graph'] = graph
-    return resource_dict
+    return R.fake_lens_path_set(['data', 'graph'], graph, resource_dict)

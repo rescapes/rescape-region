@@ -1,12 +1,14 @@
 
 from rescape_python_helpers import ramda as R
+
+from rescape_region.models import Region
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.models.resource import Resource
 from rescape_region.helpers.sankey_helpers import generate_sankey_data
 
 sample_settings = dict(
     settings=dict(
-        default_location=[4.3517, 50.8503],
+        defaultLocation=[4.3517, 50.8503],
         # The columns of the raw_data
         columns=[
             'siteName',
@@ -16,12 +18,12 @@ sample_settings = dict(
             'annualTonnage'
         ],
         # The column name used to name each stage
-        stage_key='junctionStage',
+        stageKey='junctionStage',
         # The column used for node and link values
-        value_key='annualTonnage',
+        valueKey='annualTonnage',
         # The column of the node location, normally a string representing a 2 element array representing a lat/lon
-        location_key='coordinates',
-        node_name_key='siteName',
+        locationKey='coordinates',
+        nodeNameKey='siteName',
         stages=[
             dict(key='source', name='Source', targets=['conversion']),
             dict(key='conversion', name='Conversion', targets=['distribution']),
@@ -44,10 +46,11 @@ sample_resources = R.map(
     ),
     [
         dict(
+            key='minerals',
             name='Minerals',
             data=dict(
                 material='Minerals',
-                raw_data=[
+                rawData=[
                     'Other Global Imports;Shipments, location generalized;51.309933, 3.055030;Source;22,469,843',
                     'Knauf (Danilith) BE;Waregemseweg 156-142 9790 Wortegem-Petegem, Belgium;50.864762, 3.479308;Conversion;657,245',
                     "MPRO Bruxelles;Avenue du Port 67 1000 Bruxelles, Belgium;50.867486, 4.352543;Distribution;18,632",
@@ -62,10 +65,11 @@ sample_resources = R.map(
             )
         ),
         dict(
+            key='metals',
             name='Metals',
             data=dict(
                 material='Metals',
-                raw_data=[
+                rawData=[
                     'Other Global Imports;Shipments, location generalized;51.309933, 3.055030;Source;367,689',
                     'Arcelor Steel Belgium;Lammerdries 10, 2440 Geel, Belgium;51.145051, 4.939373;Conversion;27,872',
                     'Duplex House Typology;Everywhere in Brussels;NA;Demand;3,048',
@@ -80,10 +84,11 @@ sample_resources = R.map(
         ),
 
         dict(
+            key='wood',
             name='Wood',
             data=dict(
                 material='Wood',
-                raw_data=[
+                rawData=[
                     'Forêt de Soignes;Watermael-Boitsfort Belgium ;50.777072, 4.409960;Source;6,288',
                     'Germany Imports;Germany, nearest point;50.786952, 6.102697;Source;66,812',
                     'Netherlands Imports;Netherlans, nearest point;51.467197, 4.609125;Source;52,352',
@@ -128,7 +133,7 @@ def create_sample_resource(region, resource_dict):
 
 
 def create_sample_resources():
-    regions = create_sample_regions()
+    regions = create_sample_regions(Region)
     # Convert all sample resource dicts to persisted Resource instances
     resources = R.map(create_sample_resource(R.head(regions)), sample_resources)
     return resources

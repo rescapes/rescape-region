@@ -1,6 +1,5 @@
 import graphene
 import logging
-import sys
 import traceback
 
 from graphql import format_error
@@ -20,6 +19,7 @@ from rescape_region.schema_models.settings_schema import SettingsType, settings_
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource
+
 
 logger = logging.getLogger('rescape_region')
 
@@ -74,14 +74,9 @@ class ResourceQuery(ObjectType):
         **allowed_filter_arguments(resource_fields, ResourceType)
     )
 
-    resource = graphene.Field(
-        ResourceType,
-        **allowed_filter_arguments(resource_fields, ResourceType)
-    )
-
     @login_required
     def resolve_resources(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(RegionLocation, kwargs)
+        modified_kwargs = process_filter_kwargs(Resource, kwargs)
 
         return Resource.objects.filter(
             **modified_kwargs

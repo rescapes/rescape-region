@@ -18,12 +18,12 @@ StageDataType = type(
 )
 
 resource_settings_data_fields = dict(
-    default_location=dict(type=Float, type_modifier=lambda typ: List(Float)),
+    defaultLocation=dict(type=Float, type_modifier=lambda typ: List(Float)),
     columns=dict(type=String, type_modifier=lambda typ: List(typ)),
-    stage_key=dict(type=String),
-    value_key=dict(type=String),
-    location_key=dict(type=String),
-    node_name_key=dict(type=String),
+    stageKey=dict(type=String),
+    valueKey=dict(type=String),
+    locationKey=dict(type=String),
+    nodeNameKey=dict(type=String),
     stages=dict(
         type=StageDataType,
         graphene_type=StageDataType,
@@ -67,9 +67,9 @@ node_data_fields = dict(
         type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field),
     ),
     properties=dict(type=String, type_modifier=lambda typ: List(typ)),
-    property_values=dict(type=String, type_modifier=lambda typ: List(typ)),
+    propertyValues=dict(type=String, type_modifier=lambda typ: List(typ)),
     coordinates=dict(type=String),
-    is_generalized=dict(type=String),
+    isGeneralized=dict(type=String),
 )
 
 NodeDataType = type(
@@ -117,7 +117,7 @@ resource_data_fields = dict(
         fields=resource_settings_data_fields,
         type_modifier=lambda typ: Field(typ, resolver=resolver_for_dict_field)
     ),
-    raw_data=dict(
+    rawData=dict(
         type=String,
         type_modifier=lambda typ: List(typ)
     ),
