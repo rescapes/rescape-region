@@ -1,6 +1,7 @@
 from rescape_python_helpers import ramda as R
-import re
 import locale
+import logging
+logger = logging.getLogger('rescape_region')
 
 
 def string_to_float(flt):
@@ -10,8 +11,11 @@ def string_to_float(flt):
     :return:
     """
     locale.setlocale(locale.LC_NUMERIC, 'en_US')
-    return locale.atof(flt)
-
+    try:
+        return locale.atof(flt)
+    except (TypeError, ValueError):
+        logger.warning(f"Can't convert string to a float {flt}. Setting to NaN")
+        return float('NaN')
 
 def stages_by_name(stages):
     return R.map_prop_value_as_index('name', stages)
@@ -40,7 +44,7 @@ def create_raw_nodes(resource):
         lambda line: R.from_pairs(
             zip(
                 columns,
-                line.split(';')
+                R.map(lambda s: s.strip(), line.split(';'))
             )
         ),
         raw_data
