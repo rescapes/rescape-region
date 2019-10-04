@@ -4,30 +4,13 @@ import locale
 
 
 def string_to_float(flt):
-    # https://stackoverflow.com/questions/9227335/parse-a-string-to-floats-with-different-separators
-    # Remove anything not a digit, comma or period
-    no_cruft = re.sub(r'[^\d,.-]', '', flt)
-
-    # Split the result into parts consisting purely of digits
-    parts = re.split(r'[,.]', no_cruft)
-
-    # ...and sew them back together
-    if len(parts) == 1:
-        # No delimeters found
-        flt = parts[0]
-    elif len(parts[-1]) != 2:
-        # >= 1 delimeters found. If the length of last part is not equal to 2, assume it is not a decimal part
-        flt = ''.join(parts)
-    else:
-        flt = '%s%s%s' % (''.join(parts[0:-1]),
-                          locale.localeconv()['decimal_point'],
-                          parts[-1])
-
-    # Convert to float. Invalid values are hopefully empty strings
-    try:
-        return float(flt) if flt != '' else float(0)
-    except ValueError:
-        raise ValueError("Something is wrong with the {1}. Can't convert it to a float".format(flt))
+    """
+        Set the numeric to en_US simply to assume that numbers use a point for the decimal and commas for thousands
+    :param flt:
+    :return:
+    """
+    locale.setlocale(locale.LC_NUMERIC, 'en_US')
+    return locale.atof(flt)
 
 
 def stages_by_name(stages):
@@ -64,7 +47,7 @@ def create_raw_nodes(resource):
     )
 
 
-def resolve_location(default_location, coordinates, i):
+def resolve_coordinates(default_location, coordinates, i):
     """
         Resolves the lat/lon based on the given coordinates string. If it is NA then default to BRUSSELS_LOCATION
     :param default_location: [lat, lon] representing the default location for coordinates marked 'NA'
@@ -72,6 +55,9 @@ def resolve_location(default_location, coordinates, i):
     :param i: Current index of coordinates, used for aberration
     :return: lat/lon array
     """
+
+    # TODO instead of aberrating we should create a visualizatoin to show things that are in the same place
+    # Something like a number icon that spreads when you mouse over
     if coordinates == 'NA':
         return dict(
             isGeneralized=True,
@@ -163,7 +149,7 @@ def generate_sankey_data(resource):
         :param i:
         :return:
         """
-        location_obj = resolve_location(default_location, R.prop(location_key, raw_node), i)
+        location_obj = resolve_coordinates(default_location, R.prop(location_key, raw_node), i)
         location = R.prop('location', location_obj)
         is_generalized = R.prop('isGeneralized', location_obj)
         # The key where then node is stored is the stage key

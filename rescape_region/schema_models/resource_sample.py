@@ -132,8 +132,7 @@ def create_sample_resource(region, resource_dict):
     return resource
 
 
-def create_sample_resources():
-    regions = create_sample_regions(Region)
+def create_sample_resources(regions):
     # Convert all sample resource dicts to persisted Resource instances
     resources = R.map(create_sample_resource(R.head(regions)), sample_resources)
     return resources

@@ -3,6 +3,8 @@ import logging
 import pytest
 from rescape_graphene import client_for_testing
 
+from rescape_region.models import Region
+from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import dump_errors, create_schema
 from rescape_python_helpers import ramda as R
 from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resources
@@ -31,14 +33,18 @@ class ResourceSchemaTestCase(TestCase):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
         delete_sample_resources()
-        self.resources = create_sample_resources()
-        self.regions = list(set(R.map(lambda resource: resource.region, self.resources)))
+        self.region = R.head(create_sample_regions(Region))
+
+        self.resources = create_sample_resources([self.region])
         # Create a graph for all resources
         # This modifies each
         self.graph = create_sankey_graph_from_resources(self.resources)
 
     def test_query(self):
-        quiz_model_query(self.client, graphql_query_resources, 'resources', dict(name='Minerals'))
+        quiz_model_query(self.client, graphql_query_resources, 'resources', dict(
+            region=dict(id=self.region.id),
+            name='Minerals'
+        ))
 
     def test_create(self):
         quiz_model_mutation_create(
