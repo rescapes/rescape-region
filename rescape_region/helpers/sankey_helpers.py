@@ -17,6 +17,7 @@ def string_to_float(flt):
         logger.warning(f"Can't convert string to a float {flt}. Setting to NaN")
         return float('NaN')
 
+
 def stages_by_name(stages):
     return R.map_prop_value_as_index('name', stages)
 
