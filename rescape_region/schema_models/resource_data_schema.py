@@ -57,6 +57,8 @@ GeometryDataType = type(
 
 node_data_fields = dict(
     name=dict(type=String),
+    # Index is the number used by the links to identify the node in a set of nodes
+    index=dict(type=Int),
     type=dict(type=String),
     value=dict(type=Float),
     # TODO this should be a rescape_region FeatureCollection type to hold full geojson
@@ -68,7 +70,7 @@ node_data_fields = dict(
     ),
     properties=dict(type=String, type_modifier=lambda typ: List(typ)),
     propertyValues=dict(type=String, type_modifier=lambda typ: List(typ)),
-    coordinates=dict(type=String),
+    coordinates=dict(type=Float),
     isGeneralized=dict(type=String),
 )
 

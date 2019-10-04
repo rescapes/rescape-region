@@ -14,9 +14,8 @@ def string_to_float(flt):
     try:
         return locale.atof(flt)
     except (TypeError, ValueError):
-        logger.warning(f"Can't convert string {flt} to a float. Setting to 'NaN'")
-        # Return a string because JSON/Postgres can't handle a float NaN
-        return 'NaN'
+        logger.warning(f"Can't convert string {flt} to a float. Setting to null")
+        return None
 
 
 def stages_by_name(stages):
