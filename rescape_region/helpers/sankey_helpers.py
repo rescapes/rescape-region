@@ -27,7 +27,7 @@ def stages_by_key(stages):
     return R.map_prop_value_as_index('key', stages)
 
 
-def aberrate_location(index, location, factor=.005):
+def aberrate_location(index, location, factor=.0001):
     """
        Minutely move locations so they don't overlap
     :param index: a counter to help with the aberration. Increment before calling each time
@@ -35,11 +35,8 @@ def aberrate_location(index, location, factor=.005):
     :param factor: Sensitivity of aberration, defaults to .005
     :return:
     """
-    return R.map(
-        lambda coord: coord + (factor * (-index if index % 2 else index)),
-        location
-    )
-
+    x = (index / 100) * (1 if index % 2 == 1 else -1) * index
+    return [ location[0] + (factor * -index * x), location[1] + (factor * x) ]
 
 def create_raw_nodes(delineator, resource):
     """
@@ -210,7 +207,7 @@ def generate_sankey_data(resource):
         # This is for arbitrary properties defined in the data
         # We put them in properties and propertyValues since graphql hates arbitrary key/values
         properties = R.merge(
-            R.omit(['settings', 'rawData'], R.prop('data', resource)),
+            R.omit(['rawData'], R.prop('data', resource)),
             raw_node
         )
         return R.merge(
