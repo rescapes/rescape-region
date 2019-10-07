@@ -30,10 +30,13 @@ def aberrate_location(index, location, factor=.005):
     :param factor: Sensitivity of aberration, defaults to .005
     :return:
     """
-    return [coord + factor * (-index if index % 2 else index) * (i or -1) for coord, i in enumerate(location)]
+    return R.map(
+        lambda coord: coord + (factor * (-index if index % 2 else index)),
+        location
+    )
 
 
-def create_raw_nodes(resource):
+def create_raw_nodes(delineator, resource):
     """
         Creates nodes for each column from the csv
     :param resource: The Resource object
@@ -45,7 +48,7 @@ def create_raw_nodes(resource):
         lambda line: R.from_pairs(
             zip(
                 columns,
-                R.map(lambda s: s.strip(), line.split(';'))
+                R.map(lambda s: s.strip(), line.split(delineator))
             )
         ),
         raw_data
@@ -142,6 +145,7 @@ def generate_sankey_data(resource):
     location_key = R.prop('locationKey', settings)
     node_name_key = R.prop('nodeNameKey', settings)
     default_location = R.prop('defaultLocation', settings)
+    delineator = R.prop_or(';', 'delineator', settings)
     # A dct of stages by name
     stage_by_name = stages_by_name(stages)
 
@@ -194,7 +198,7 @@ def generate_sankey_data(resource):
             }
         )
 
-    raw_nodes = create_raw_nodes(resource)
+    raw_nodes = create_raw_nodes(delineator, resource)
     # Reduce the nodes
     nodes_by_stage = R.reduce(
         lambda accum, i_and_node: accumulate_nodes(accum, i_and_node[1], i_and_node[0]),

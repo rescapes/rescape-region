@@ -43,7 +43,7 @@ ResourceSettingsDataType = type(
 
 geometry_data_fields = dict(
     type=dict(type=String),
-    coordinates=dict(type=String, type_modifier=lambda typ: List(typ))
+    coordinates=dict(type=Float, type_modifier=lambda typ: List(typ))
 )
 
 GeometryDataType = type(
