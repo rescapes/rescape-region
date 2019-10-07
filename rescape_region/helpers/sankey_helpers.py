@@ -44,6 +44,10 @@ def create_raw_nodes(delineator, resource):
     """
     columns = R.item_path(['data', 'settings', 'columns'], resource)
     raw_data = R.item_path(['data', 'rawData'], resource)
+    # Sometimes we split nodes and edges in the raw data into
+    # dict(nodes=..., edges=...). Sometimes the raw data is just nodes
+    # and we get the edges from the node data
+    raw_nodes = R.prop_or(raw_data, 'nodes', raw_data)
     return R.map(
         lambda line: R.from_pairs(
             zip(
@@ -51,7 +55,7 @@ def create_raw_nodes(delineator, resource):
                 R.map(lambda s: s.strip(), line.split(delineator))
             )
         ),
-        raw_data
+        raw_nodes
     )
 
 
