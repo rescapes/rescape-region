@@ -1,3 +1,4 @@
+from inflection import humanize
 from rescape_python_helpers import ramda as R
 import locale
 import logging
@@ -25,18 +26,6 @@ def stages_by_name(stages):
 
 def stages_by_key(stages):
     return R.map_prop_value_as_index('key', stages)
-
-
-def aberrate_location(index, location, factor=.0001):
-    """
-       Minutely move locations so they don't overlap
-    :param index: a counter to help with the aberration. Increment before calling each time
-    :param location: Simple point location (two item array) of lat lon value
-    :param factor: Sensitivity of aberration, defaults to .005
-    :return:
-    """
-    x = (index / 100) * (1 if index % 2 == 1 else -1) * index
-    return [ location[0] + (factor * -index * x), location[1] + (factor * x) ]
 
 def create_raw_nodes(delineator, resource):
     """
@@ -89,7 +78,6 @@ def resolve_coordinates(default_location, coordinates, i):
         Resolves the lat/lon based on the given coordinates string. If it is NA then default to BRUSSELS_LOCATION
     :param default_location: [lat, lon] representing the default location for coordinates marked 'NA'
     :param coordinates: comma separated lon/lat. We flip this since the software wants [lat, lon]
-    :param i: Current index of coordinates, used for aberration
     :return: lat/lon array
     """
 
@@ -98,7 +86,7 @@ def resolve_coordinates(default_location, coordinates, i):
     if not coordinates or coordinates == 'NA':
         return dict(
             isGeneralized=True,
-            location=aberrate_location(i, default_location)
+            location=default_location
         )
     else:
         return dict(
@@ -207,9 +195,10 @@ def generate_sankey_data(resource):
         # This is for arbitrary properties defined in the data
         # We put them in properties and propertyValues since graphql hates arbitrary key/values
         properties = R.merge(
-            R.omit(['rawData'], R.prop('data', resource)),
+            R.omit(['settings', 'rawData'], R.prop('data', resource)),
             raw_node
         )
+        properties[node_name_key] = humanize(properties[node_name_key])
         return R.merge(
             # Omit accum[key] since we'll concat it with the new node
             R.omit([key], accum),

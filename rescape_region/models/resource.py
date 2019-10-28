@@ -18,6 +18,10 @@ def default():
             valueVey=None,
             # The column name that stores the name of the node
             nodeNameKey=None,
+            # Optional color key of the individual node
+            nodeColorKey=None,
+            # Optional color key of the individual link
+            linkColorKey=None,
             # A list of stages. Each stage is a dict with key name and targets array
             # The key is used to list targets in the targes array. The name is the readable name
             # Targets is a list of keys of other stages

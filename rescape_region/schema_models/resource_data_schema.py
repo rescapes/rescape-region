@@ -1,6 +1,6 @@
 from rescape_python_helpers import ramda as R
 from rescape_graphene import resolver_for_dict_field, resolver_for_dict_list
-from graphene import ObjectType, String, Float, List, Field, Int
+from graphene import ObjectType, String, Float, List, Field, Int, Boolean
 
 stage_data_fields = dict(
     key=dict(type=String),
@@ -19,11 +19,15 @@ StageDataType = type(
 
 resource_settings_data_fields = dict(
     defaultLocation=dict(type=Float, type_modifier=lambda typ: List(Float)),
+    unit=dict(type=String),
     columns=dict(type=String, type_modifier=lambda typ: List(typ)),
     stageKey=dict(type=String),
     valueKey=dict(type=String),
     locationKey=dict(type=String),
     nodeNameKey=dict(type=String),
+    nodeColorKey=dict(type=String),
+    linkColorKey=dict(type=String),
+
     stages=dict(
         type=StageDataType,
         graphene_type=StageDataType,
@@ -71,7 +75,7 @@ node_data_fields = dict(
     properties=dict(type=String, type_modifier=lambda typ: List(typ)),
     propertyValues=dict(type=String, type_modifier=lambda typ: List(typ)),
     coordinates=dict(type=Float),
-    isGeneralized=dict(type=String),
+    isGeneralized=dict(type=Boolean),
 )
 
 NodeDataType = type(
