@@ -12,7 +12,7 @@ def string_to_float(flt):
     :param flt:
     :return:
     """
-    locale.setlocale(locale.LC_NUMERIC, 'en_US')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     try:
         return locale.atof(flt)
     except (TypeError, ValueError):
