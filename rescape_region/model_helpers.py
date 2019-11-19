@@ -39,7 +39,13 @@ def feature_collection_default():
 
 
 def region_data_default():
-    return dict()
+    def region_data_default():
+        return dict(locations=dict(params=[dict(
+            country="ENTER A COUNTRY OR REMOVE THIS KEY/VALUE",
+            state="ENTER A STATE/PROVINCE ABBREVIATION OR REMOVE THIS KEY/VALUE",
+            city="ENTER A CITY OR REMOVE THIS KEY/VALUE",
+            neighborhood="ENTER A NEIGHBORHOOD OR REMOVE THIS KEY/VALUE"
+        )]))
 
 
 def project_data_default():
