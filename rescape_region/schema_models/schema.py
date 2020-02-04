@@ -32,10 +32,10 @@ class SettingsQuery(ObjectType):
 
     @login_required
     def resolve_settings(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(Settings, kwargs)
+        q_expressions = process_filter_kwargs(Settings, kwargs)
 
         return Settings.objects.filter(
-            **modified_kwargs
+            *q_expressions
         )
 
 
@@ -47,10 +47,10 @@ class RegionQuery(ObjectType):
 
     @login_required
     def resolve_regions(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(Region, kwargs)
+        q_expressions = process_filter_kwargs(Region, kwargs)
 
         return Region.objects.filter(
-            **modified_kwargs
+            *q_expressions
         )
 
 
@@ -62,9 +62,9 @@ class ProjectQuery(ObjectType):
 
     @login_required
     def resolve_projects(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(Project, kwargs)
+        q_expressions = process_filter_kwargs(Project, kwargs)
         return Project.objects.filter(
-            **modified_kwargs
+            *q_expressions
         )
 
 
@@ -76,10 +76,10 @@ class ResourceQuery(ObjectType):
 
     @login_required
     def resolve_resources(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(Resource, kwargs)
+        q_expressions = process_filter_kwargs(Resource, kwargs)
 
         return Resource.objects.filter(
-            **modified_kwargs
+            *q_expressions
         )
 
 
@@ -91,10 +91,10 @@ class LocationQuery(ObjectType):
 
     @login_required
     def resolve_locations(self, info, **kwargs):
-        modified_kwargs = process_filter_kwargs(RegionLocation, kwargs)
+        q_expressions = process_filter_kwargs(RegionLocation, kwargs)
 
         return RegionLocation.objects.filter(
-            **modified_kwargs
+            *q_expressions
         )
 
 
@@ -107,10 +107,10 @@ def create_user_state_query(user_state_config):
 
         @login_required
         def resolve_user_states(self, info, **kwargs):
-            modified_kwargs = process_filter_kwargs(UserState, kwargs)
+            q_expressions = process_filter_kwargs(UserState, kwargs)
 
             return UserState.objects.filter(
-                **modified_kwargs
+                *q_expressions
             )
 
     return UserStateQuery
@@ -134,10 +134,10 @@ def create_group_state_query(group_state_config):
 
         @login_required
         def resolve_group_states(self, info, **kwargs):
-            modified_kwargs = process_filter_kwargs(GroupState, kwargs)
+            q_expressions = process_filter_kwargs(GroupState, kwargs)
 
             return R.prop('model_class', group_state_config).objects.filter(
-                **modified_kwargs
+                *q_expressions
             )
 
     return GroupStateQuery

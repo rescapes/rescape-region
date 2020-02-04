@@ -44,7 +44,8 @@ def region_data_default():
         country="ENTER A COUNTRY OR REMOVE THIS KEY/VALUE",
         state="ENTER A STATE/PROVINCE ABBREVIATION OR REMOVE THIS KEY/VALUE",
         city="ENTER A CITY OR REMOVE THIS KEY/VALUE",
-        neighborhood="ENTER A NEIGHBORHOOD OR REMOVE THIS KEY/VALUE"
+        neighborhood="ENTER A NEIGHBORHOOD OR REMOVE THIS KEY/VALUE",
+        blockname="ENTER A BLOCKNAME OR REMOVE THIS KEY/VALUE"
     )]))
 
 
@@ -53,7 +54,9 @@ def project_data_default():
 
 
 def user_state_data_default():
-    return dict()
+    return dict(
+        userRegions=dict(region=dict(id='ENTER A REGION ID HERE (NO QUOTES)'))
+    )
 
 
 def group_state_data_default():
