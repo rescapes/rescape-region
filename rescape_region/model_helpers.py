@@ -55,7 +55,7 @@ def project_data_default():
 
 def user_state_data_default():
     return dict(
-        userRegions=dict(region=dict(id='ENTER A REGION ID HERE (NO QUOTES)'))
+        userRegions=[]
     )
 
 

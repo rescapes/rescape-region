@@ -1,3 +1,4 @@
+import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field
 from graphene_django.types import DjangoObjectType
@@ -21,6 +22,7 @@ raw_settings_fields = dict(
 
 
 class SettingsType(DjangoObjectType):
+    id = graphene.Int(source='pk')
 
     class Meta:
         model = Settings

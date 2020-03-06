@@ -33,6 +33,7 @@ raw_region_fields = dict(
 
 
 class RegionType(DjangoObjectType):
+    id = graphene.Int(source='pk')
 
     class Meta:
         model = Region

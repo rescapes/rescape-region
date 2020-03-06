@@ -1,3 +1,4 @@
+import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field
 from graphene_django.types import DjangoObjectType
@@ -15,6 +16,8 @@ from .resource_data_schema import ResourceDataType, resource_data_fields
 
 
 class ResourceType(DjangoObjectType):
+    id = graphene.Int(source='pk')
+
     class Meta:
         model = Resource
 

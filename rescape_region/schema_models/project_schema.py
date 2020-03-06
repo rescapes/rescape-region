@@ -1,10 +1,15 @@
+from operator import itemgetter
+
+import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, List
+from graphene import InputObjectType, Mutation, Field, List, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, allowed_filter_arguments, \
+    get_paginator, create_paginated_type_mixin
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
@@ -42,6 +47,8 @@ raw_project_fields = dict(
 
 
 class ProjectType(DjangoObjectType):
+    id = graphene.Int(source='pk')
+
     class Meta:
         model = Project
 
@@ -67,6 +74,57 @@ project_mutation_config = dict(
     resolve=guess_update_or_create
 )
 
+# Paginated version of LocationType
+(ProjectPaginatedType, project_paginated_fields) = itemgetter('type', 'fields')(
+    create_paginated_type_mixin(ProjectType, project_fields)
+)
+
+class ProjectQuery(ObjectType):
+    projects = graphene.List(
+        ProjectType,
+        **allowed_filter_arguments(project_fields, ProjectType)
+    )
+    projects_paginated = Field(
+        ProjectPaginatedType,
+        **allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
+    )
+
+    @login_required
+    def resolve_projects(self, info, **kwargs):
+        return project_resolver('filter', **kwargs)
+
+
+    @login_required
+    def resolve_projects_paginated(self, info, **kwargs):
+        projects = project_resolver('filter', **R.prop_or({}, 'objects', kwargs)).order_by('id')
+        return get_paginator(
+            projects,
+            R.prop('page_size', kwargs),
+            R.prop('page', kwargs),
+            ProjectPaginatedType
+        )
+
+
+def project_resolver(manager_method, **kwargs):
+    """
+
+    Small correction here to change the data filter to data__contains to handle any json
+    https://docs.djangoproject.com/en/2.0/ref/contrib/postgres/fields/#std:fieldlookup-hstorefield.contains
+    Since our location.data has bad naming with things like Sidewalk instead of sidewalk, we also
+    have to call reverse_data_fields on the give data object to fix the names
+
+    We also include is_scenario=False in the filter to prevent Scenario locations unless kwargs['is_scenario'] is
+    given
+
+    :param manager_method: 'filter', 'get', or 'count'
+    :param kwargs:
+    :return:
+    """
+
+    q_expressions = process_filter_kwargs(Project, kwargs)
+    return getattr(Project.objects, manager_method)(
+        *q_expressions
+    )
 
 class UpsertProject(Mutation):
     """
@@ -130,3 +188,14 @@ class UpdateProject(UpsertProject):
 
 graphql_update_or_create_project = graphql_update_or_create(project_mutation_config, project_fields)
 graphql_query_projects = graphql_query(ProjectType, project_fields, 'projects')
+
+
+def graphql_query_projects_limited(project_fields):
+    return graphql_query(ProjectType, project_fields, 'projects')
+
+
+graphql_query_projects_paginated = graphql_query(
+    ProjectPaginatedType,
+    project_paginated_fields,
+    'projectsPaginated'
+)

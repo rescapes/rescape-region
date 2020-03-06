@@ -1,3 +1,4 @@
+import graphene
 from graphene import Field, Mutation, InputObjectType
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
@@ -26,6 +27,7 @@ def create_group_state_config(class_config):
         """
             GroupStateType models GroupState, which represents the settings both imposed upon and chosen by the group
         """
+        id = graphene.Int(source='pk')
 
         class Meta:
             model = GroupState

@@ -1,3 +1,4 @@
+import graphene
 from graphene import Field, Mutation, InputObjectType
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
@@ -38,6 +39,7 @@ def create_user_state_config(class_config):
         """
             UserStateType models UserState, which represents the settings both imposed upon and chosen by the user
         """
+        id = graphene.Int(source='pk')
 
         class Meta:
             model = UserState

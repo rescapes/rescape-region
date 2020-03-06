@@ -13,7 +13,8 @@ from rescape_region.models import Region, UserState, GroupState, Project, Region
 from rescape_region.schema_models.group_state_schema import create_group_state_config
 from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
     UpdateLocation
-from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject
+from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject, \
+    ProjectQuery
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
 from rescape_region.schema_models.user_state_schema import create_user_state_config
@@ -53,19 +54,6 @@ class RegionQuery(ObjectType):
             *q_expressions
         )
 
-
-class ProjectQuery(ObjectType):
-    projects = graphene.List(
-        ProjectType,
-        **allowed_filter_arguments(project_fields, ProjectType)
-    )
-
-    @login_required
-    def resolve_projects(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Project, kwargs)
-        return Project.objects.filter(
-            *q_expressions
-        )
 
 
 class ResourceQuery(ObjectType):

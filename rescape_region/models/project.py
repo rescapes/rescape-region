@@ -16,7 +16,7 @@ class Project(SafeDeleteModel):
     """
 
     # Unique human readable identifier for URLs, etc
-    key = CharField(max_length=20, unique=True, null=False)
+    key = CharField(max_length=50, unique=True, null=False)
     name = CharField(max_length=50, null=False)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
