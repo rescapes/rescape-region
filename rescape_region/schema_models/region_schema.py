@@ -1,17 +1,14 @@
-from copy import deepcopy
-
 import graphene
 from django.db import transaction
-from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 from graphene import InputObjectType, Mutation, Field
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field
+from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
-from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.region import Region
 from .region_data_schema import RegionDataType, region_data_fields

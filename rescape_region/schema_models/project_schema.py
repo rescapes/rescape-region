@@ -1,7 +1,6 @@
 from operator import itemgetter
 
 import graphene
-from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field, List, ObjectType
 from graphene_django.types import DjangoObjectType
@@ -10,17 +9,16 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, allowed_filter_arguments, \
     get_paginator, create_paginated_type_mixin
+from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
-from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
-from django.conf import settings
+from rescape_region.model_helpers import get_project_model
 from rescape_region.models.project import Project
 from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
-from django.apps import apps
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
@@ -48,19 +46,6 @@ raw_project_fields = dict(
     user=dict(graphene_type=UserType, fields=user_fields),
 )
 
-def get_project_model():
-    """
-    Uses the same technique as get_user_model() to get the current project model from settings
-    :return:
-    """
-    try:
-        return apps.get_model(settings.PROJECT_MODEL, require_ready=False)
-    except ValueError:
-        raise ImproperlyConfigured("PROJECT_MODEL must be of the form 'app_label.model_name'")
-    except LookupError:
-        raise ImproperlyConfigured(
-            "PROJECT_USER_MODEL refers to model '%s' that has not been installed" % settings.PROJECT_MODEL
-        )
 
 class ProjectType(DjangoObjectType):
     id = graphene.Int(source='pk')

@@ -8,9 +8,10 @@ from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
 from snapshottest import TestCase
 
-from rescape_region.models import Region, Project, RegionLocation, UserState
+from rescape_region.model_helpers import get_location_model, get_region_model, get_project_model
+from rescape_region.models import UserState
 from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
-from rescape_region.schema_models.project_schema import create_project_type, project_fields
+from rescape_region.schema_models.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
@@ -28,17 +29,17 @@ omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 schema = create_schema()
 default_class_config = dict(
     region=dict(
-        model_class=Region,
+        model_class=get_region_model(),
         graphene_class=RegionType,
         fields=region_fields
     ),
     project=dict(
-        model_class=Project,
-        graphene_class=create_project_type(Project),
+        model_class=get_project_model(),
+        graphene_class=ProjectType,
         fields=project_fields
     ),
     location=dict(
-        model_class=RegionLocation,
+        model_class=get_location_model(),
         graphene_class=RegionLocationType,
         fields=location_fields
     )
@@ -54,7 +55,7 @@ class UserStateSchemaTestCase(TestCase):
 
     def setUp(self):
         delete_sample_user_states()
-        self.user_states = create_sample_user_states(UserState, Region, Project)
+        self.user_states = create_sample_user_states(UserState, get_region_model(), get_project_model())
         # Gather all unique sample users
         self.users = list(set(R.map(
             lambda user_state: user_state.user,
@@ -64,7 +65,7 @@ class UserStateSchemaTestCase(TestCase):
         # Gather all unique sample regions
         self.regions = R.compose(
             # Forth Resolve persisted Regions
-            R.map(lambda id: Region.objects.get(id=id)),
+            R.map(lambda id: get_region_model().objects.get(id=id)),
             # Third make ids unique
             lambda ids: list(set(ids)),
             # Second map each to the region id
@@ -75,7 +76,7 @@ class UserStateSchemaTestCase(TestCase):
         # Gather all unique sample projects
         self.projects = R.compose(
             # Forth Resolve persisted Projects
-            R.map(lambda id: Project.objects.get(id=id)),
+            R.map(lambda id: get_project_model().objects.get(id=id)),
             # Third make ids unique
             lambda ids: list(set(ids)),
             # Second map each to the project id

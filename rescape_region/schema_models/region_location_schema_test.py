@@ -3,7 +3,7 @@ import logging
 import pytest
 from rescape_graphene import client_for_testing
 
-from rescape_region.models import RegionLocation
+from rescape_region.model_helpers import get_location_model
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
@@ -26,7 +26,7 @@ class LocationSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.locations = create_sample_region_locations(RegionLocation)
+        self.locations = create_sample_region_locations(get_location_model())
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_region_locations, 'locations', dict(name='Grand Place'))

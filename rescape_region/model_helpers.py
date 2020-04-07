@@ -1,3 +1,6 @@
+from django.apps import apps
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from rescape_python_helpers import ewkt_from_feature
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
 
@@ -61,3 +64,46 @@ def user_state_data_default():
 
 def group_state_data_default():
     return dict()
+
+
+def get_region_model():
+    """
+    Uses the same technique as get_user_model() to get the current region model from settings
+    :return:
+    """
+    try:
+        return apps.get_model(settings.REGION_MODEL, require_ready=False)
+    except ValueError:
+        raise ImproperlyConfigured("REGION_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured(
+            "REGION_MODEL refers to model '%s' that has not been installed" % settings.REGION_MODEL
+        )
+
+def get_project_model():
+    """
+    Uses the same technique as get_user_model() to get the current project model from settings
+    :return:
+    """
+    try:
+        return apps.get_model(settings.PROJECT_MODEL, require_ready=False)
+    except ValueError:
+        raise ImproperlyConfigured("PROJECT_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured(
+            "PROJECT_USER_MODEL refers to model '%s' that has not been installed" % settings.PROJECT_MODEL
+        )
+
+def get_location_model():
+    """
+    Uses the same technique as get_user_model() to get the current location model from settings
+    :return:
+    """
+    try:
+        return apps.get_model(settings.LOCATION_MODEL, require_ready=False)
+    except ValueError:
+        raise ImproperlyConfigured("LOCATION_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured(
+            "LOCATION_MODEL refers to model '%s' that has not been installed" % settings.LOCATION_MODEL
+        )

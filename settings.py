@@ -12,8 +12,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ENV
 PROD = os.environ.get('ENV_TYPE') == 'prod'
 
-# The Project model. This is configured here so that the Graphene project_schema can use the local apps Project class
+# Django models that can be overridden in packages that use this package
+REGION_MODEL = 'rescape_region.region'
 PROJECT_MODEL = 'rescape_region.project'
+LOCATION_MODEL = 'rescape_region.location'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'dp&=7jt@y*^3kwfxh&!xufl9pu$!!t2vhvxozgf5y$xd(*(7w*'
