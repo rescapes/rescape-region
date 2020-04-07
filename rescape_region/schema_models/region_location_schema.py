@@ -10,13 +10,13 @@ from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
-from rescape_region.model_helpers import get_location_model
 from rescape_region.models import RegionLocation
 from .region_location_data_schema import region_location_data_fields, RegionLocationDataType
 
+# This file is only used for tests in rescape_region
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_location_model(), None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(RegionLocation, None, 'key')),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
@@ -34,7 +34,7 @@ class RegionLocationType(DjangoObjectType):
     id = graphene.Int(source='pk')
 
     class Meta:
-        model = get_location_model()
+        model = RegionLocation
 
 
 # Modify data field to use the resolver.
