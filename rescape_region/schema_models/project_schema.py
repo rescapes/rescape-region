@@ -15,7 +15,7 @@ from rescape_graphene.schema_models.geojson.types.feature_collection import feat
 from rescape_python_helpers import ramda as R
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
-import settings
+from django.conf import settings
 from rescape_region.models.project import Project
 from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
