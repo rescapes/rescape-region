@@ -1,8 +1,7 @@
-from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from django.db import models
-from django.db.models import OneToOneField, CharField
 from django.contrib.gis.db.models import Model
+from django.contrib.postgres.fields import JSONField
+from django.db.models import CharField
 
 from rescape_region.model_helpers import user_state_data_default
 
@@ -14,7 +13,7 @@ class Settings(Model):
         No user settings are stored here, that is all stored in UserState
     """
     # Unique human readable identifier
-    key = CharField(max_length=20, unique=True, null=False)
+    key = CharField(max_length=50, unique=True, null=False)
     data = JSONField(null=False, default=user_state_data_default)
 
     class Meta:

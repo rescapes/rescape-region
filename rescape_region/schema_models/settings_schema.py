@@ -1,16 +1,17 @@
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field
+from graphene import InputObjectType, Mutation, Field, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field
-from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
+    DENY, resolver_for_dict_field, allowed_filter_arguments
+from rescape_graphene import enforce_unique_props
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
 from rescape_python_helpers import ramda as R
-from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.models.settings import Settings
+from rescape_region.schema_models.region_schema import RegionType
 from .settings_data_schema import SettingsDataType, settings_data_fields
 
 raw_settings_fields = dict(
@@ -45,6 +46,21 @@ settings_mutation_config = dict(
 )
 
 
+class SettingsQuery(ObjectType):
+    settings = graphene.List(
+        SettingsType,
+        **allowed_filter_arguments(settings_fields, RegionType)
+    )
+
+    @login_required
+    def resolve_settings(self, info, **kwargs):
+        q_expressions = process_filter_kwargs(Settings, kwargs)
+
+        return Settings.objects.filter(
+            *q_expressions
+        )
+
+
 class UpsertSettings(Mutation):
     """
         Abstract base class for mutation
@@ -77,7 +93,7 @@ class CreateSettings(UpsertSettings):
 
     class Arguments:
         settings_data = type('CreateSettingsInputType', (InputObjectType,),
-                           input_type_fields(settings_fields, CREATE, SettingsType))(required=True)
+                             input_type_fields(settings_fields, CREATE, SettingsType))(required=True)
 
 
 class UpdateSettings(UpsertSettings):
@@ -87,7 +103,7 @@ class UpdateSettings(UpsertSettings):
 
     class Arguments:
         settings_data = type('UpdateSettingsInputType', (InputObjectType,),
-                           input_type_fields(settings_fields, UPDATE, SettingsType))(required=True)
+                             input_type_fields(settings_fields, UPDATE, SettingsType))(required=True)
 
 
 graphql_update_or_create_settings = graphql_update_or_create(settings_mutation_config, settings_fields)

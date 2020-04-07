@@ -12,12 +12,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ENV
 PROD = os.environ.get('ENV_TYPE') == 'prod'
 
+# The Project model. This is configured here so that the Graphene project_schema can use the local apps Project class
+PROJECT_MODEL = 'rescape_region.project'
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'dp&=7jt@y*^3kwfxh&!xufl9pu$!!t2vhvxozgf5y$xd(*(7w*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'true' == (os.environ.get('DJANGO_DEBUG', 'true')).lower()
-TESTING = False
+TESTING = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',

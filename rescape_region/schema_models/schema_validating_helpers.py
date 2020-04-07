@@ -90,13 +90,14 @@ def quiz_model_mutation_update(client, graphql_update_or_create_function, create
     )
     assert not R.has('errors', new_result), R.dump_json(R.prop('errors', new_result))
     updated = R.item_str_path(f'data.{update_path}', new_result)
+    # TODO grapqhl returns ids now, so this can probable be removed
     # Since graphql ID type outputs string ids, but our input type is an int, convert all non-nil ids
     # Since OpenStreetMap can have actual string ids we want to leave those alone
-    pattern = re.compile("^\d+$")
-    updated_with_int_ids = R.map_with_obj_deep(
-        lambda k, v: int(v) if R.equals('id', k) and pattern.search(v or '') else v, updated)
+    #pattern = re.compile("^\d+$")
+    #updated_with_int_ids = R.map_with_obj_deep(
+    #    lambda k, v: int(v) if R.equals('id', k) and pattern.search(v or '') else v, updated)
     assert created['id'] == updated['id']
     assert update_values == pick_deep(
         update_values,
-        updated_with_int_ids
+        updated
     )

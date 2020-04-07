@@ -1,43 +1,29 @@
-import graphene
 import logging
 import traceback
 
+import graphene
+from graphene import ObjectType, Schema
 from graphql import format_error
+from graphql_jwt.decorators import login_required
+from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
 from rescape_graphene.graphql_helpers.schema_helpers import allowed_filter_arguments, \
     process_filter_kwargs
 from rescape_python_helpers import ramda as R
-from graphene import ObjectType, Schema
-from graphql_jwt.decorators import login_required
-from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
+
 from rescape_region.models import Region, UserState, GroupState, Project, RegionLocation, Settings
+from rescape_region.models.resource import Resource
 from rescape_region.schema_models.group_state_schema import create_group_state_config
-from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
-    UpdateLocation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject, \
     ProjectQuery
+from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
+    UpdateLocation
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings
-from rescape_region.schema_models.user_state_schema import create_user_state_config
-from rescape_region.models.resource import Resource
 from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource
-
+from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings, \
+    SettingsQuery
+from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape_region')
-
-
-class SettingsQuery(ObjectType):
-    settings = graphene.List(
-        SettingsType,
-        **allowed_filter_arguments(settings_fields, RegionType)
-    )
-
-    @login_required
-    def resolve_settings(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Settings, kwargs)
-
-        return Settings.objects.filter(
-            *q_expressions
-        )
 
 
 class RegionQuery(ObjectType):

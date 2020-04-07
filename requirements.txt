@@ -2,7 +2,7 @@ django==2.0.7
 django-loginas==0.3.6
 pyramda==0.1
 graphene==2.1.8
-graphene-django==2.8.2
+graphene-django==2.9.0
 snapshottest==0.5.1
 inflection==0.3.1
 deepmerge==0.1.0
@@ -16,7 +16,7 @@ twine==1.15.0
 utils==0.9.0
 simplejson==3.17.0
 jsonfield===2.0.2
-rescape-graphene==0.2.78
+rescape-graphene==0.2.82
 rescape-python-helpers==0.0.27
 pytest==4.6.9
 pytest-cov==2.8.1
