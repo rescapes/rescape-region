@@ -90,7 +90,7 @@ project_mutation_config = dict(
     resolve=guess_update_or_create
 )
 
-# Paginated version of LocationType
+# Paginated version of ProjectType
 (ProjectPaginatedType, project_paginated_fields) = itemgetter('type', 'fields')(
     create_paginated_type_mixin(ProjectType, project_fields)
 )
