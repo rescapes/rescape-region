@@ -15,7 +15,7 @@ from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 
 from rescape_region.model_helpers import get_location_model
 from rescape_region.models import RegionLocation
-from .region_location_data_schema import RegionLocationDataType, region_location_data_fields
+from .region_location_data_schema import region_location_data_fields
 
 
 raw_location_fields = dict(

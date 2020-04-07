@@ -10,6 +10,7 @@ from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
+from rescape_region.model_helpers import get_region_model
 from rescape_region.models.region import Region
 from .region_data_schema import RegionDataType, region_data_fields
 
@@ -33,7 +34,7 @@ class RegionType(DjangoObjectType):
     id = graphene.Int(source='pk')
 
     class Meta:
-        model = Region
+        model = get_region_model()
 
 
 # Modify data field to use the resolver.
