@@ -1,13 +1,9 @@
-from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.db.models import (
     CharField,
-    DateTimeField, ForeignKey, ManyToManyField)
-from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import Model
+    DateTimeField)
 from safedelete.models import SafeDeleteModel
-
 from rescape_region.model_helpers import region_data_default, feature_collection_default
-
 
 class RegionLocation(SafeDeleteModel):
     """
