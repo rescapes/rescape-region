@@ -1,12 +1,13 @@
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field
+from graphene import InputObjectType, Mutation, Field, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -48,6 +49,20 @@ RegionLocationType._meta.fields['geojson'] = Field(
     resolver=resolver_for_dict_field
 )
 location_fields = merge_with_django_properties(RegionLocationType, raw_location_fields)
+
+class LocationQuery(ObjectType):
+    locations = graphene.List(
+        RegionLocationType,
+        **allowed_filter_arguments(location_fields, RegionLocationType)
+    )
+
+    @login_required
+    def resolve_locations(self, info, **kwargs):
+        q_expressions = process_filter_kwargs(RegionLocation, kwargs)
+
+        return RegionLocation.objects.filter(
+            *q_expressions
+        )
 
 location_mutation_config = dict(
     class_name='Location',

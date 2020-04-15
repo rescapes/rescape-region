@@ -1,11 +1,12 @@
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field
+from graphene import InputObjectType, Mutation, Field, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, allowed_filter_arguments
 from rescape_python_helpers import ramda as R
 from rescape_graphene import enforce_unique_props
 
@@ -47,6 +48,21 @@ ResourceType._meta.fields['geojson'] = Field(
     resolver=resolver_for_dict_field
 )
 resource_fields = merge_with_django_properties(ResourceType, raw_resource_fields)
+
+
+class ResourceQuery(ObjectType):
+    resources = graphene.List(
+        ResourceType,
+        **allowed_filter_arguments(resource_fields, ResourceType)
+    )
+
+    @login_required
+    def resolve_resources(self, info, **kwargs):
+        q_expressions = process_filter_kwargs(Resource, kwargs)
+
+        return Resource.objects.filter(
+            *q_expressions
+        )
 
 resource_mutation_config = dict(
     class_name='Resource',

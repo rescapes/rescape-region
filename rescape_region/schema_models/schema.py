@@ -16,61 +16,16 @@ from rescape_region.schema_models.group_state_schema import create_group_state_c
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject, \
     ProjectQuery
 from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
-    UpdateLocation
-from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion
-from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource
+    UpdateLocation, LocationQuery
+from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion, \
+    RegionQuery
+from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource, \
+    ResourceQuery
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings, \
     SettingsQuery
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape_region')
-
-
-class RegionQuery(ObjectType):
-    regions = graphene.List(
-        RegionType,
-        **allowed_filter_arguments(region_fields, RegionType)
-    )
-
-    @login_required
-    def resolve_regions(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Region, kwargs)
-
-        return Region.objects.filter(
-            *q_expressions
-        )
-
-
-
-class ResourceQuery(ObjectType):
-    resources = graphene.List(
-        ResourceType,
-        **allowed_filter_arguments(resource_fields, ResourceType)
-    )
-
-    @login_required
-    def resolve_resources(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Resource, kwargs)
-
-        return Resource.objects.filter(
-            *q_expressions
-        )
-
-
-class LocationQuery(ObjectType):
-    locations = graphene.List(
-        RegionLocationType,
-        **allowed_filter_arguments(location_fields, RegionLocationType)
-    )
-
-    @login_required
-    def resolve_locations(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(RegionLocation, kwargs)
-
-        return RegionLocation.objects.filter(
-            *q_expressions
-        )
-
 
 def create_user_state_query(user_state_config):
     class UserStateQuery(ObjectType):
