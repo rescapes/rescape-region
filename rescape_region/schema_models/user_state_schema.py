@@ -131,7 +131,7 @@ def create_user_state_config(class_config):
     return dict(
         model_class=UserState,
         graphene_class=UserStateType,
-        fields=user_state_fields,
+        graphene_fields=user_state_fields,
         create_mutation_class=CreateUserState,
         update_mutation_class=UpdateUserState,
         graphql_mutation=graphql_update_or_create_user_state,

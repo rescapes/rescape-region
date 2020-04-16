@@ -15,7 +15,7 @@ PROD = os.environ.get('ENV_TYPE') == 'prod'
 # Django models that can be overridden in packages that use this package
 REGION_MODEL = 'rescape_region.region'
 PROJECT_MODEL = 'rescape_region.project'
-LOCATION_MODEL = 'rescape_region.location'
+LOCATION_SCHEMA_CONFIG = 'rescape_region.schema_models.location_schema.location_schema_config'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'dp&=7jt@y*^3kwfxh&!xufl9pu$!!t2vhvxozgf5y$xd(*(7w*'

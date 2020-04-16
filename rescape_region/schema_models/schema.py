@@ -10,19 +10,19 @@ from rescape_graphene.graphql_helpers.schema_helpers import allowed_filter_argum
     process_filter_kwargs
 from rescape_python_helpers import ramda as R
 
-from rescape_region.models import Region, UserState, GroupState, Project, RegionLocation, Settings
+from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.group_state_schema import create_group_state_config
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject, \
-    ProjectQuery
-from rescape_region.schema_models.region_location_schema import location_fields, RegionLocationType, CreateLocation, \
-    UpdateLocation, LocationQuery
+    ProjectQuery, ProjectMutation
+from rescape_region.schema_models.location_schema import location_fields, CreateLocation, \
+    UpdateLocation, LocationType, LocationQuery, LocationMutation
 from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion, \
-    RegionQuery
+    RegionQuery, RegionMutation
 from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource, \
-    ResourceQuery
+    ResourceQuery, ResourceMutation
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings, \
-    SettingsQuery
+    SettingsQuery, SettingsMutation
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape_region')
@@ -31,7 +31,7 @@ def create_user_state_query(user_state_config):
     class UserStateQuery(ObjectType):
         user_states = graphene.List(
             R.prop('graphene_class', user_state_config),
-            **allowed_filter_arguments(R.prop('fields', user_state_config), R.prop('graphene_class', user_state_config))
+            **allowed_filter_arguments(R.prop('graphene_fields', user_state_config), R.prop('graphene_class', user_state_config))
         )
 
         @login_required
@@ -57,7 +57,7 @@ def create_group_state_query(group_state_config):
     class GroupStateQuery(ObjectType):
         group_states = graphene.List(
             R.prop('graphene_class', group_state_config),
-            **allowed_filter_arguments(R.prop('fields', group_state_config),
+            **allowed_filter_arguments(R.prop('graphene_fields', group_state_config),
                                        R.prop('graphene_class', group_state_config))
         )
 
@@ -79,32 +79,6 @@ def create_group_state_query_and_mutation_classes(class_config):
         mutation=create_group_state_mutation(group_state_config)
     )
 
-
-class SettingsMutation(graphene.ObjectType):
-    create_settings = CreateSettings.Field()
-    update_settings = UpdateSettings.Field()
-
-
-class RegionMutation(graphene.ObjectType):
-    create_region = CreateRegion.Field()
-    update_region = UpdateRegion.Field()
-
-
-class ProjectMutation(graphene.ObjectType):
-    create_project = CreateProject.Field()
-    update_project = UpdateProject.Field()
-
-
-class ResourceMutation(graphene.ObjectType):
-    create_resource = CreateResource.Field()
-    update_resource = UpdateResource.Field()
-
-
-class LocationMutation(graphene.ObjectType):
-    create_location = CreateLocation.Field()
-    update_location = UpdateLocation.Field()
-
-
 def create_user_state_mutation(user_state_config):
     class UserStateMutation(graphene.ObjectType):
         create_user_state = R.prop('create_mutation_class', user_state_config).Field()
@@ -125,35 +99,35 @@ default_class_config = dict(
     settings=dict(
         model_class=Settings,
         graphene_class=SettingsType,
-        fields=settings_fields,
+        graphene_fields=settings_fields,
         query=SettingsQuery,
         mutation=SettingsMutation
     ),
     region=dict(
         model_class=Region,
         graphene_class=RegionType,
-        fields=region_fields,
+        graphene_fields=region_fields,
         query=RegionQuery,
         mutation=RegionMutation
     ),
     project=dict(
         model_class=Project,
         graphene_class=ProjectType,
-        fields=project_fields,
+        graphene_fields=project_fields,
         query=ProjectQuery,
         mutation=ProjectMutation
     ),
     resource=dict(
         model_class=Resource,
         graphene_class=ResourceType,
-        fields=resource_fields,
+        graphene_fields=resource_fields,
         query=ResourceQuery,
         mutation=ResourceMutation
     ),
     location=dict(
-        model_class=RegionLocation,
-        graphene_class=RegionLocationType,
-        fields=location_fields,
+        model_class=Location,
+        graphene_class=LocationType,
+        graphene_fields=location_fields,
         query=LocationQuery,
         mutation=LocationMutation
     )

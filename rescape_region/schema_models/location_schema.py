@@ -11,18 +11,18 @@ from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwarg
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
-from rescape_region.models import RegionLocation
-from .region_location_data_schema import region_location_data_fields, RegionLocationDataType
-
+from rescape_region.models import Location
 # This file is only used for tests in rescape_region
+from rescape_region.schema_models.location_data_schema import LocationDataType, location_data_fields
+
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(RegionLocation, None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key')),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
-    # This refers to the RegionLocationDataType, which is a representation of all the json fields of Location.data
-    data=dict(graphene_type=RegionLocationDataType, fields=region_location_data_fields, default=lambda: dict()),
+    # This refers to the LocationDataType, which is a representation of all the json fields of Location.data
+    data=dict(graphene_type=LocationDataType, fields=location_data_fields, default=lambda: dict()),
     # This is the OSM geojson
     geojson=dict(
         graphene_type=FeatureCollectionDataType,
@@ -31,36 +31,36 @@ raw_location_fields = dict(
 )
 
 
-class RegionLocationType(DjangoObjectType):
+class LocationType(DjangoObjectType):
     id = graphene.Int(source='pk')
 
     class Meta:
-        model = RegionLocation
+        model = Location
 
 
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-RegionLocationType._meta.fields['data'] = Field(RegionLocationDataType, resolver=resolver_for_dict_field)
+LocationType._meta.fields['data'] = Field(LocationDataType, resolver=resolver_for_dict_field)
 
 # Modify the geojson field to use the geometry collection resolver
-RegionLocationType._meta.fields['geojson'] = Field(
+LocationType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
     resolver=resolver_for_dict_field
 )
-location_fields = merge_with_django_properties(RegionLocationType, raw_location_fields)
+location_fields = merge_with_django_properties(LocationType, raw_location_fields)
 
 class LocationQuery(ObjectType):
     locations = graphene.List(
-        RegionLocationType,
-        **allowed_filter_arguments(location_fields, RegionLocationType)
+        LocationType,
+        **allowed_filter_arguments(location_fields, LocationType)
     )
 
     @login_required
     def resolve_locations(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(RegionLocation, kwargs)
+        q_expressions = process_filter_kwargs(Location, kwargs)
 
-        return RegionLocation.objects.filter(
+        return Location.objects.filter(
             *q_expressions
         )
 
@@ -78,7 +78,7 @@ class UpsertLocation(Mutation):
     """
         Abstract base class for mutation
     """
-    location = Field(RegionLocationType)
+    location = Field(LocationType)
 
     @transaction.atomic
     @login_required
@@ -87,7 +87,7 @@ class UpsertLocation(Mutation):
         if R.has('id', location_data) and R.has('data', location_data):
             # New data gets priority, but this is a deep merge.
             location_data['data'] = R.merge_deep(
-                RegionLocation.objects.get(id=location_data['id']).data,
+                Location.objects.get(id=location_data['id']).data,
                 location_data['data']
             )
 
@@ -95,7 +95,7 @@ class UpsertLocation(Mutation):
         modified_location_data = enforce_unique_props(location_fields, location_data)
         update_or_create_values = input_type_parameters_for_update_or_create(location_fields, modified_location_data)
 
-        location, created = RegionLocation.objects.update_or_create(**update_or_create_values)
+        location, created = Location.objects.update_or_create(**update_or_create_values)
         return UpsertLocation(location=location)
 
 
@@ -106,7 +106,7 @@ class CreateLocation(UpsertLocation):
 
     class Arguments:
         location_data = type('CreateLocationInputType', (InputObjectType,),
-                             input_type_fields(location_fields, CREATE, RegionLocationType))(required=True)
+                             input_type_fields(location_fields, CREATE, LocationType))(required=True)
 
 
 class UpdateLocation(UpsertLocation):
@@ -116,8 +116,18 @@ class UpdateLocation(UpsertLocation):
 
     class Arguments:
         location_data = type('UpdateLocationInputType', (InputObjectType,),
-                             input_type_fields(location_fields, UPDATE, RegionLocationType))(required=True)
+                             input_type_fields(location_fields, UPDATE, LocationType))(required=True)
 
 
-graphql_update_or_create_region_location = graphql_update_or_create(location_mutation_config, location_fields)
-graphql_query_region_locations = graphql_query(RegionLocationType, location_fields, 'locations')
+class LocationMutation(graphene.ObjectType):
+    create_location = CreateLocation.Field()
+    update_location = UpdateLocation.Field()
+
+graphql_update_or_create_location = graphql_update_or_create(location_mutation_config, location_fields)
+graphql_query_locations = graphql_query(LocationType, location_fields, 'locations')
+
+location_schema_config = dict(
+    model_class=Location,
+    graphene_class=LocationType,
+    graphene_fields=location_fields,
+)

@@ -1,7 +1,7 @@
-from rescape_python_helpers import ramda as R
+from graphene import ObjectType, Float, List, Field, Int, Boolean
 from rescape_graphene import resolver_for_dict_field, \
     resolver_for_dict_list, model_resolver_for_dict_field, type_modify_fields
-from graphene import ObjectType, Float, List, Field, Int, Boolean
+from rescape_python_helpers import ramda as R
 
 viewport_data_fields = dict(
     latitude=dict(type=Float),
@@ -58,13 +58,12 @@ def UserGlobalDataType(class_config):
 
 def user_region_data_fields(class_config):
     region_class_config = R.prop('region', class_config)
-    location_class_config = R.prop('location', class_config)
     return dict(
         # References a Region.
         region=dict(
             type=R.prop('graphene_class', region_class_config),
             graphene_type=R.prop('graphene_class', region_class_config),
-            fields=R.prop('fields', region_class_config),
+            fields=R.prop('graphene_fields', region_class_config),
             type_modifier=lambda *type_and_args: Field(
                 *type_and_args,
                 resolver=model_resolver_for_dict_field(R.prop('model_class', region_class_config)
@@ -102,7 +101,7 @@ def user_project_data_fields(class_config):
         project=dict(
             type=R.prop('graphene_class', project_class_config),
             graphene_type=R.prop('graphene_class', project_class_config),
-            fields=R.prop('fields', project_class_config),
+            fields=R.prop('graphene_fields', project_class_config),
             type_modifier=lambda *type_and_args: Field(
                 *type_and_args,
                 resolver=model_resolver_for_dict_field(R.prop('model_class', project_class_config))
@@ -118,7 +117,7 @@ def user_project_data_fields(class_config):
         locations=dict(
             type=R.prop('graphene_class', location_class_config),
             graphene_type=R.prop('graphene_class', location_class_config),
-            fields=R.prop('fields', location_class_config),
+            fields=R.prop('graphene_fields', location_class_config),
             type_modifier=lambda *type_and_args: List(*type_and_args)
         ),
         # Is this project the active project for this user

@@ -127,6 +127,9 @@ class UpdateResource(UpsertResource):
         resource_data = type('UpdateResourceInputType', (InputObjectType,),
                              input_type_fields(resource_fields, UPDATE, ResourceType))(required=True)
 
+class ResourceMutation(graphene.ObjectType):
+    create_resource = CreateResource.Field()
+    update_resource = UpdateResource.Field()
 
 graphql_update_or_create_resource = graphql_update_or_create(resource_mutation_config, resource_fields)
 graphql_query_resources = graphql_query(ResourceType, resource_fields, 'resources')

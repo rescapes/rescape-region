@@ -119,5 +119,9 @@ class UpdateRegion(UpsertRegion):
                            input_type_fields(region_fields, UPDATE, RegionType))(required=True)
 
 
+class RegionMutation(graphene.ObjectType):
+    create_region = CreateRegion.Field()
+    update_region = UpdateRegion.Field()
+
 graphql_update_or_create_region = graphql_update_or_create(region_mutation_config, region_fields)
 graphql_query_regions = graphql_query(RegionType, region_fields, 'regions')

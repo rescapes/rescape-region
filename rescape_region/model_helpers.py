@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from rescape_python_helpers import ewkt_from_feature
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
+from pydoc import locate
 
 
 def geos_feature_geometry_default():
@@ -94,16 +95,23 @@ def get_project_model():
             "PROJECT_USER_MODEL refers to model '%s' that has not been installed" % settings.PROJECT_MODEL
         )
 
-def get_location_model():
+
+def get_location_schema():
     """
     Uses the same technique as get_user_model() to get the current location model from settings
     :return:
     """
     try:
-        return apps.get_model(settings.LOCATION_MODEL, require_ready=False)
+        return locate(settings.LOCATION_SCHEMA_CONFIG)
     except ValueError:
-        raise ImproperlyConfigured("LOCATION_MODEL must be of the form 'app_label.model_name'")
+        raise ImproperlyConfigured('''settings.LOCATION_SCHEMA_CONFIG must point to the location schema config containing
+    {
+        model_class=Location,
+        graphene_class=LocationType,
+        graphene_fields=location_fields,
+    }
+''')
     except LookupError:
         raise ImproperlyConfigured(
-            "LOCATION_MODEL refers to model '%s' that has not been installed" % settings.LOCATION_MODEL
+            "settings.LOCATION_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.LOCATION_SCHEMA_CONFIG
         )

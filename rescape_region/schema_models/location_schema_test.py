@@ -3,16 +3,21 @@ import logging
 import pytest
 from rescape_graphene import client_for_testing
 
-from rescape_region.model_helpers import get_location_model
+import os
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rescape_region.settings")
+django.setup()
+
+from rescape_region.model_helpers import get_location_schema
+from rescape_region.schema_models.location_schema import graphql_update_or_create_location, graphql_query_locations
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
-from .region_location_schema import graphql_query_region_locations, graphql_update_or_create_region_location
 
 from snapshottest import TestCase
 
-from .region_location_sample import create_sample_region_locations
+from .location_sample import create_sample_locations
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -26,15 +31,15 @@ class LocationSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.locations = create_sample_region_locations(get_location_model())
+        self.locations = create_sample_locations(get_location_schema()['model_class'])
 
     def test_query(self):
-        quiz_model_query(self.client, graphql_query_region_locations, 'locations', dict(name='Grand Place'))
+        quiz_model_query(self.client, graphql_query_locations, 'locations', dict(name='Grand Place'))
 
     def test_create(self):
         quiz_model_mutation_create(
             self.client,
-            graphql_update_or_create_region_location,
+            graphql_update_or_create_location,
             'createLocation.location',
             dict(
                 name='Grote Markt',
@@ -61,7 +66,7 @@ class LocationSchemaTestCase(TestCase):
     def test_update(self):
         quiz_model_mutation_update(
             self.client,
-            graphql_update_or_create_region_location,
+            graphql_update_or_create_location,
             'createLocation.location',
             'updateLocation.location',
             dict(

@@ -4,13 +4,12 @@ from copy import deepcopy
 import pytest
 from django.contrib.auth.hashers import make_password
 from rescape_graphene import client_for_testing
-
 from rescape_python_helpers import ramda as R
 from snapshottest import TestCase
 
-from rescape_region.model_helpers import get_location_model, get_region_model, get_project_model
+from rescape_region.model_helpers import get_region_model, get_project_model, \
+    get_location_schema
 from rescape_region.models import UserState
-from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import create_schema
@@ -18,9 +17,8 @@ from rescape_region.schema_models.schema_validating_helpers import quiz_model_qu
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
 from rescape_region.schema_models.user_state_schema import create_user_state_config
-
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
-    form_sample_user_state_data, create_sample_user_state
+    form_sample_user_state_data
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -31,17 +29,17 @@ default_class_config = dict(
     region=dict(
         model_class=get_region_model(),
         graphene_class=RegionType,
-        fields=region_fields
+        graphene_fields=region_fields
     ),
     project=dict(
         model_class=get_project_model(),
         graphene_class=ProjectType,
-        fields=project_fields
+        graphene_fields=project_fields
     ),
     location=dict(
-        model_class=get_location_model(),
-        graphene_class=RegionLocationType,
-        fields=location_fields
+        model_class=get_location_schema()['model_class'],
+        graphene_class=get_location_schema()['graphene_class'],
+        graphene_fields=get_location_schema()['graphene_fields']
     )
 )
 user_state_schema = create_user_state_config(default_class_config)

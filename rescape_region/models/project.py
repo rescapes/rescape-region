@@ -6,8 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import SET_NULL, CASCADE
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.model_helpers import feature_collection_default, project_data_default
-from rescape_region.models.region_location import RegionLocation
+from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
 
 
 class Project(SafeDeleteModel):
@@ -29,7 +28,7 @@ class Project(SafeDeleteModel):
     # reaching Project from Region
     region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+',)
     # Locations in the project. It might be better in some cases to leave this empty and specify locations by queries
-    locations = ManyToManyField(RegionLocation, blank=True)
+    locations = ManyToManyField('Location', blank=True)
 
     # Projects must be owned by someone
     user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='+',)

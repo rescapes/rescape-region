@@ -94,7 +94,7 @@ def create_group_state_config(class_config):
     return dict(
         model_class=GroupState,
         graphene_class=GroupStateType,
-        fields=group_state_fields,
+        graphene_fields=group_state_fields,
         create_mutation_class=CreateGroupState,
         update_mutation_class=UpdateGroupState,
         graphql_mutation=graphql_update_or_create_group_state,

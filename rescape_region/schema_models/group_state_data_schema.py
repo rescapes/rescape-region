@@ -9,7 +9,7 @@ def group_state_data_fields(class_config):
             # Intentional use of UserRegionDataType here. We want any group state to match user state
             type=R.item_str_path('region.graphene_class', class_config),
             graphene_type=R.item_str_path('region.graphene_class', class_config),
-            fields=R.item_str_path('region.fields', class_config),
+            fields=R.item_str_path('region.graphene_fields', class_config),
             type_modifier=lambda *type_and_args: List(*type_and_args, resolver=resolver_for_dict_list)
         )
     )

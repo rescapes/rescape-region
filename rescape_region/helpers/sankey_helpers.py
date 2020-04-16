@@ -56,7 +56,7 @@ def create_raw_links(delineator, resource):
     :param resource: The Resource object
     :return: Raw node data
     """
-    columns = R.item_path(['data', 'settings', 'link_columns'], resource)
+    columns = R.item_path(['data', 'settings', 'columns'], resource)
     raw_data = R.item_path(['data', 'rawData'], resource)
     # Sometimes we split nodes and edges in the raw data into
     # dict(nodes=..., edges=...). Sometimes the raw data is just nodes
@@ -70,7 +70,7 @@ def create_raw_links(delineator, resource):
             )
         ),
         raw_links
-    )
+    ) if raw_links else raw_data
 
 
 def resolve_coordinates(default_location, coordinates, i):
@@ -236,13 +236,13 @@ def generate_sankey_data(resource):
     nodes = R.flatten(R.values(nodes_by_stage))
     try:
         has_links = True
-        # Throw if link_columns aren't defined. This is expected for sankeys without explicit links
-        R.item_path(['data', 'settings', 'link_columns'], resource)
+        # Throw if columns aren't defined. This is expected for sankeys without explicit links
+        R.item_path(['data', 'settings', 'columns'], resource)
     except:
         has_links = False
     if has_links:
         raw_links = create_raw_links(delineator, resource)
-        node_key_key = R.prop('nodeKeyKey', settings)
+        node_key_key = R.prop('nodeNameKey', settings)
         nodes_by_key = R.from_pairs(R.map(
             lambda node: [prop_lookup(node, node_key_key), node],
             nodes

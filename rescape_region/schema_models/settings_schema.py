@@ -106,5 +106,10 @@ class UpdateSettings(UpsertSettings):
                              input_type_fields(settings_fields, UPDATE, SettingsType))(required=True)
 
 
+class SettingsMutation(graphene.ObjectType):
+    create_settings = CreateSettings.Field()
+    update_settings = UpdateSettings.Field()
+
+
 graphql_update_or_create_settings = graphql_update_or_create(settings_mutation_config, settings_fields)
 graphql_query_settings = graphql_query(SettingsType, settings_fields, 'settings')

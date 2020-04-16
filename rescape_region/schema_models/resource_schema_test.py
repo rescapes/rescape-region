@@ -54,7 +54,7 @@ class ResourceSchemaTestCase(TestCase):
             dict(
                 key='candy',
                 name='Candy',
-                region=dict(id=R.head(self.regions).id),
+                region=dict(id=self.region.id),
                 data=R.merge(
                     sample_settings,
                     dict(

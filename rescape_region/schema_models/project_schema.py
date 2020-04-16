@@ -2,7 +2,7 @@ from operator import itemgetter
 
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, List, ObjectType
+from graphene import InputObjectType, Mutation, Field, ObjectType, List
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
@@ -14,9 +14,8 @@ from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwarg
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
-from rescape_region.model_helpers import get_project_model
+from rescape_region.model_helpers import get_project_model, get_location_schema
 from rescape_region.models.project import Project
-from rescape_region.schema_models.region_location_schema import RegionLocationType, location_fields
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
 
@@ -34,15 +33,14 @@ raw_project_fields = dict(
         fields=feature_collection_data_type_fields
     ),
     region=dict(graphene_type=RegionType, fields=region_fields),
+    # The locations of the project. The Graphene type is dynamic to support application specific location classes
     locations=dict(
-        graphene_type=RegionLocationType,
-        fields=location_fields,
+        graphene_type=get_location_schema()['graphene_class'],
+        fields=get_location_schema()['graphene_fields'],
         type_modifier=lambda *type_and_args: List(*type_and_args)
     ),
     # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
     # support our Mutation subclasses and query_argument generation
-    # For simplicity we limit fields to id. Mutations can only use id, and a query doesn't need other
-    # details of the User--it can query separately for that
     user=dict(graphene_type=UserType, fields=user_fields),
 )
 
@@ -80,6 +78,7 @@ project_mutation_config = dict(
     create_paginated_type_mixin(ProjectType, project_fields)
 )
 
+
 class ProjectQuery(ObjectType):
     projects = graphene.List(
         ProjectType,
@@ -93,7 +92,6 @@ class ProjectQuery(ObjectType):
     @login_required
     def resolve_projects(self, info, **kwargs):
         return project_resolver('filter', **kwargs)
-
 
     @login_required
     def resolve_projects_paginated(self, info, **kwargs):
@@ -126,6 +124,7 @@ def project_resolver(manager_method, **kwargs):
     return getattr(Project.objects, manager_method)(
         *q_expressions
     )
+
 
 class UpsertProject(Mutation):
     """
@@ -185,6 +184,11 @@ class UpdateProject(UpsertProject):
     class Arguments:
         project_data = type('UpdateProjectInputType', (InputObjectType,),
                             input_type_fields(project_fields, UPDATE, ProjectType))(required=True)
+
+
+class ProjectMutation(graphene.ObjectType):
+    create_project = CreateProject.Field()
+    update_project = UpdateProject.Field()
 
 
 graphql_update_or_create_project = graphql_update_or_create(project_mutation_config, project_fields)

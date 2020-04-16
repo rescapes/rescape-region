@@ -5,7 +5,7 @@ from django.db.models import (
 from safedelete.models import SafeDeleteModel
 from rescape_region.model_helpers import region_data_default, feature_collection_default
 
-class RegionLocation(SafeDeleteModel):
+class Location(SafeDeleteModel):
     """
         Models a geospatial location
     """

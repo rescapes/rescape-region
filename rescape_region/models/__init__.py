@@ -3,7 +3,7 @@ from .project import Project
 from .user_state import UserState
 from .group_state import GroupState
 from .settings import Settings
-from .region_location import RegionLocation
+from .location import Location
 from .resource import Resource
 
 __all__ = [
