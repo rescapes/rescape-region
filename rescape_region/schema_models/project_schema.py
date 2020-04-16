@@ -15,13 +15,12 @@ from rescape_graphene.schema_models.geojson.types.feature_collection import feat
 from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_project_model, get_location_schema
-from rescape_region.models.project import Project
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Project, None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key')),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
@@ -120,8 +119,8 @@ def project_resolver(manager_method, **kwargs):
     :return:
     """
 
-    q_expressions = process_filter_kwargs(Project, kwargs)
-    return getattr(Project.objects, manager_method)(
+    q_expressions = process_filter_kwargs(get_project_model(), kwargs)
+    return getattr(get_project_model().objects, manager_method)(
         *q_expressions
     )
 
@@ -139,7 +138,7 @@ class UpsertProject(Mutation):
         if R.has('id', project_data) and R.has('data', project_data):
             # New data gets priority, but this is a deep merge.
             project_data['data'] = R.merge_deep(
-                Project.objects.get(id=project_data['id']).data,
+                get_project_model().objects.get(id=project_data['id']).data,
                 project_data['data']
             )
 
@@ -152,7 +151,7 @@ class UpsertProject(Mutation):
             R.omit(['locations'], modified_project_data)
         )
 
-        project, created = Project.objects.update_or_create(**update_or_create_values)
+        project, created = get_project_model().objects.update_or_create(**update_or_create_values)
         locations = R.prop_or([], 'locations', modified_project_data)
         any_locations = R.compose(R.lt(0), R.length, locations)
         if not created and any_locations:

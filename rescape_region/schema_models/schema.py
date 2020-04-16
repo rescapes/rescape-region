@@ -13,16 +13,11 @@ from rescape_python_helpers import ramda as R
 from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.group_state_schema import create_group_state_config
-from rescape_region.schema_models.project_schema import ProjectType, project_fields, CreateProject, UpdateProject, \
-    ProjectQuery, ProjectMutation
-from rescape_region.schema_models.location_schema import location_fields, CreateLocation, \
-    UpdateLocation, LocationType, LocationQuery, LocationMutation
-from rescape_region.schema_models.region_schema import RegionType, region_fields, CreateRegion, UpdateRegion, \
-    RegionQuery, RegionMutation
-from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, CreateResource, UpdateResource, \
-    ResourceQuery, ResourceMutation
-from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, CreateSettings, UpdateSettings, \
-    SettingsQuery, SettingsMutation
+from rescape_region.schema_models.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
+from rescape_region.schema_models.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
+from rescape_region.schema_models.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
+from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
+from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 
 logger = logging.getLogger('rescape_region')
