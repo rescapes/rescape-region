@@ -20,8 +20,8 @@ from .project_data_schema import ProjectDataType, project_data_fields
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', {})),
-    name=dict(create=REQUIRE),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['user_id']))),
+    name=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'name', R.pick(['user_id']))),
     created_at=dict(),
     updated_at=dict(),
     # This refers to the ProjectDataType, which is a representation of all the json fields of Project.data

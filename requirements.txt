@@ -48,9 +48,9 @@ pytz==2019.3
 readme-renderer==25.0
 requests==2.23.0
 requests-toolbelt==0.9.1
-rescape-graphene==0.2.84
+rescape-graphene==0.2.85
 rescape-python-helpers==0.0.28
-rescape-region==0.1.27
+rescape-region==0.1.28
 Rx==1.6.1
 simplejson==3.17.0
 singledispatch==3.4.0.3
