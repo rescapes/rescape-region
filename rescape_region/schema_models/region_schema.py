@@ -17,7 +17,7 @@ from .region_data_schema import RegionDataType, region_data_fields
 
 raw_region_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, {}, 'key')),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),

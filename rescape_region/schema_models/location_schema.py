@@ -17,7 +17,7 @@ from rescape_region.schema_models.location_data_schema import LocationDataType, 
 
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key', {})),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),

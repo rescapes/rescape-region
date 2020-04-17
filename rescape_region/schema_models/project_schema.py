@@ -20,7 +20,7 @@ from .project_data_schema import ProjectDataType, project_data_fields
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key')),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', {})),
     name=dict(create=REQUIRE),
     created_at=dict(),
     updated_at=dict(),
