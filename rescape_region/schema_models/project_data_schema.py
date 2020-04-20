@@ -10,7 +10,7 @@ project_data_fields = dict(
         type=get_location_schema()['graphene_class'],
         graphene_type=get_location_schema()['graphene_class'],
         fields=get_location_schema()['graphene_fields'],
-        type_modifier=lambda *type_and_args: List(*type_and_args)
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
     ),
 
     # The default mapbox settings for the region
@@ -18,7 +18,7 @@ project_data_fields = dict(
         type=MapboxDataType,
         graphene_type=MapboxDataType,
         fields=mapbox_data_fields,
-        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
     )
 )
 
