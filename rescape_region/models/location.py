@@ -18,6 +18,7 @@ class Location(SafeDeleteModel):
     geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=region_data_default)
 
+
     class Meta:
         app_label = "rescape_region"
 

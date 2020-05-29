@@ -32,11 +32,21 @@ MapboxDataType = type(
     type_modify_fields(mapbox_data_fields)
 )
 
+activity_data_fields = dict(
+    is_active=dict(type=Boolean)
+)
+
+ActivityDataType = type(
+    'ActivityDataType',
+    (ObjectType,),
+    type_modify_fields(activity_data_fields)
+)
+
 
 def user_global_data_fields(class_config):
     return {
         # The mapbox state for the user's Global settings
-        'mapbox':dict(
+        'mapbox': dict(
             type=MapboxDataType,
             graphene_type=MapboxDataType,
             fields=mapbox_data_fields,
@@ -120,8 +130,13 @@ def user_project_data_fields(class_config):
             fields=R.prop('graphene_fields', location_class_config),
             type_modifier=lambda *type_and_args: List(*type_and_args)
         ),
-        # Is this project the active project for this user
-        is_active=dict(type=Boolean)
+        # Is the project active for the user and similar
+        activity=dict(
+            type=ActivityDataType,
+            graphene_type=ActivityDataType,
+            fields=activity_data_fields,
+            type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        )
     )
 
 

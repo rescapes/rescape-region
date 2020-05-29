@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field, ObjectType
@@ -5,7 +7,8 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments, create_paginated_type_mixin, \
+    get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -27,7 +30,9 @@ raw_region_fields = dict(
     geojson=dict(
         graphene_type=FeatureCollectionDataType,
         fields=feature_collection_data_type_fields
-    )
+    ),
+    # TODO this needs special authentication to perform writes of deleted=True or reads of deleted=True
+    deleted=dict(),
 )
 
 
@@ -50,19 +55,50 @@ RegionType._meta.fields['geojson'] = Field(
 region_fields = merge_with_django_properties(RegionType, raw_region_fields)
 
 
+# Paginated version of ProjectType
+(RegionPaginatedType, region_paginated_fields) = itemgetter('type', 'fields')(
+    create_paginated_type_mixin(RegionType, region_fields)
+)
+
+
 class RegionQuery(ObjectType):
     regions = graphene.List(
         RegionType,
         **allowed_filter_arguments(region_fields, RegionType)
     )
+    regions_paginated = Field(
+        RegionPaginatedType,
+        **allowed_filter_arguments(region_paginated_fields, RegionPaginatedType)
+    )
 
     @login_required
     def resolve_regions(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Region, kwargs)
+        return region_resolver('filter', **kwargs)
 
-        return Region.objects.filter(
-            *q_expressions
+    @login_required
+    def resolve_regions_paginated(self, info, **kwargs):
+        regions = region_resolver('filter', **R.prop_or({}, 'objects', kwargs)).order_by('id')
+        return get_paginator(
+            regions,
+            R.prop('page_size', kwargs),
+            R.prop('page', kwargs),
+            RegionPaginatedType
         )
+
+
+def region_resolver(manager_method, **kwargs):
+    """
+
+    Resolves the regions for model get_region_model()
+    :param manager_method: 'filter', 'get', or 'count'
+    :param kwargs: Filter arguments for the Region
+    :return:
+    """
+
+    q_expressions = process_filter_kwargs(get_region_model(), kwargs)
+    return getattr(get_region_model().objects, manager_method)(
+        *q_expressions
+    )
 
 region_mutation_config = dict(
     class_name='Region',
@@ -125,3 +161,14 @@ class RegionMutation(graphene.ObjectType):
 
 graphql_update_or_create_region = graphql_update_or_create(region_mutation_config, region_fields)
 graphql_query_regions = graphql_query(RegionType, region_fields, 'regions')
+
+
+def graphql_query_regions_limited(region_fields):
+    return graphql_query(RegionType, region_fields, 'regions')
+
+
+graphql_query_regions_paginated = graphql_query(
+    RegionPaginatedType,
+    region_paginated_fields,
+    'regionsPaginated'
+)

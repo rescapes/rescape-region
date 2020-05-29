@@ -1,8 +1,9 @@
 from django.db.models import (
     CharField,
-    DateTimeField)
+    DateTimeField, BooleanField)
 from django.contrib.postgres.fields import JSONField
 from safedelete.models import SafeDeleteModel
+from datetime import datetime
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default
 

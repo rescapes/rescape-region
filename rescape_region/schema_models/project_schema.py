@@ -41,6 +41,8 @@ raw_project_fields = dict(
     # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
     # support our Mutation subclasses and query_argument generation
     user=dict(graphene_type=UserType, fields=user_fields),
+    # TODO this needs special authentication to perform writes of deleted=True or reads of deleted=True
+    deleted=dict()
 )
 
 
@@ -106,16 +108,9 @@ class ProjectQuery(ObjectType):
 def project_resolver(manager_method, **kwargs):
     """
 
-    Small correction here to change the data filter to data__contains to handle any json
-    https://docs.djangoproject.com/en/2.0/ref/contrib/postgres/fields/#std:fieldlookup-hstorefield.contains
-    Since our location.data has bad naming with things like Sidewalk instead of sidewalk, we also
-    have to call reverse_data_fields on the give data object to fix the names
-
-    We also include is_scenario=False in the filter to prevent Scenario locations unless kwargs['is_scenario'] is
-    given
-
+    Resolves the projects for model get_project_model()
     :param manager_method: 'filter', 'get', or 'count'
-    :param kwargs:
+    :param kwargs: Filter arguments for the Project
     :return:
     """
 

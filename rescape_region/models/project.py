@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.db.models import (
     CharField,
-    DateTimeField, ForeignKey, ManyToManyField)
+    DateTimeField, ForeignKey, ManyToManyField, BooleanField)
 from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import SET_NULL, CASCADE
 from safedelete.models import SafeDeleteModel
