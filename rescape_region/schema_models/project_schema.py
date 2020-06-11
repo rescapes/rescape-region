@@ -129,7 +129,7 @@ class UpsertProject(Mutation):
     @transaction.atomic
     @login_required
     def mutate(self, info, project_data=None):
-        deleted_project_response = delete_if_marked_for_delete(Project, UpsertProject, 'project', project_data)
+        deleted_project_response = delete_if_marked_for_delete(get_project_model(), UpsertProject, 'project', project_data)
         if deleted_project_response:
             return deleted_project_response
 
