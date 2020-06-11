@@ -44,7 +44,6 @@ def create_user_state_config(class_config):
         class Meta:
             model = UserState
 
-
     # Modify data field to use the resolver.
     # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
     # Django model to generate the fields
@@ -58,7 +57,10 @@ def create_user_state_config(class_config):
         # details of the User--it can query separately for that
         user=dict(graphene_type=UserType, fields=user_fields),
         # This refers to the UserState, which is a representation of all the json fields of UserState.data
-        data=dict(graphene_type=UserStateDataType(class_config), fields=user_state_data_fields(class_config), default=lambda: dict())
+        data=dict(graphene_type=UserStateDataType(class_config), fields=user_state_data_fields(class_config),
+                  default=lambda: dict()),
+        created_at=dict(),
+        updated_at=dict(),
     ))
 
     user_state_mutation_config = dict(
@@ -70,14 +72,11 @@ def create_user_state_config(class_config):
         resolve=guess_update_or_create
     )
 
-
-
     class UpsertUserState(Mutation):
         """
             Abstract base class for mutation
         """
         user_state = Field(UserStateType)
-
 
         def mutate(self, info, user_state_data=None):
             """
@@ -104,7 +103,6 @@ def create_user_state_config(class_config):
             user_state, created = UserState.objects.update_or_create(**update_or_create_values)
             return UpsertUserState(user_state=user_state)
 
-
     class CreateUserState(UpsertUserState):
         """
             Create UserState mutation class
@@ -112,8 +110,7 @@ def create_user_state_config(class_config):
 
         class Arguments:
             user_state_data = type('CreateUserStateInputType', (InputObjectType,),
-                                  input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
-
+                                   input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
 
     class UpdateUserState(UpsertUserState):
         """
@@ -123,7 +120,6 @@ def create_user_state_config(class_config):
         class Arguments:
             user_state_data = type('UpdateUserStateInputType', (InputObjectType,),
                                    input_type_fields(user_state_fields, UPDATE, UserStateType))(required=True)
-
 
     graphql_update_or_create_user_state = graphql_update_or_create(user_state_mutation_config, user_state_fields)
     graphql_query_user_states = graphql_query(UserStateType, user_state_fields, 'userStates')
