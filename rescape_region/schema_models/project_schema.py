@@ -10,13 +10,14 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, allowed_filter_arguments, \
     get_paginator, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_project_model, get_location_schema
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
+from ..models import Project
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
@@ -125,10 +126,13 @@ class UpsertProject(Mutation):
         Abstract base class for mutation
     """
     project = Field(ProjectType)
-
     @transaction.atomic
     @login_required
     def mutate(self, info, project_data=None):
+        deleted_project_response = delete_if_marked_for_delete(Project, UpsertProject, 'project', project_data)
+        if deleted_project_response:
+            return deleted_project_response
+
         # We must merge in existing project.data if we are updating data
         if R.has('id', project_data) and R.has('data', project_data):
             # New data gets priority, but this is a deep merge.

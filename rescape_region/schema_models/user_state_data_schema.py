@@ -88,7 +88,12 @@ def user_region_data_fields(class_config):
             type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
         ),
         # Is this region the active region for this user
-        is_active=dict(type=Boolean)
+        activity=dict(
+            type=ActivityDataType,
+            graphene_type=ActivityDataType,
+            fields=activity_data_fields,
+            type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        )
     )
 
 

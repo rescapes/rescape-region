@@ -10,7 +10,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments, create_paginated_type_mixin, \
     get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -116,9 +116,15 @@ class UpsertRegion(Mutation):
     """
     region = Field(RegionType)
 
+
     @transaction.atomic
     @login_required
     def mutate(self, info, region_data=None):
+
+        deleted_region_response = delete_if_marked_for_delete(Region, UpsertRegion, 'region', region_data)
+        if deleted_region_response:
+            return deleted_region_response
+
         # We must merge in existing region.data if we are updating data
         if R.has('id', region_data) and R.has('data', region_data):
             # New data gets priority, but this is a deep merge.
@@ -130,7 +136,6 @@ class UpsertRegion(Mutation):
         # Make sure that all props are unique that must be, either by modifying values or erring.
         modified_region_data = enforce_unique_props(region_fields, region_data)
         update_or_create_values = input_type_parameters_for_update_or_create(region_fields, modified_region_data)
-
         region, created = Region.objects.update_or_create(**update_or_create_values)
         return UpsertRegion(region=region)
 
