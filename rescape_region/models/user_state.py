@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import OneToOneField
+from django.db.models import OneToOneField, DateTimeField
 from django.contrib.gis.db.models import Model
 
 from rescape_region.model_helpers import user_state_data_default
@@ -16,6 +16,8 @@ class UserState(Model):
     """
     user = OneToOneField(User, null=False, on_delete=models.CASCADE)
     data = JSONField(null=False, default=user_state_data_default)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
 
     class Meta:
         app_label = "rescape_region"
