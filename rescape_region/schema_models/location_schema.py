@@ -7,7 +7,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -19,19 +20,18 @@ raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
     key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key', {})),
     name=dict(create=REQUIRE),
-    created_at=dict(),
-    updated_at=dict(),
     # This refers to the LocationDataType, which is a representation of all the json fields of Location.data
     data=dict(graphene_type=LocationDataType, fields=location_data_fields, default=lambda: dict()),
     # This is the OSM geojson
     geojson=dict(
         graphene_type=FeatureCollectionDataType,
         fields=feature_collection_data_type_fields
-    )
+    ),
+    deleted={}
 )
 
 
-class LocationType(DjangoObjectType):
+class LocationType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
     id = graphene.Int(source='pk')
 
     class Meta:
@@ -95,7 +95,7 @@ class UpsertLocation(Mutation):
         modified_location_data = enforce_unique_props(location_fields, location_data)
         update_or_create_values = input_type_parameters_for_update_or_create(location_fields, modified_location_data)
 
-        location, created = Location.objects.update_or_create(**update_or_create_values)
+        location, created = update_or_create_with_revision(Location, update_or_create_values)
         return UpsertLocation(location=location)
 
 

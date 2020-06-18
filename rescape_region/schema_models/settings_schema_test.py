@@ -1,7 +1,9 @@
 import logging
+from rescape_python_helpers import ramda as R
 
 import pytest
 from rescape_graphene import client_for_testing
+from reversion.models import Version
 
 from rescape_region.models.settings import Settings
 from rescape_region.schema_models.schema import create_schema
@@ -32,7 +34,7 @@ class SettingsSchemaTestCase(TestCase):
         quiz_model_query(self.client, graphql_query_settings, 'settings', dict(key='global'))
 
     def test_create(self):
-        quiz_model_mutation_create(
+        result, _ = quiz_model_mutation_create(
             self.client, graphql_update_or_create_settings, 'createSettings.settings',
             dict(
                 key='mars',
@@ -54,9 +56,13 @@ class SettingsSchemaTestCase(TestCase):
                 )
             )
         )
+        versions = Version.objects.get_for_object(Settings.objects.get(
+            id=R.item_str_path('data.createSettings.settings.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
-        quiz_model_mutation_update(
+        result, update_result = quiz_model_mutation_update(
             self.client,
             graphql_update_or_create_settings,
             'createSettings.settings',
@@ -90,3 +96,7 @@ class SettingsSchemaTestCase(TestCase):
                 )
             )
         )
+        versions = Version.objects.get_for_object(Settings.objects.get(
+            id=R.item_str_path('data.updateSettings.settings.id', update_result)
+        ))
+        assert len(versions) == 2

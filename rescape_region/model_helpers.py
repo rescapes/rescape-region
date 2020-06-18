@@ -1,3 +1,4 @@
+import reversion
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -115,3 +116,5 @@ def get_location_schema():
         raise ImproperlyConfigured(
             "settings.LOCATION_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.LOCATION_SCHEMA_CONFIG
         )
+
+

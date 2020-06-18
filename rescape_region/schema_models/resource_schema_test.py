@@ -2,15 +2,13 @@ import logging
 
 import pytest
 from rescape_graphene import client_for_testing
-
-from rescape_region.models import Region
-from rescape_region.schema_models.region_sample import create_sample_regions
-from rescape_region.schema_models.schema import dump_errors, create_schema
 from rescape_python_helpers import ramda as R
-from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resources
-from graphene.test import Client
 from snapshottest import TestCase
 
+from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resources
+from rescape_region.models import Region
+from rescape_region.schema_models.region_sample import create_sample_regions
+from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users

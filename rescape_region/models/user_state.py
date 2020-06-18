@@ -1,13 +1,16 @@
+import reversion
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import OneToOneField, DateTimeField
-from django.contrib.gis.db.models import Model
+from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import user_state_data_default
+from rescape_region.models.revision_mixin import RevisionMixin
 
 
-class UserState(Model):
+@reversion.register()
+class UserState(SafeDeleteModel, RevisionMixin):
     """
         User state reference a single User.
         It is designed to be a json blob that matches frontend end representation of the model data as closely
@@ -16,8 +19,6 @@ class UserState(Model):
     """
     user = OneToOneField(User, null=False, on_delete=models.CASCADE)
     data = JSONField(null=False, default=user_state_data_default)
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
 
     class Meta:
         app_label = "rescape_region"

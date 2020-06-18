@@ -5,7 +5,9 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
     enforce_unique_props, resolver_for_dict_field, user_fields
-from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update
+from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
 from rescape_python_helpers import ramda as R
@@ -35,7 +37,7 @@ def create_user_state_config(class_config):
     :return:
     """
 
-    class UserStateType(DjangoObjectType):
+    class UserStateType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
         """
             UserStateType models UserState, which represents the settings both imposed upon and chosen by the user
         """
@@ -59,8 +61,7 @@ def create_user_state_config(class_config):
         # This refers to the UserState, which is a representation of all the json fields of UserState.data
         data=dict(graphene_type=UserStateDataType(class_config), fields=user_state_data_fields(class_config),
                   default=lambda: dict()),
-        created_at=dict(),
-        updated_at=dict(),
+        deleted={}
     ))
 
     user_state_mutation_config = dict(
@@ -100,7 +101,7 @@ def create_user_state_config(class_config):
                     modified_data)
             )
 
-            user_state, created = UserState.objects.update_or_create(**update_or_create_values)
+            user_state, created = update_or_create_with_revision(UserState, update_or_create_values)
             return UpsertUserState(user_state=user_state)
 
     class CreateUserState(UpsertUserState):

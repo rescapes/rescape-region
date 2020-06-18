@@ -34,7 +34,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'safedelete',
     'graphene_django',
-    'rescape_region'
+    'rescape_region',
+    'reversion',
+    'reversion_compare'
 ]
 
 STATIC_URL = '/static/'

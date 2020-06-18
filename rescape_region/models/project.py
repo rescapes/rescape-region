@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import reversion
 from django.contrib.auth import get_user_model
 from django.db.models import (
     CharField,
@@ -9,9 +10,10 @@ from django.contrib.gis.db.models import SET_NULL, CASCADE
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
+from rescape_region.models.revision_mixin import RevisionMixin
 
-
-class Project(SafeDeleteModel):
+@reversion.register()
+class Project(SafeDeleteModel, RevisionMixin):
     """
         Models a geospatial project
     """
@@ -19,8 +21,6 @@ class Project(SafeDeleteModel):
     # Unique human readable identifier for URLs, etc
     key = CharField(max_length=50, unique=True, null=False)
     name = CharField(max_length=50, null=False)
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
     # TODO probably unneeded. Locations have geojson
     geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=project_data_default)

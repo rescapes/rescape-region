@@ -1,12 +1,16 @@
+import reversion
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import OneToOneField
-from django.contrib.gis.db.models import Model
+from safedelete.models import SafeDeleteModel
+
 from rescape_region.model_helpers import group_state_data_default
+from rescape_region.models.revision_mixin import RevisionMixin
 
 
-class GroupState(Model):
+@reversion.register()
+class GroupState(SafeDeleteModel, RevisionMixin):
     """
         Group state reference a single Group.
         The json structure of data should be identical to that of UserState, but maybe in the future will

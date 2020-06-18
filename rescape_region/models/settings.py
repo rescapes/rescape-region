@@ -1,12 +1,16 @@
+import reversion
 from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db.models import Model
 from django.contrib.postgres.fields import JSONField
 from django.db.models import CharField
+from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import user_state_data_default
+from rescape_region.models.revision_mixin import RevisionMixin
 
 
-class Settings(Model):
+@reversion.register()
+class Settings(SafeDeleteModel, RevisionMixin):
     """
         Global settings. This is a single instance class at the moment but can be expanded to handle different
         servers and other global settings that need to be customized by geographic region or similar.

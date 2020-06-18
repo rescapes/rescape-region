@@ -7,7 +7,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, resolver_for_dict_field, allowed_filter_arguments
 from rescape_graphene import enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models.settings import Settings
@@ -19,10 +20,11 @@ raw_settings_fields = dict(
     key=dict(create=REQUIRE),
     # This refers to the SettingsDataType, which is a representation of all the json fields of Settings.data
     data=dict(graphene_type=SettingsDataType, fields=settings_data_fields, default=lambda: dict()),
+    deleted={}
 )
 
 
-class SettingsType(DjangoObjectType):
+class SettingsType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
     id = graphene.Int(source='pk')
 
     class Meta:
@@ -82,7 +84,7 @@ class UpsertSettings(Mutation):
         modified_settings_data = enforce_unique_props(settings_fields, settings_data)
         update_or_create_values = input_type_parameters_for_update_or_create(settings_fields, modified_settings_data)
 
-        settings, created = Settings.objects.update_or_create(**update_or_create_values)
+        settings, created = update_or_create_with_revision(Settings, update_or_create_values)
         return UpsertSettings(settings=settings)
 
 

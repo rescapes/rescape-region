@@ -10,7 +10,9 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments, create_paginated_type_mixin, \
     get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
+    update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -22,8 +24,6 @@ raw_region_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
     key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, 'key', {})),
     name=dict(create=REQUIRE),
-    created_at=dict(),
-    updated_at=dict(),
     # This refers to the RegionDataType, which is a representation of all the json fields of Region.data
     data=dict(graphene_type=RegionDataType, fields=region_data_fields, default=lambda: dict()),
     # This is the OSM geojson
@@ -35,9 +35,8 @@ raw_region_fields = dict(
     deleted=dict(),
 )
 
+class RegionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 
-class RegionType(DjangoObjectType):
-    id = graphene.Int(source='pk')
 
     class Meta:
         model = get_region_model()
@@ -136,8 +135,10 @@ class UpsertRegion(Mutation):
         # Make sure that all props are unique that must be, either by modifying values or erring.
         modified_region_data = enforce_unique_props(region_fields, region_data)
         update_or_create_values = input_type_parameters_for_update_or_create(region_fields, modified_region_data)
-        region, created = Region.objects.update_or_create(**update_or_create_values)
+        region, created = update_or_create_with_revision(Region, update_or_create_values)
+
         return UpsertRegion(region=region)
+
 
 
 class CreateRegion(UpsertRegion):

@@ -6,7 +6,9 @@ from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, allowed_filter_arguments
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, allowed_filter_arguments, \
+    update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
 from rescape_graphene import enforce_unique_props
 
@@ -16,7 +18,7 @@ from rescape_region.schema_models.region_schema import RegionType
 from .resource_data_schema import ResourceDataType, resource_data_fields
 
 
-class ResourceType(DjangoObjectType):
+class ResourceType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
     id = graphene.Int(source='pk')
 
     class Meta:
@@ -34,7 +36,8 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     # For simplicity we limit fields to id. Mutations can only us id, and a query doesn't need other
     # details of the resource--it can query separately for that
     region=dict(graphene_type=RegionType,
-                fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE))))
+                fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE)))),
+    deleted={}
 ))
 
 # Modify data field to use the resolver.
@@ -104,7 +107,7 @@ class UpsertResource(Mutation):
             )
         )) if R.has('data', update_or_create_values['defaults']) else update_or_create_values
 
-        resource, created = Resource.objects.update_or_create(**update_or_create_values_with_sankey_data)
+        resource, created = update_or_create_with_revision(Resource, update_or_create_values_with_sankey_data)
         return UpsertResource(resource=resource)
 
 

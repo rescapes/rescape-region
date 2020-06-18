@@ -10,7 +10,9 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, allowed_filter_arguments, \
     get_paginator, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
+    update_or_create_with_revision
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -23,8 +25,6 @@ raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
     key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['user_id']))),
     name=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'name', R.pick(['user_id']))),
-    created_at=dict(),
-    updated_at=dict(),
     # This refers to the ProjectDataType, which is a representation of all the json fields of Project.data
     data=dict(graphene_type=ProjectDataType, fields=project_data_fields, default=lambda: dict()),
     # This is the OSM geojson
@@ -47,7 +47,7 @@ raw_project_fields = dict(
 )
 
 
-class ProjectType(DjangoObjectType):
+class ProjectType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
     id = graphene.Int(source='pk')
 
     class Meta:
@@ -150,7 +150,7 @@ class UpsertProject(Mutation):
             R.omit(['locations'], modified_project_data)
         )
 
-        project, created = get_project_model().objects.update_or_create(**update_or_create_values)
+        project, created = update_or_create_with_revision(get_project_model(), update_or_create_values)
         locations = R.prop_or([], 'locations', modified_project_data)
         any_locations = R.compose(R.lt(0), R.length, locations)
         if not created and any_locations:

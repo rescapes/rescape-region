@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth.hashers import make_password
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
+from reversion.models import Version
 from snapshottest import TestCase
 
 from rescape_region.model_helpers import get_region_model, get_project_model, \
@@ -139,7 +140,7 @@ class UserStateSchemaTestCase(TestCase):
             )
         )
 
-        quiz_model_mutation_create(
+        result, _ = quiz_model_mutation_create(
             self.client,
             R.prop('graphql_mutation', user_state_schema),
             'createUserState.userState',
@@ -148,6 +149,10 @@ class UserStateSchemaTestCase(TestCase):
             dict(),
             True
         )
+        versions = Version.objects.get_for_object(UserState.objects.get(
+            id=R.item_str_path('data.createUserState.userState.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
         # First add a new User
@@ -192,7 +197,7 @@ class UserStateSchemaTestCase(TestCase):
         update_data = deepcopy(R.pick(['data'], sample_user_state_data))
         R.item_str_path('mapbox.viewport', R.head(R.item_str_path('data.userRegions', (update_data))))['zoom'] = 15
 
-        quiz_model_mutation_update(
+        result, update_result = quiz_model_mutation_update(
             self.client,
             R.prop('graphql_mutation', user_state_schema),
             'createUserState.userState',
@@ -200,6 +205,10 @@ class UserStateSchemaTestCase(TestCase):
             sample_user_state_data,
             update_data
         )
+        versions = Version.objects.get_for_object(UserState.objects.get(
+            id=R.item_str_path('data.updateUserState.userState.id', update_result)
+        ))
+        assert len(versions) == 2
 
     # def test_delete(self):
     #     self.assertMatchSnapshot(self.client.execute('''{

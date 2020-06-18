@@ -2,6 +2,7 @@ import re
 
 from rescape_python_helpers.functional.ramda import pick_deep
 from rescape_python_helpers import ramda as R
+from reversion.models import Version
 
 
 def quiz_model_query(client, model_query_function, result_name, variables):
@@ -36,9 +37,10 @@ def quiz_model_mutation_create(client, graphql_update_or_create_function, result
     :param second_create_results: Tests a second create if specified. Use to make sure that create with the same values
     creates a new instance or updates, depending on what you expect it to do.
     :param second_create_does_update: Default False. If True expects a second create with the same value to update rather than create a new instance
-    :return:
+    :return: Tuple with two return values. The second is null if second_create_results is False
     """
     result = graphql_update_or_create_function(client, values=values)
+
     result_path_partial = R.item_str_path(f'data.{result_path}')
     assert not R.has('errors', result), R.dump_json(R.prop('errors', result))
     # Get the created value
@@ -55,6 +57,10 @@ def quiz_model_mutation_create(client, graphql_update_or_create_function, result
         if not second_create_does_update:
             assert created['id'] != created_too['id']
         assert second_create_results == pick_deep(second_create_results, created_too)
+    else:
+        new_result = None
+
+    return result, new_result
 
 
 def quiz_model_mutation_update(client, graphql_update_or_create_function, create_path, update_path, values,
@@ -76,7 +82,7 @@ def quiz_model_mutation_update(client, graphql_update_or_create_function, create
     # look at the users added and omit the non-determinant dateJoined
     assert values == pick_deep(created, values)
     # Update with the id and optionally key if there is one + update_values
-    new_result = graphql_update_or_create_function(
+    update_result = graphql_update_or_create_function(
         client,
         R.merge_all([
             dict(
@@ -88,16 +94,11 @@ def quiz_model_mutation_update(client, graphql_update_or_create_function, create
             update_values
         ])
     )
-    assert not R.has('errors', new_result), R.dump_json(R.prop('errors', new_result))
-    updated = R.item_str_path(f'data.{update_path}', new_result)
-    # TODO grapqhl returns ids now, so this can probable be removed
-    # Since graphql ID type outputs string ids, but our input type is an int, convert all non-nil ids
-    # Since OpenStreetMap can have actual string ids we want to leave those alone
-    #pattern = re.compile("^\d+$")
-    #updated_with_int_ids = R.map_with_obj_deep(
-    #    lambda k, v: int(v) if R.equals('id', k) and pattern.search(v or '') else v, updated)
+    assert not R.has('errors', update_result), R.dump_json(R.prop('errors', update_result))
+    updated = R.item_str_path(f'data.{update_path}', update_result)
     assert created['id'] == updated['id']
     assert update_values == pick_deep(
         update_values,
         updated
     )
+    return result, update_result

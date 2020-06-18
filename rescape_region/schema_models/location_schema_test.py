@@ -1,10 +1,15 @@
 import logging
+from rescape_python_helpers import ramda as R
 
 import pytest
 from rescape_graphene import client_for_testing
 
 import os
 import django
+from reversion.models import Version
+
+from ..models import Location
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rescape_region.settings")
 django.setup()
 
@@ -37,7 +42,7 @@ class LocationSchemaTestCase(TestCase):
         quiz_model_query(self.client, graphql_query_locations, 'locations', dict(name='Grand Place'))
 
     def test_create(self):
-        quiz_model_mutation_create(
+        result, new_result = quiz_model_mutation_create(
             self.client,
             graphql_update_or_create_location,
             'createLocation.location',
@@ -62,9 +67,13 @@ class LocationSchemaTestCase(TestCase):
             # Second create should create a new record with a unique key
             dict(key='groteMarkt1')
         )
+        versions = Version.objects.get_for_object(Location.objects.get(
+            id=R.item_str_path('data.createLocation.location.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
-        quiz_model_mutation_update(
+        result, update_result = quiz_model_mutation_update(
             self.client,
             graphql_update_or_create_location,
             'createLocation.location',
@@ -103,3 +112,7 @@ class LocationSchemaTestCase(TestCase):
                 }
             )
         )
+        versions = Version.objects.get_for_object(Location.objects.get(
+            id=R.item_str_path('data.updateLocation.location.id', update_result)
+        ))
+        assert len(versions) == 2

@@ -1,7 +1,10 @@
+import reversion
 from django.contrib.gis.db import models
-from django.db.models import (CharField, DateTimeField, ForeignKey)
 from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import Model
+from django.db.models import (CharField, DateTimeField, ForeignKey)
+from safedelete.models import SafeDeleteModel
+
+from rescape_region.models.revision_mixin import RevisionMixin
 
 
 def default():
@@ -38,7 +41,8 @@ def default():
     )
 
 
-class Resource(Model):
+@reversion.register()
+class Resource(SafeDeleteModel, RevisionMixin):
     """
         Models a resource, such as water
     """

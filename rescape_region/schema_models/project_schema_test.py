@@ -3,6 +3,7 @@ import logging
 import pytest
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
+from reversion.models import Version
 
 from rescape_region.model_helpers import get_location_schema, get_project_model
 from rescape_region.models.region import Region
@@ -41,7 +42,7 @@ class ProjectSchemaTestCase(TestCase):
         quiz_model_query(self.client, graphql_query_projects, 'projects', dict(name='Gare'))
 
     def test_create(self):
-        quiz_model_mutation_create(
+        result, new_result = quiz_model_mutation_create(
             self.client, graphql_update_or_create_project, 'createProject.project',
             dict(
                 name='Carre',
@@ -63,9 +64,13 @@ class ProjectSchemaTestCase(TestCase):
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
                 user=R.pick(['id'], R.head(self.users).__dict__),
             ), dict(key='carre1'))
+        versions = Version.objects.get_for_object(get_project_model().objects.get(
+            id=R.item_str_path('data.createProject.project.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
-        quiz_model_mutation_update(
+        result, update_result = quiz_model_mutation_update(
             self.client,
             graphql_update_or_create_project,
             'createProject.project',
@@ -107,3 +112,7 @@ class ProjectSchemaTestCase(TestCase):
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), [R.head(self.locations)])
             )
         )
+        versions = Version.objects.get_for_object(get_project_model().objects.get(
+            id=R.item_str_path('data.updateProject.project.id', update_result)
+        ))
+        assert len(versions) == 2

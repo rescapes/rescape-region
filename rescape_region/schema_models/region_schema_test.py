@@ -1,7 +1,11 @@
 import logging
 
+from django.core.management import call_command
+from rescape_python_helpers import ramda as R
+
 import pytest
 from rescape_graphene import client_for_testing
+from reversion.models import Version
 
 from rescape_region.models import Region
 from rescape_region.schema_models.schema import create_schema
@@ -32,7 +36,7 @@ class RegionSchemaTestCase(TestCase):
         quiz_model_query(self.client, graphql_query_regions, 'regions', dict(name='Belgium'))
 
     def test_create(self):
-        quiz_model_mutation_create(
+        (result, new_result) = quiz_model_mutation_create(
             self.client, graphql_update_or_create_region, 'createRegion.region',
             dict(
                 name='Luxembourg',
@@ -67,9 +71,13 @@ class RegionSchemaTestCase(TestCase):
                 )
             ), dict(key='luxembourg1')
         )
+        versions = Version.objects.get_for_object(Region.objects.get(
+            id=R.item_str_path('data.createRegion.region.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
-        quiz_model_mutation_update(
+        (result, update_result) = quiz_model_mutation_update(
             self.client,
             graphql_update_or_create_region,
             'createRegion.region',
@@ -108,3 +116,8 @@ class RegionSchemaTestCase(TestCase):
                 }
             )
         )
+        versions = Version.objects.get_for_object(Region.objects.get(
+            id=R.item_str_path('data.updateRegion.region.id', update_result)
+        ))
+        assert len(versions) == 2
+
