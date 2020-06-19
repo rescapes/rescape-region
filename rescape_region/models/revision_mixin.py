@@ -6,8 +6,13 @@ from rescape_python_helpers import ramda as R
 class RevisionMixin(models.Model):
     @property
     def created_at(self):
-        # Get the first version's create date
-        return R.last(list(Version.objects.get_for_object(self))).revision.date_created if self.pk else None
+        # Get the first version's create date.
+        # If the model instance has a legacy field date_created_unrevisioned, use that instead
+        if hasattr(self, 'created_at_unrevisioned'):
+            return self.created_at_unrevisioned
+
+        return R.last(list(Version.objects.get_for_object(self))).revision.date_created if \
+            not self.pk else None
 
     @property
     def latest_version(self):
