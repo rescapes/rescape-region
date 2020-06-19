@@ -3,10 +3,11 @@ import logging
 import pytest
 from rescape_graphene import client_for_testing
 from rescape_python_helpers import ramda as R
+from reversion.models import Version
 from snapshottest import TestCase
 
 from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resources
-from rescape_region.models import Region
+from rescape_region.models import Region, Resource
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
 from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
@@ -32,10 +33,9 @@ class ResourceSchemaTestCase(TestCase):
         self.client = client_for_testing(schema, users[0])
         delete_sample_resources()
         self.region = R.head(create_sample_regions(Region))
-
         self.resources = create_sample_resources([self.region])
         # Create a graph for all resources
-        # This modifies each
+        # This modifies each node to have a node_index
         self.graph = create_sankey_graph_from_resources(self.resources)
 
     def test_query(self):
@@ -45,7 +45,7 @@ class ResourceSchemaTestCase(TestCase):
         ))
 
     def test_create(self):
-        quiz_model_mutation_create(
+        result, _ = quiz_model_mutation_create(
             self.client,
             graphql_update_or_create_resource,
             'createResource.resource',
@@ -73,9 +73,13 @@ class ResourceSchemaTestCase(TestCase):
                 )
             )
         )
+        versions = Version.objects.get_for_object(Resource.objects.get(
+            id=R.item_str_path('data.createResource.resource.id', result)
+        ))
+        assert len(versions) == 1
 
     def test_update(self):
-        quiz_model_mutation_update(
+        result, update_result = quiz_model_mutation_update(
             self.client,
             graphql_update_or_create_resource,
             'createResource.resource',
@@ -83,7 +87,7 @@ class ResourceSchemaTestCase(TestCase):
             dict(
                 key='candy',
                 name='Candy',
-                region=dict(id=R.head(self.regions).id),
+                region=dict(id=self.region.id),
                 data=R.merge(
                     sample_settings,
                     dict(
@@ -108,3 +112,7 @@ class ResourceSchemaTestCase(TestCase):
                 name='Popcorn'
             )
         )
+        versions = Version.objects.get_for_object(Resource.objects.get(
+            id=R.item_str_path('data.updateResource.resource.id', update_result)
+        ))
+        assert len(versions) == 2

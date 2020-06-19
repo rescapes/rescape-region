@@ -234,13 +234,8 @@ def generate_sankey_data(resource):
         enumerate(raw_nodes)
     )
     nodes = R.flatten(R.values(nodes_by_stage))
-    try:
-        has_links = True
-        # Throw if columns aren't defined. This is expected for sankeys without explicit links
-        R.item_path(['data', 'settings', 'columns'], resource)
-    except:
-        has_links = False
-    if has_links:
+    # See if there are explicit links
+    if R.item_path_or(False, ['data', 'settings', 'link_start_node_key'], resource):
         raw_links = create_raw_links(delineator, resource)
         node_key_key = R.prop('nodeNameKey', settings)
         nodes_by_key = R.from_pairs(R.map(
@@ -298,7 +293,7 @@ def index_sankey_graph(graph):
 
     nodes = R.prop('nodes', graph)
     for (i, node) in enumerate(nodes):
-        node['index'] = i
+        node['node_index'] = i
     for link in R.prop('links', graph):
         link['source'] = nodes.index(R.prop('source_node', link))
         link['target'] = nodes.index(R.prop('target_node', link))

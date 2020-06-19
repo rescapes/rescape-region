@@ -1,8 +1,5 @@
-import re
-
-from rescape_python_helpers.functional.ramda import pick_deep
 from rescape_python_helpers import ramda as R
-from reversion.models import Version
+from rescape_python_helpers.functional.ramda import pick_deep
 
 
 def quiz_model_query(client, model_query_function, result_name, variables):
