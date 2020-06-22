@@ -50,6 +50,7 @@ LocationType._meta.fields['geojson'] = Field(
 )
 location_fields = merge_with_django_properties(LocationType, raw_location_fields)
 
+
 class LocationQuery(ObjectType):
     locations = graphene.List(
         LocationType,

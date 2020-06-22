@@ -35,11 +35,11 @@ raw_region_fields = dict(
     deleted=dict(),
 )
 
+
 class RegionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
-
-
     class Meta:
         model = get_region_model()
+
 
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
@@ -52,7 +52,6 @@ RegionType._meta.fields['geojson'] = Field(
     resolver=resolver_for_dict_field
 )
 region_fields = merge_with_django_properties(RegionType, raw_region_fields)
-
 
 # Paginated version of ProjectType
 (RegionPaginatedType, region_paginated_fields) = itemgetter('type', 'fields')(
@@ -99,6 +98,7 @@ def region_resolver(manager_method, **kwargs):
         *q_expressions
     )
 
+
 region_mutation_config = dict(
     class_name='Region',
     crud={
@@ -114,7 +114,6 @@ class UpsertRegion(Mutation):
         Abstract base class for mutation
     """
     region = Field(RegionType)
-
 
     @transaction.atomic
     @login_required
@@ -140,7 +139,6 @@ class UpsertRegion(Mutation):
         return UpsertRegion(region=region)
 
 
-
 class CreateRegion(UpsertRegion):
     """
         Create Region mutation class
@@ -164,6 +162,7 @@ class UpdateRegion(UpsertRegion):
 class RegionMutation(graphene.ObjectType):
     create_region = CreateRegion.Field()
     update_region = UpdateRegion.Field()
+
 
 graphql_update_or_create_region = graphql_update_or_create(region_mutation_config, region_fields)
 graphql_query_regions = graphql_query(RegionType, region_fields, 'regions')

@@ -7,9 +7,6 @@ from safedelete.models import SafeDeleteModel
 from rescape_region.model_helpers import region_data_default, feature_collection_default
 from rescape_region.models.revision_mixin import RevisionMixin
 
-
-
-
 @reversion.register()
 class Location(SafeDeleteModel, RevisionMixin):
     """
