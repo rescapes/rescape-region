@@ -11,7 +11,7 @@ from rescape_region.models.region import Region
 from rescape_region.schema_models.location_sample import create_sample_locations
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
-from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
 from .project_schema import graphql_query_projects, graphql_update_or_create_project

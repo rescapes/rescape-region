@@ -8,7 +8,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, resolver_for_dict_field, allowed_filter_arguments
 from rescape_graphene import enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision
-from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
+    DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models.settings import Settings
@@ -20,7 +21,7 @@ raw_settings_fields = dict(
     key=dict(create=REQUIRE),
     # This refers to the SettingsDataType, which is a representation of all the json fields of Settings.data
     data=dict(graphene_type=SettingsDataType, fields=settings_data_fields, default=lambda: dict()),
-    deleted={}
+    **reversion_and_safe_delete_types
 )
 
 

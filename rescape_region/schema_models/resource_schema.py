@@ -8,7 +8,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, allowed_filter_arguments, \
     update_or_create_with_revision
-from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
+    DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
 from rescape_graphene import enforce_unique_props
 
@@ -37,7 +38,7 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     # details of the resource--it can query separately for that
     region=dict(graphene_type=RegionType,
                 fields=merge_with_django_properties(RegionType, dict(id=dict(create=REQUIRE)))),
-    deleted={}
+    **reversion_and_safe_delete_types
 ))
 
 # Modify data field to use the resolver.
@@ -54,6 +55,8 @@ resource_fields = merge_with_django_properties(ResourceType, raw_resource_fields
 
 
 class ResourceQuery(ObjectType):
+    id = graphene.Int(source='pk')
+
     resources = graphene.List(
         ResourceType,
         **allowed_filter_arguments(resource_fields, ResourceType)
@@ -66,6 +69,7 @@ class ResourceQuery(ObjectType):
         return Resource.objects.filter(
             *q_expressions
         )
+
 
 resource_mutation_config = dict(
     class_name='Resource',
@@ -130,9 +134,11 @@ class UpdateResource(UpsertResource):
         resource_data = type('UpdateResourceInputType', (InputObjectType,),
                              input_type_fields(resource_fields, UPDATE, ResourceType))(required=True)
 
+
 class ResourceMutation(graphene.ObjectType):
     create_resource = CreateResource.Field()
     update_resource = UpdateResource.Field()
+
 
 graphql_update_or_create_resource = graphql_update_or_create(resource_mutation_config, resource_fields)
 graphql_query_resources = graphql_query(ResourceType, resource_fields, 'resources')

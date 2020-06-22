@@ -4,6 +4,8 @@ from copy import deepcopy
 import pytest
 from django.contrib.auth.hashers import make_password
 from rescape_graphene import client_for_testing
+from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+    quiz_model_mutation_update
 from rescape_python_helpers import ramda as R
 from reversion.models import Version
 from snapshottest import TestCase
@@ -14,8 +16,6 @@ from rescape_region.models import UserState
 from rescape_region.schema_models.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.region_schema import RegionType, region_fields
 from rescape_region.schema_models.schema import create_schema
-from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
-    quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_user
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \

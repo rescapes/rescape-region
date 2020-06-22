@@ -9,7 +9,7 @@ from reversion.models import Version
 
 from rescape_region.models import Region
 from rescape_region.schema_models.schema import create_schema
-from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
 from .region_schema import graphql_query_regions, graphql_update_or_create_region
@@ -120,4 +120,3 @@ class RegionSchemaTestCase(TestCase):
             id=R.item_str_path('data.updateRegion.region.id', update_result)
         ))
         assert len(versions) == 2
-

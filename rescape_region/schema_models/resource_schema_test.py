@@ -10,7 +10,7 @@ from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resou
 from rescape_region.models import Region, Resource
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_schema
-from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
 from .resource_sample import sample_settings, delete_sample_resources, create_sample_resources

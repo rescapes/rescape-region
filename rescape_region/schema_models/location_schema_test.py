@@ -16,7 +16,7 @@ django.setup()
 from rescape_region.model_helpers import get_location_schema
 from rescape_region.schema_models.location_schema import graphql_update_or_create_location, graphql_query_locations
 from rescape_region.schema_models.schema import create_schema
-from rescape_region.schema_models.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
+from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
 
@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 omit_props = ['createdAt', 'updatedAt']
 
 schema = create_schema()
+
+
 @pytest.mark.django_db
 class LocationSchemaTestCase(TestCase):
     client = None

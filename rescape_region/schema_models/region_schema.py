@@ -12,7 +12,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
     update_or_create_with_revision
-from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
+    DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
@@ -31,12 +32,13 @@ raw_region_fields = dict(
         graphene_type=FeatureCollectionDataType,
         fields=feature_collection_data_type_fields
     ),
-    # TODO this needs special authentication to perform writes of deleted=True or reads of deleted=True
-    deleted=dict(),
+    **reversion_and_safe_delete_types
 )
 
 
 class RegionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
+    id = graphene.Int(source='pk')
+
     class Meta:
         model = get_region_model()
 

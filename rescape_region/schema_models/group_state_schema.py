@@ -6,7 +6,8 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, \
     resolver_for_dict_field
 from rescape_graphene.graphql_helpers.schema_helpers import update_or_create_with_revision
-from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
+    DjangoObjectTypeRevisionedMixin
 
 from rescape_region.models import GroupState
 from rescape_region.schema_models.group_state_data_schema import GroupStateDataType, group_state_data_fields
@@ -44,7 +45,7 @@ def create_group_state_config(class_config):
         id=dict(create=DENY, update=REQUIRE),
         data=dict(graphene_type=GroupStateDataType(class_config), fields=group_state_data_fields(class_config),
                   default=lambda: dict()),
-        deleted={}
+        **reversion_and_safe_delete_types
     ))
 
     group_state_mutation_config = dict(
