@@ -6,11 +6,11 @@ from django.db.models import OneToOneField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import group_state_data_default
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 
 @reversion.register()
-class GroupState(SafeDeleteModel, RevisionMixin):
+class GroupState(SafeDeleteModel, RevisionModelMixin):
     """
         Group state reference a single Group.
         The json structure of data should be identical to that of UserState, but maybe in the future will

@@ -10,10 +10,10 @@ from django.contrib.gis.db.models import SET_NULL, CASCADE
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 @reversion.register()
-class Project(SafeDeleteModel, RevisionMixin):
+class Project(SafeDeleteModel, RevisionModelMixin):
     """
         Models a geospatial project
     """

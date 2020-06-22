@@ -5,10 +5,10 @@ from django.db.models import (
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 @reversion.register()
-class Location(SafeDeleteModel, RevisionMixin):
+class Location(SafeDeleteModel, RevisionModelMixin):
     """
         Models a geospatial location
     """

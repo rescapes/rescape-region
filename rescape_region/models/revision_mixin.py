@@ -3,7 +3,7 @@ from reversion.models import Version
 from rescape_python_helpers import ramda as R
 
 
-class RevisionMixin(models.Model):
+class RevisionModelMixin(models.Model):
     @property
     def created_at(self):
         # Get the first version's create date.

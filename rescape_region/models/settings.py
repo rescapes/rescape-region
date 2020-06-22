@@ -6,11 +6,11 @@ from django.db.models import CharField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import user_state_data_default
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 
 @reversion.register()
-class Settings(SafeDeleteModel, RevisionMixin):
+class Settings(SafeDeleteModel, RevisionModelMixin):
     """
         Global settings. This is a single instance class at the moment but can be expanded to handle different
         servers and other global settings that need to be customized by geographic region or similar.

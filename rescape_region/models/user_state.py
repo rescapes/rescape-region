@@ -6,11 +6,11 @@ from django.db.models import OneToOneField, DateTimeField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import user_state_data_default
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 
 @reversion.register()
-class UserState(SafeDeleteModel, RevisionMixin):
+class UserState(SafeDeleteModel, RevisionModelMixin):
     """
         User state reference a single User.
         It is designed to be a json blob that matches frontend end representation of the model data as closely

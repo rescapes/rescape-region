@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db.models import (CharField, DateTimeField, ForeignKey)
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.models.revision_mixin import RevisionMixin
+from rescape_region.models.revision_mixin import RevisionModelMixin
 
 
 def default():
@@ -42,7 +42,7 @@ def default():
 
 
 @reversion.register()
-class Resource(SafeDeleteModel, RevisionMixin):
+class Resource(SafeDeleteModel, RevisionModelMixin):
     """
         Models a resource, such as water
     """
