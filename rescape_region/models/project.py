@@ -12,6 +12,7 @@ from safedelete.models import SafeDeleteModel
 from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
 from rescape_region.models.revision_mixin import RevisionModelMixin
 
+
 @reversion.register()
 class Project(SafeDeleteModel, RevisionModelMixin):
     """
@@ -28,12 +29,12 @@ class Project(SafeDeleteModel, RevisionModelMixin):
     # Don't create a related name. It leads Graphene to register classes by following the reverse relationship.
     # We don't want this because we might use Region but have our own Project class. This prevents Graphene from
     # reaching Project from Region
-    region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+',)
+    region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+', )
     # Locations in the project. It might be better in some cases to leave this empty and specify locations by queries
     locations = ManyToManyField('Location', blank=True)
 
     # Projects must be owned by someone
-    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='+',)
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='+', )
 
     class Meta:
         app_label = "rescape_region"
