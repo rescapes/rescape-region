@@ -51,6 +51,12 @@ Update the version in setup.py
 Run to generate build:
 Update the version with bumpversion, which can't seem to look it up itself but updates setup.py
 
+install wheel and bumpversion if needed
+```
+pip3 install wheel
+pip3 install bumpversion
+```
+
 ```bash
 git commit . -m "Version update" && git push
 bumpversion --current-version {look in setup.py} patch setup.py
