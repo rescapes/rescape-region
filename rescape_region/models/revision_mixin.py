@@ -4,6 +4,15 @@ from rescape_python_helpers import ramda as R
 
 
 class RevisionModelMixin(models.Model):
+
+    @property
+    def instance_version(self):
+        """
+            Uses self._version if defined, else assumes the lastest version
+        :return:
+        """
+        return self._version if R.has('_version', self) else R.last(list(Version.objects.get_for_object(self)))
+
     @property
     def created_at(self):
         # Get the first version's create date.
@@ -11,7 +20,7 @@ class RevisionModelMixin(models.Model):
         if hasattr(self, 'created_at_unrevisioned'):
             return self.created_at_unrevisioned
 
-        return R.last(list(Version.objects.get_for_object(self))).revision.date_created if \
+        return self.instance_version.revision.date_created if \
             not self.pk else None
 
     @property
@@ -22,7 +31,7 @@ class RevisionModelMixin(models.Model):
     @property
     def updated_at(self):
         # Get the current version's revision's create_date
-        return self.latest_version.revision.date_created if self.pk else None
+        return self.instance_version.revision.date_created if self.pk else None
 
     @property
     def version_number(self):
@@ -30,7 +39,7 @@ class RevisionModelMixin(models.Model):
             There is no version number, only a revision number. So use count to show the version
         :return:
         """
-        return Version.objects.get_for_object(self).count()
+        return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
 
     @property
     def revision_id(self):
@@ -38,8 +47,7 @@ class RevisionModelMixin(models.Model):
             There is no version number, only a revision number. So use count to show the version
         :return:
         """
-        return Version.objects.get_for_object(self).revsion.id
-
+        return self.instance_version.revision.id
 
     class Meta:
         abstract = True
