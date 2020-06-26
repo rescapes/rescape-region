@@ -14,6 +14,7 @@ from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
 from rescape_python_helpers import ramda as R
 
+
 def create_user_state_config(class_config):
     """
         Creates the UserStateType based on specific class_config
@@ -82,7 +83,7 @@ def create_user_state_config(class_config):
 
     @R.curry
     def find_scope_instance(model, scope_id):
-       model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name'),
+        model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name'),
 
     @R.curry
     def find_scope_instances(new_data, path, model):
@@ -119,14 +120,14 @@ def create_user_state_config(class_config):
             # If any scope instances specified in new_data don't exist, throw an error
             validated_scope_instances = R.chain_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
             if R.find(lambda query: not R.length(query.count()), validated_scope_instances):
-                raise Exception(f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
+                raise Exception(
+                    f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
 
             modified_data = merge_data_fields_on_update(
                 ['data'],
                 UserState.objects.get(id=user_state_data['id']),
                 user_state_data
             ) if R.has('id', user_state_data) else user_state_data
-
 
             update_or_create_values = input_type_parameters_for_update_or_create(
                 user_state_fields,
