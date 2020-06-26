@@ -82,7 +82,7 @@ def create_user_state_config(class_config):
 
     @R.curry
     def find_scope_instance(model, scope_id):
-       model.objects.all_with_deleted().filter(id=scope_id),
+       model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name'),
 
     @R.curry
     def find_scope_instances(new_data, path, model):
@@ -116,8 +116,10 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or('data', user_state_data)
 
-
-            R.map_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
+            # If any scope instances specified in new_data don't exist, throw an error
+            validated_scope_instances = R.chain_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
+            if (R.find(lambda query: not R.length(query.count()), validated_scope_instances)):
+                raise Exception(f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
 
             modified_data = merge_data_fields_on_update(
                 ['data'],
