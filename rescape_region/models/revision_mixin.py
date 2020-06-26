@@ -21,7 +21,7 @@ class RevisionModelMixin(models.Model):
             return self.created_at_unrevisioned
 
         return self.instance_version.revision.date_created if \
-            not self.pk else None
+            self.pk and self.instance_version else None
 
     @property
     def latest_version(self):
@@ -31,7 +31,7 @@ class RevisionModelMixin(models.Model):
     @property
     def updated_at(self):
         # Get the current version's revision's create_date
-        return self.instance_version.revision.date_created if self.pk else None
+        return self.instance_version.revision.date_created if self.pk and self.instance_version else None
 
     @property
     def version_number(self):
@@ -39,6 +39,9 @@ class RevisionModelMixin(models.Model):
             There is no version number, only a revision number. So use count to show the version
         :return:
         """
+        if not self.instance_version:
+            return None
+
         return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
 
     @property
@@ -47,7 +50,7 @@ class RevisionModelMixin(models.Model):
             There is no version number, only a revision number. So use count to show the version
         :return:
         """
-        return self.instance_version.revision.id
+        return self.instance_version.revision.id if self.pk and self.instance_version else None
 
     class Meta:
         abstract = True

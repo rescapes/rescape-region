@@ -136,6 +136,7 @@ class UpsertProject(Mutation):
         # We must merge in existing project.data if we are updating data
         if R.has('id', project_data) and R.has('data', project_data):
             # New data gets priority, but this is a deep merge.
+            # If anything is omitted from the new data, it's assumed that the existing value should remain
             project_data['data'] = R.merge_deep(
                 get_project_model().objects.get(id=project_data['id']).data,
                 project_data['data']

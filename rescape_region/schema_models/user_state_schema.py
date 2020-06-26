@@ -9,6 +9,7 @@ from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 
+from rescape_region.model_helpers import get_region_model, get_project_model
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
 from rescape_python_helpers import ramda as R
@@ -73,6 +74,31 @@ def create_user_state_config(class_config):
         resolve=guess_update_or_create
     )
 
+    # The scope instance types expected in user_state.data
+    user_state_scopes = {
+        {'userRegions.regions': get_region_model()},
+        {'userProject.projects': get_project_model()}
+    }
+
+    @R.curry
+    def find_scope_instance(model, scope_id):
+       model.objects.all_with_deleted().filter(id=scope_id),
+
+    @R.curry
+    def find_scope_instances(new_data, path, model):
+        """
+            Retrieve the scope instances to verify the Ids
+        :param new_data:
+        :param path:
+        :param model:
+        :return:
+        """
+        scope_ids = R.item_str_path(R.concat(path, '.id'), new_data)
+        return R.map(
+            find_scope_instance(model),
+            scope_ids
+        )
+
     class UpsertUserState(Mutation):
         """
             Abstract base class for mutation
@@ -87,11 +113,18 @@ def create_user_state_config(class_config):
             :return:
             """
 
+            # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
+            new_data = R.prop_or('data', user_state_data)
+
+
+            R.map_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
+
             modified_data = merge_data_fields_on_update(
                 ['data'],
                 UserState.objects.get(id=user_state_data['id']),
                 user_state_data
             ) if R.has('id', user_state_data) else user_state_data
+
 
             update_or_create_values = input_type_parameters_for_update_or_create(
                 user_state_fields,
