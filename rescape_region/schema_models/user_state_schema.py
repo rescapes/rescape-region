@@ -118,7 +118,7 @@ def create_user_state_config(class_config):
 
             # If any scope instances specified in new_data don't exist, throw an error
             validated_scope_instances = R.chain_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
-            if (R.find(lambda query: not R.length(query.count()), validated_scope_instances)):
+            if R.find(lambda query: not R.length(query.count()), validated_scope_instances):
                 raise Exception(f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
 
             modified_data = merge_data_fields_on_update(
