@@ -76,17 +76,17 @@ def create_user_state_config(class_config):
     )
 
     # The scope instance types expected in user_state.data
-    user_state_scopes = {
-        {'userRegions.regions': get_region_model()},
-        {'userProject.projects': get_project_model()}
-    }
+    user_state_scopes = [
+        dict(prop='userRegions', scope_instance_path='region', model=get_region_model()),
+        dict(prop='userProjects', scope_instance_path='project', model=get_project_model())
+    ]
 
     @R.curry
     def find_scope_instance(model, scope_id):
-        model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name'),
+        return model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name')
 
     @R.curry
-    def find_scope_instances(new_data, path, model):
+    def find_scope_instances(new_data, user_state_scope):
         """
             Retrieve the scope instances to verify the Ids
         :param new_data:
@@ -94,10 +94,15 @@ def create_user_state_config(class_config):
         :param model:
         :return:
         """
-        scope_ids = R.item_str_path(R.concat(path, '.id'), new_data)
+        user_scope_instances = R.prop_or([], R.prop('prop', user_state_scope), new_data)
         return R.map(
-            find_scope_instance(model),
-            scope_ids
+            lambda user_scope_instance: find_scope_instance(
+                R.prop('model', user_state_scope),
+                R.item_path(
+                    [R.prop('scope_instance_path', user_state_scope), 'id'],
+                    user_scope_instance)
+            ),
+            user_scope_instances
         )
 
     class UpsertUserState(Mutation):
@@ -115,11 +120,10 @@ def create_user_state_config(class_config):
             """
 
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
-            new_data = R.prop_or('data', user_state_data)
-
+            new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_instances = R.chain_with_obj_to_values(find_scope_instances(new_data), user_state_scopes)
-            if R.find(lambda query: not R.length(query.count()), validated_scope_instances):
+            validated_scope_instances = R.chain(find_scope_instances(new_data), user_state_scopes)
+            if R.any_satisfy(lambda query: not R.equals(1, query.count()), validated_scope_instances):
                 raise Exception(
                     f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
 

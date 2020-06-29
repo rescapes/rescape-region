@@ -42,7 +42,7 @@ class RevisionModelMixin(models.Model):
         if not self.instance_version:
             return None
 
-        return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
+        return list(Version.objects.get_for_object(self).order_by('-revision_id')).index(self.instance_version) + 1
 
     @property
     def revision_id(self):
