@@ -41,13 +41,14 @@ class RevisionModelMixin(models.Model):
     @property
     def version_number(self):
         """
-            There is no version number, only a revision number. So use count to show the version
+            There is no version number, only a revision number. Query and order by revision_id ascending to get
+            a 1-based index
         :return:
         """
         if not self.instance_version:
             return None
 
-        return list(Version.objects.get_for_object(self).order_by('-revision_id')).index(self.instance_version) + 1
+        return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
 
     @property
     def revision_id(self):
