@@ -1,7 +1,7 @@
 import reversion
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import JSONField
-from django.db.models import (CharField, DateTimeField, ForeignKey)
+from django.db.models import (CharField, ForeignKey)
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.models.revision_mixin import RevisionModelMixin

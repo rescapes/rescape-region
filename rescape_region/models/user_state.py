@@ -2,7 +2,7 @@ import reversion
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import OneToOneField, DateTimeField
+from django.db.models import OneToOneField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import user_state_data_default

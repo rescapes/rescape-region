@@ -1,7 +1,8 @@
-from inflection import humanize
-from rescape_python_helpers import ramda as R
 import locale
 import logging
+
+from inflection import humanize
+from rescape_python_helpers import ramda as R
 
 logger = logging.getLogger('rescape_region')
 
