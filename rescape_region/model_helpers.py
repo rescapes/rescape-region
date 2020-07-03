@@ -103,9 +103,10 @@ def get_location_schema():
     :return:
     """
     try:
+        modules = settings.LOCATION_SCHEMA_CONFIG.split('.')
         return getattr(
-            importlib.import_module(R.init(settings.LOCATION_SCHEMA_CONFIG)),
-            R.last(settings.LOCATION_SCHEMA_CONFIG)
+            importlib.import_module(R.init(modules)),
+            R.last(modules)
         )
     except ValueError:
         raise ImproperlyConfigured('''settings.LOCATION_SCHEMA_CONFIG must point to the location schema config containing
