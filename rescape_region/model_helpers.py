@@ -1,11 +1,11 @@
-import reversion
+import importlib
+
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from rescape_python_helpers import ewkt_from_feature
 from rescape_python_helpers.geospatial.geometry_helpers import ewkt_from_feature_collection
-from pydoc import locate
-
+from rescape_python_helpers import ramda as R
 
 def geos_feature_geometry_default():
     """
@@ -103,7 +103,10 @@ def get_location_schema():
     :return:
     """
     try:
-        return locate(settings.LOCATION_SCHEMA_CONFIG)
+        return getattr(
+            importlib.import_module(R.init(settings.LOCATION_SCHEMA_CONFIG)),
+            R.last(settings.LOCATION_SCHEMA_CONFIG)
+        )
     except ValueError:
         raise ImproperlyConfigured('''settings.LOCATION_SCHEMA_CONFIG must point to the location schema config containing
     {
