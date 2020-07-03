@@ -105,7 +105,7 @@ def get_location_schema():
     try:
         modules = settings.LOCATION_SCHEMA_CONFIG.split('.')
         return getattr(
-            importlib.import_module(R.init(modules)),
+            importlib.import_module(R.join('.', R.init(modules))),
             R.last(modules)
         )
     except ValueError:
