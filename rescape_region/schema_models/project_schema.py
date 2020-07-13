@@ -60,14 +60,14 @@ class ProjectType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Django model to generate the fields
 ProjectType._meta.fields['data'] = Field(
     ProjectDataType,
-    allowed_filter_arguments(project_data_fields, ProjectDataType),
+    #allowed_filter_arguments(project_data_fields, ProjectDataType),
     resolver=resolver_for_dict_field
 )
 
 # Modify the geojson field to use the geometry collection resolver
 ProjectType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
-    allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
+    #allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 project_fields = merge_with_django_properties(ProjectType, raw_project_fields)

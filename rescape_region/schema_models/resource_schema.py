@@ -47,14 +47,14 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
 # Django model to generate the fields
 ResourceType._meta.fields['data'] = Field(
     ResourceDataType,
-    allowed_filter_arguments(resource_data_fields, ResourceDataType),
+    #allowed_filter_arguments(resource_data_fields, ResourceDataType),
     resolver=resolver_for_dict_field
 )
 
 # Modify the geojson field to use the geometry collection resolver
 ResourceType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
-    allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
+    #allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 resource_fields = merge_with_django_properties(ResourceType, raw_resource_fields)

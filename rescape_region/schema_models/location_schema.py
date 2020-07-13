@@ -45,14 +45,14 @@ class LocationType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Django model to generate the fields
 LocationType._meta.fields['data'] = Field(
     LocationDataType,
-    allowed_filter_arguments(location_data_fields, LocationDataType),
+    #allowed_filter_arguments(location_data_fields, LocationDataType),
     resolver=resolver_for_dict_field
 )
 
 # Modify the geojson field to use the geometry collection resolver
 LocationType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
-    allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
+    #allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 location_fields = merge_with_django_properties(LocationType, raw_location_fields)

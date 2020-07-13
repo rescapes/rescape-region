@@ -38,7 +38,7 @@ class SettingsType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Django model to generate the fields
 SettingsType._meta.fields['data'] = Field(
     SettingsDataType,
-    allowed_filter_arguments(settings_data_fields, SettingsDataType),
+    #allowed_filter_arguments(settings_data_fields, SettingsDataType),
     resolver=resolver_for_dict_field
 )
 

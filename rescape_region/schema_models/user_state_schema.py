@@ -54,7 +54,7 @@ def create_user_state_config(class_config):
     # Django model to generate the fields
     UserStateType._meta.fields['data'] = Field(
         UserStateDataType(class_config),
-        allowed_filter_arguments(user_state_data_fields, UserStateDataType),
+        #allowed_filter_arguments(user_state_data_fields, UserStateDataType),
         resolver=resolver_for_dict_field
     )
 

@@ -41,7 +41,7 @@ def create_group_state_config(class_config):
     # Django model to generate the fields
     GroupStateType._meta.fields['data'] = Field(
         GroupStateDataType(class_config),
-        allowed_filter_arguments(group_state_data_fields, GroupStateDataType),
+        #allowed_filter_arguments(group_state_data_fields, GroupStateDataType),
         resolver=resolver_for_dict_field
     )
 
