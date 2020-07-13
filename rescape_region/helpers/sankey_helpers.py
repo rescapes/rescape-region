@@ -151,7 +151,7 @@ def create_links(stages, value_key, nodes_by_stages):
 
 def generate_sankey_data(resource):
     """
-        Generates nodes and links for the given Resrouce object
+        Generates nodes and links for the given Resouce object
     :param resource:  Resource object
     :return: A dict containing nodes and links. nodes are a dict key by stage name
         Results can be assigned to resource.data.sankey and saved

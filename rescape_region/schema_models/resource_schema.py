@@ -93,18 +93,18 @@ class UpsertResource(Mutation):
     @transaction.atomic
     @login_required
     def mutate(self, info, resource_data=None):
-        # We must merge in existing resource.data if we are updating data
-        if R.has('id', resource_data) and R.has('data', resource_data):
+        # We must merge in existing resource.data if we are updating
+        if R.has('id', resource_data):
             # New data gets priority, but this is a deep merge.
             resource_data['data'] = R.merge_deep(
                 Resource.objects.get(id=resource_data['id']).data,
-                resource_data['data']
+                R.prop_or({}, 'data', resource_data)
             )
             # Modifies defaults value to add .data.graph
             # We could decide in the future to generate this derived data on the client, but it's easy enough to do here
 
-        # Make sure that all props are unique that must be, either by modifying values or erring.
         modified_resource_data = enforce_unique_props(resource_fields, resource_data)
+        # Make sure that all props are unique that must be, either by modifying values or erring.
         update_or_create_values = input_type_parameters_for_update_or_create(resource_fields, modified_resource_data)
 
         # Add the sankey data unless we are updating the instance without updating instance.data
@@ -112,7 +112,7 @@ class UpsertResource(Mutation):
             defaults=add_sankey_graph_to_resource_dict(
                 update_or_create_values['defaults']
             )
-        )) if R.has('data', update_or_create_values['defaults']) else update_or_create_values
+        )) if R.has('defaults', update_or_create_values) else update_or_create_values
 
         resource, created = update_or_create_with_revision(Resource, update_or_create_values_with_sankey_data)
         return UpsertResource(resource=resource)
