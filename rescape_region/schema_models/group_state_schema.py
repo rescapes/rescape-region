@@ -5,7 +5,7 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, \
     resolver_for_dict_field
-from rescape_graphene.graphql_helpers.schema_helpers import update_or_create_with_revision
+from rescape_graphene.graphql_helpers.schema_helpers import update_or_create_with_revision, allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 
@@ -39,7 +39,11 @@ def create_group_state_config(class_config):
     # Modify data field to use the resolver.
     # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
     # Django model to generate the fields
-    GroupStateType._meta.fields['data'] = Field(GroupStateDataType(class_config), resolver=resolver_for_dict_field)
+    GroupStateType._meta.fields['data'] = Field(
+        GroupStateDataType(class_config),
+        allowed_filter_arguments(group_state_data_fields, GroupStateDataType),
+        resolver=resolver_for_dict_field
+    )
 
     group_state_fields = merge_with_django_properties(GroupStateType, dict(
         id=dict(create=DENY, update=REQUIRE),

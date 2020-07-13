@@ -12,7 +12,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, top_level_allowed_filter_arguments
+    update_or_create_with_revision, top_level_allowed_filter_arguments, allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -58,11 +58,16 @@ class ProjectType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-ProjectType._meta.fields['data'] = Field(ProjectDataType, resolver=resolver_for_dict_field)
+ProjectType._meta.fields['data'] = Field(
+    ProjectDataType,
+    allowed_filter_arguments(project_data_fields, ProjectDataType),
+    resolver=resolver_for_dict_field
+)
 
 # Modify the geojson field to use the geometry collection resolver
 ProjectType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
+    allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 project_fields = merge_with_django_properties(ProjectType, raw_project_fields)

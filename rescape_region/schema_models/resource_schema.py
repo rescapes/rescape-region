@@ -8,9 +8,10 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
 from rescape_graphene import enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
-    top_level_allowed_filter_arguments
+    top_level_allowed_filter_arguments, allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
+from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
 from rescape_region.helpers.sankey_helpers import add_sankey_graph_to_resource_dict
@@ -44,11 +45,16 @@ raw_resource_fields = merge_with_django_properties(ResourceType, dict(
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-ResourceType._meta.fields['data'] = Field(ResourceDataType, resolver=resolver_for_dict_field)
+ResourceType._meta.fields['data'] = Field(
+    ResourceDataType,
+    allowed_filter_arguments(resource_data_fields, ResourceDataType),
+    resolver=resolver_for_dict_field
+)
 
 # Modify the geojson field to use the geometry collection resolver
 ResourceType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
+    allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 resource_fields = merge_with_django_properties(ResourceType, raw_resource_fields)

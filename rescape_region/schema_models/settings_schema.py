@@ -36,7 +36,11 @@ class SettingsType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Modify data field to use the resolver.
 # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
 # Django model to generate the fields
-SettingsType._meta.fields['data'] = Field(SettingsDataType, resolver=resolver_for_dict_field)
+SettingsType._meta.fields['data'] = Field(
+    SettingsDataType,
+    allowed_filter_arguments(settings_data_fields, SettingsDataType),
+    resolver=resolver_for_dict_field
+)
 
 settings_fields = merge_with_django_properties(SettingsType, raw_settings_fields)
 

@@ -5,7 +5,8 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
     enforce_unique_props, resolver_for_dict_field, user_fields
-from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision
+from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision, \
+    allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 
@@ -51,7 +52,11 @@ def create_user_state_config(class_config):
     # Modify data field to use the resolver.
     # I guess there's no way to specify a resolver upon field creation, since graphene just reads the underlying
     # Django model to generate the fields
-    UserStateType._meta.fields['data'] = Field(UserStateDataType(class_config), resolver=resolver_for_dict_field)
+    UserStateType._meta.fields['data'] = Field(
+        UserStateDataType(class_config),
+        allowed_filter_arguments(user_state_data_fields, UserStateDataType),
+        resolver=resolver_for_dict_field
+    )
 
     user_state_fields = merge_with_django_properties(UserStateType, dict(
         id=dict(create=DENY, update=REQUIRE),
