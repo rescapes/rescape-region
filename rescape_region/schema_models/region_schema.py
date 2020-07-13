@@ -49,14 +49,12 @@ class RegionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 # Django model to generate the fields
 RegionType._meta.fields['data'] = Field(
     RegionDataType,
-    #allowed_filter_arguments(region_data_fields, RegionDataType),
     resolver=resolver_for_dict_field
 )
 
 # Modify the geojson field to use the geometry collection resolver
 RegionType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
-    #allowed_filter_arguments(feature_collection_data_type_fields, FeatureCollectionDataType),
     resolver=resolver_for_dict_field
 )
 
