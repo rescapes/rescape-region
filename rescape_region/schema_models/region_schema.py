@@ -11,7 +11,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision
+    update_or_create_with_revision, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
