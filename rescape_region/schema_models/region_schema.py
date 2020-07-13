@@ -7,7 +7,7 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments, create_paginated_type_mixin, \
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin, \
     get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
@@ -64,11 +64,11 @@ region_fields = merge_with_django_properties(RegionType, raw_region_fields)
 class RegionQuery(ObjectType):
     regions = graphene.List(
         RegionType,
-        **allowed_filter_arguments(region_fields, RegionType)
+        **top_level_allowed_filter_arguments(region_fields, RegionType)
     )
     regions_paginated = Field(
         RegionPaginatedType,
-        **allowed_filter_arguments(region_paginated_fields, RegionPaginatedType)
+        **top_level_allowed_filter_arguments(region_paginated_fields, RegionPaginatedType)
     )
 
     @login_required

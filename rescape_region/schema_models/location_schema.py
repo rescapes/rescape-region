@@ -5,9 +5,10 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, allowed_filter_arguments
+    DENY, FeatureCollectionDataType, resolver_for_dict_field
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
+    top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -55,7 +56,7 @@ location_fields = merge_with_django_properties(LocationType, raw_location_fields
 class LocationQuery(ObjectType):
     locations = graphene.List(
         LocationType,
-        **allowed_filter_arguments(location_fields, LocationType)
+        **top_level_allowed_filter_arguments(location_fields, LocationType)
     )
 
     @login_required

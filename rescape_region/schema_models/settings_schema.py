@@ -7,7 +7,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, resolver_for_dict_field, allowed_filter_arguments
 from rescape_graphene import enforce_unique_props
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
+    top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
@@ -52,7 +53,7 @@ settings_mutation_config = dict(
 class SettingsQuery(ObjectType):
     settings = graphene.List(
         SettingsType,
-        **allowed_filter_arguments(settings_fields, RegionType)
+        **top_level_allowed_filter_arguments(settings_fields, RegionType)
     )
 
     @login_required

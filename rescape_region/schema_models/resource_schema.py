@@ -6,12 +6,12 @@ from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, increment_prop_until_unique
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, allowed_filter_arguments, \
-    update_or_create_with_revision
+from rescape_graphene import enforce_unique_props
+from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
+    top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
-from rescape_graphene import enforce_unique_props
 
 from rescape_region.helpers.sankey_helpers import add_sankey_graph_to_resource_dict
 from rescape_region.models.resource import Resource
@@ -59,7 +59,7 @@ class ResourceQuery(ObjectType):
 
     resources = graphene.List(
         ResourceType,
-        **allowed_filter_arguments(resource_fields, ResourceType)
+        **top_level_allowed_filter_arguments(resource_fields, ResourceType)
     )
 
     @login_required

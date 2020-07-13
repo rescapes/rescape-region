@@ -7,7 +7,7 @@ from graphql import format_error
 from graphql_jwt.decorators import login_required
 from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
 from rescape_graphene.graphql_helpers.schema_helpers import allowed_filter_arguments, \
-    process_filter_kwargs
+    process_filter_kwargs, top_level_allowed_filter_arguments
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
@@ -26,7 +26,7 @@ def create_user_state_query(user_state_config):
     class UserStateQuery(ObjectType):
         user_states = graphene.List(
             R.prop('graphene_class', user_state_config),
-            **allowed_filter_arguments(R.prop('graphene_fields', user_state_config), R.prop('graphene_class', user_state_config))
+            **top_level_allowed_filter_arguments(R.prop('graphene_fields', user_state_config), R.prop('graphene_class', user_state_config))
         )
 
         @login_required
@@ -52,7 +52,7 @@ def create_group_state_query(group_state_config):
     class GroupStateQuery(ObjectType):
         group_states = graphene.List(
             R.prop('graphene_class', group_state_config),
-            **allowed_filter_arguments(R.prop('graphene_fields', group_state_config),
+            **top_level_allowed_filter_arguments(R.prop('graphene_fields', group_state_config),
                                        R.prop('graphene_class', group_state_config))
         )
 

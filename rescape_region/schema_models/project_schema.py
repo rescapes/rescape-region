@@ -7,11 +7,11 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, allowed_filter_arguments, \
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, \
     get_paginator, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision
+    update_or_create_with_revision, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -84,11 +84,11 @@ project_mutation_config = dict(
 class ProjectQuery(ObjectType):
     projects = graphene.List(
         ProjectType,
-        **allowed_filter_arguments(project_fields, ProjectType)
+        **top_level_allowed_filter_arguments(project_fields, ProjectType)
     )
     projects_paginated = Field(
         ProjectPaginatedType,
-        **allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
+        **top_level_allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
     )
 
     @login_required
