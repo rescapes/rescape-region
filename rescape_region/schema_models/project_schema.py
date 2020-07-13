@@ -10,6 +10,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, \
     get_paginator, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
+from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
     update_or_create_with_revision, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
@@ -91,18 +92,20 @@ class ProjectQuery(ObjectType):
         **top_level_allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
     )
 
-    @login_required
-    def resolve_projects(self, info, **kwargs):
+    @staticmethod
+    def _resolve_projects(info, **kwargs):
         return project_resolver('filter', **kwargs)
 
     @login_required
+    def resolve_projects(self, info, **kwargs):
+        return ProjectQuery._resolve_projects(info, **kwargs)
+
+    @login_required
     def resolve_projects_paginated(self, info, **kwargs):
-        projects = project_resolver('filter', **R.prop_or({}, 'objects', kwargs)).order_by('id')
-        return get_paginator(
-            projects,
-            R.prop('page_size', kwargs),
-            R.prop('page', kwargs),
-            ProjectPaginatedType
+        return resolve_paginated_for_type(
+            ProjectPaginatedType,
+            ProjectQuery._resolve_projects,
+            **kwargs
         )
 
 

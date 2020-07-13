@@ -10,6 +10,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin, \
     get_paginator
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
+from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
     update_or_create_with_revision, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
@@ -71,20 +72,21 @@ class RegionQuery(ObjectType):
         **top_level_allowed_filter_arguments(region_paginated_fields, RegionPaginatedType)
     )
 
-    @login_required
-    def resolve_regions(self, info, **kwargs):
+    @staticmethod
+    def _resolve_regions(info, **kwargs):
         return region_resolver('filter', **kwargs)
 
     @login_required
-    def resolve_regions_paginated(self, info, **kwargs):
-        regions = region_resolver('filter', **R.prop_or({}, 'objects', kwargs)).order_by('id')
-        return get_paginator(
-            regions,
-            R.prop('page_size', kwargs),
-            R.prop('page', kwargs),
-            RegionPaginatedType
-        )
+    def resolve_regions(self, info, **kwargs):
+        return RegionQuery._resolve_regions(info, **kwargs)
 
+    @login_required
+    def resolve_regions_paginated(self, info, **kwargs):
+        return resolve_paginated_for_type(
+            RegionPaginatedType,
+            RegionQuery._resolve_regions,
+            **kwargs
+        )
 
 def region_resolver(manager_method, **kwargs):
     """
