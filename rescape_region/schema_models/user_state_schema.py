@@ -131,11 +131,27 @@ def create_user_state_config(class_config):
                 raise Exception(
                     f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
 
-            modified_data = merge_data_fields_on_update(
-                ['data'],
-                UserState.objects.get(id=user_state_data['id']),
-                user_state_data
-            ) if R.has('id', user_state_data) else user_state_data
+            # id or user.id can be used to identify the existing instance
+            id_props = R.compact_dict(
+                dict(
+                    id=R.prop_or(None, 'id', user_state_data),
+                    user_id=R.item_str_path_or(None, 'user.id', user_state_data)
+                )
+            )
+            def fetch_and_merge(user_state_data, props):
+                existing = UserState.objects.get(**props)
+                return merge_data_fields_on_update(
+                    ['data'],
+                    existing,
+                    # Merge existing's id in case it wasn't in user_state_data
+                    R.merge(user_state_data, R.pick(['id'], existing))
+                )
+
+            modified_data = R.if_else(
+                R.compose(R.length, R.keys),
+                lambda props: fetch_and_merge(user_state_data, props),
+                lambda x: user_state_data
+            )(id_props)
 
             update_or_create_values = input_type_parameters_for_update_or_create(
                 user_state_fields,

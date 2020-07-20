@@ -202,6 +202,11 @@ LOGGING = {
             'handlers': ['django_info', 'console'],
             'propagate': True,
             'level': 'WARNING',
+        },
+        'rescape_graphene': {
+            'handlers': ['django_error', 'django_info', 'console'],
+            'propagate': True,
+            'level': 'DEBUG',
         }
     },
 }
@@ -215,6 +220,7 @@ GRAPHENE = {
     'SCHEMA': 'rescape_region.schema_models.schema_creator.schema',
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
+        # TODO This does not work
         'rescape_region.middleware.debug_middleware.DebugMiddleware'
     ]
 }
