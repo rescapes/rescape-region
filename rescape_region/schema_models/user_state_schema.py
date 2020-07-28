@@ -1,19 +1,55 @@
 import graphene
-from graphene import Field, Mutation, InputObjectType
+from graphene import Field, Mutation, InputObjectType, ObjectType
 from graphene_django.types import DjangoObjectType
+from graphql_jwt.decorators import login_required
 from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     input_type_parameters_for_update_or_create, UPDATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
     enforce_unique_props, resolver_for_dict_field, user_fields
 from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision, \
-    allowed_filter_arguments
+    top_level_allowed_filter_arguments, process_filter_kwargs
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
+from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_region_model, get_project_model
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
-from rescape_python_helpers import ramda as R
+
+
+def create_user_state_query_and_mutation_classes(class_config):
+    user_state_config = create_user_state_config(class_config)
+    return dict(
+        query=create_user_state_query(user_state_config),
+        mutation=create_user_state_mutation(user_state_config)
+    )
+
+
+def create_user_state_mutation(user_state_config):
+    class UserStateMutation(graphene.ObjectType):
+        create_user_state = R.prop('create_mutation_class', user_state_config).Field()
+        update_user_state = R.prop('update_mutation_class', user_state_config).Field()
+
+    return UserStateMutation
+
+
+def create_user_state_query(user_state_config):
+    class UserStateQuery(ObjectType):
+        user_states = graphene.List(
+            R.prop('graphene_class', user_state_config),
+            **top_level_allowed_filter_arguments(R.prop('graphene_fields', user_state_config),
+                                                 R.prop('graphene_class', user_state_config))
+        )
+
+        @login_required
+        def resolve_user_states(self, info, **kwargs):
+            q_expressions = process_filter_kwargs(UserState, kwargs)
+
+            return UserState.objects.filter(
+                *q_expressions
+            )
+
+    return UserStateQuery
 
 
 def create_user_state_config(class_config):
@@ -138,11 +174,16 @@ def create_user_state_config(class_config):
                     user_id=R.item_str_path_or(None, 'user.id', user_state_data)
                 )
             )
+
             def fetch_and_merge(user_state_data, props):
-                existing = UserState.objects.get(**props)
+                existing = UserState.objects.filter(**props)
+                # If the user doesn't have a user state yet
+                if not R.length(existing):
+                    return user_state_data
+
                 return merge_data_fields_on_update(
                     ['data'],
-                    existing,
+                    R.head(existing),
                     # Merge existing's id in case it wasn't in user_state_data
                     R.merge(user_state_data, R.pick(['id'], existing))
                 )

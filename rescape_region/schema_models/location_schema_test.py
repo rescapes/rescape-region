@@ -66,8 +66,8 @@ class LocationSchemaTestCase(TestCase):
                 },
                 data=dict()
             ),
-            # Second create should create a new record with a unique key
-            dict(key='groteMarkt1')
+            # Second create should create a new record that matches this regex
+            dict(key=r'groteMarkt.+')
         )
         versions = Version.objects.get_for_object(Location.objects.get(
             id=R.item_str_path('data.createLocation.location.id', result)

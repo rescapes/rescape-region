@@ -12,82 +12,20 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
 from rescape_region.models.resource import Resource
-from rescape_region.schema_models.group_state_schema import create_group_state_config
+from rescape_region.schema_models.group_state_schema import create_group_state_config, \
+    create_group_state_query_and_mutation_classes
 from rescape_region.schema_models.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
 from rescape_region.schema_models.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
 from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
-from rescape_region.schema_models.user_state_schema import create_user_state_config
+from rescape_region.schema_models.user_state_schema import create_user_state_config, create_user_state_query, \
+    create_user_state_query_and_mutation_classes
 
 logger = logging.getLogger('rescape_region')
 
-def create_user_state_query(user_state_config):
-    class UserStateQuery(ObjectType):
-        user_states = graphene.List(
-            R.prop('graphene_class', user_state_config),
-            **top_level_allowed_filter_arguments(R.prop('graphene_fields', user_state_config), R.prop('graphene_class', user_state_config))
-        )
-
-        @login_required
-        def resolve_user_states(self, info, **kwargs):
-            q_expressions = process_filter_kwargs(UserState, kwargs)
-
-            return UserState.objects.filter(
-                *q_expressions
-            )
-
-    return UserStateQuery
 
 
-def create_user_state_query_and_mutation_classes(class_config):
-    user_state_config = create_user_state_config(class_config)
-    return dict(
-        query=create_user_state_query(user_state_config),
-        mutation=create_user_state_mutation(user_state_config)
-    )
-
-
-def create_group_state_query(group_state_config):
-    class GroupStateQuery(ObjectType):
-        group_states = graphene.List(
-            R.prop('graphene_class', group_state_config),
-            **top_level_allowed_filter_arguments(R.prop('graphene_fields', group_state_config),
-                                       R.prop('graphene_class', group_state_config))
-        )
-
-        @login_required
-        def resolve_group_states(self, info, **kwargs):
-            q_expressions = process_filter_kwargs(GroupState, kwargs)
-
-            return R.prop('model_class', group_state_config).objects.filter(
-                *q_expressions
-            )
-
-    return GroupStateQuery
-
-
-def create_group_state_query_and_mutation_classes(class_config):
-    group_state_config = create_group_state_config(class_config)
-    return dict(
-        query=create_group_state_query(group_state_config),
-        mutation=create_group_state_mutation(group_state_config)
-    )
-
-def create_user_state_mutation(user_state_config):
-    class UserStateMutation(graphene.ObjectType):
-        create_user_state = R.prop('create_mutation_class', user_state_config).Field()
-        update_user_state = R.prop('update_mutation_class', user_state_config).Field()
-
-    return UserStateMutation
-
-
-def create_group_state_mutation(group_state_config):
-    class GroupStateMutation(graphene.ObjectType):
-        create_user_state = R.prop('create_mutation_class', group_state_config).Field()
-        update_user_state = R.prop('update_mutation_class', group_state_config).Field()
-
-    return GroupStateMutation
 
 
 default_class_config = dict(

@@ -70,7 +70,7 @@ class RegionSchemaTestCase(TestCase):
                     )
                 )
             ),
-            dict(key='luxembourg1')
+            dict(key=r'luxembourg.+')
         )
         versions = Version.objects.get_for_object(Region.objects.get(
             id=R.item_str_path('data.createRegion.region.id', result)

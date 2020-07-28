@@ -63,7 +63,8 @@ class ProjectSchemaTestCase(TestCase):
                 data=dict(),
                 locations=R.map(R.compose(R.pick(['id']), lambda l: l.__dict__), self.locations),
                 user=R.pick(['id'], R.head(self.users).__dict__),
-            ), dict(key='carre1'))
+            ),
+            dict(key=r'carre.+'))
         versions = Version.objects.get_for_object(get_project_model().objects.get(
             id=R.item_str_path('data.createProject.project.id', result)
         ))
