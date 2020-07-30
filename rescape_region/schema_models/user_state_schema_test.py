@@ -15,7 +15,7 @@ from rescape_region.model_helpers import get_region_model, get_project_model, \
 from rescape_region.models import UserState
 from rescape_region.schema_models.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.region_schema import RegionType, region_fields
-from rescape_region.schema_models.schema import create_schema
+from rescape_region.schema_models.schema import create_default_schema
 from rescape_region.schema_models.user_sample import create_sample_user
 from rescape_region.schema_models.user_state_schema import create_user_state_config
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 
-schema = create_schema()
+schema = create_default_schema()
 default_class_config = dict(
     region=dict(
         model_class=get_region_model(),

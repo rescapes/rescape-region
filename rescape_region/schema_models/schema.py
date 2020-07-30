@@ -1,32 +1,21 @@
 import logging
 import traceback
 
-import graphene
-from graphene import ObjectType, Schema
 from graphql import format_error
-from graphql_jwt.decorators import login_required
-from rescape_graphene import Mutation as GrapheneMutation, Query as GrapheneQuery
-from rescape_graphene.graphql_helpers.schema_helpers import allowed_filter_arguments, \
-    process_filter_kwargs, top_level_allowed_filter_arguments
 from rescape_python_helpers import ramda as R
 
-from rescape_region.models import Region, UserState, GroupState, Project, Location, Settings
+from rescape_graphene import create_schema
+from rescape_region.models import Region, Project, Location, Settings
 from rescape_region.models.resource import Resource
-from rescape_region.schema_models.group_state_schema import create_group_state_config, \
-    create_group_state_query_and_mutation_classes
+from rescape_region.schema_models.group_state_schema import create_group_state_query_and_mutation_classes
 from rescape_region.schema_models.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
 from rescape_region.schema_models.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
 from rescape_region.schema_models.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
 from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
-from rescape_region.schema_models.user_state_schema import create_user_state_config, create_user_state_query, \
-    create_user_state_query_and_mutation_classes
+from rescape_region.schema_models.user_state_schema import create_user_state_query_and_mutation_classes
 
 logger = logging.getLogger('rescape_region')
-
-
-
-
 
 default_class_config = dict(
     settings=dict(
@@ -66,23 +55,21 @@ default_class_config = dict(
     )
 )
 
-
-def create_query_and_mutation_classes(class_config):
+def create_default_schema(class_config={}):
     """
-        Creates a Query class and Mutation classs from defaults or allows overrides of any of these schemas
-        Each arg if overriden must provide a dict with a query and mutation key, each pointing to the
-        override query and mutation graphene.ObjectType
-    :param class_config: Handles User and Group queries and mutations (defined in rescape_graphene)
-    :param class_config.region: Handles Region queries and mutations. See the default Region for an example
-    :param class_config.project: Handles Project queries and mutations. See the default Project for an example
-    :param class_config.location: Handles Location queries and mutations. See the default Location for an example
-    :return: A dict with query and mutation for the two dynamic classes
+        Merges the default graphene types defined in this schema with an application using this library
+        that has it's own graphene types. The latter can define overrides for all the default graphene types
+        defined in this file. UserState and GroupState are created based on a merger of the types
+    :param class_config:
+    :return:
     """
 
+    # Merge the incoming class_config with our defaults
     merged_class_config = R.merge(
         default_class_config,
         class_config
     )
+
     # We use region, project, and location to create user_state and group_state
     # This is because user_state and group_state store settings for a user or group about those enties
     # For instance, what regions does a group have access to or what location is selected by a user
@@ -96,48 +83,7 @@ def create_query_and_mutation_classes(class_config):
             group_state=group_state
         )
     )
-
-    class Query(
-        GrapheneQuery,
-        *R.map_with_obj_to_values(
-            lambda k, v: R.prop('query', v), query_and_mutation_class_lookups
-        )
-    ):
-        pass
-
-    class Mutation(
-        GrapheneMutation,
-        *R.map_with_obj_to_values(
-            lambda k, v: R.prop('mutation', v), query_and_mutation_class_lookups
-        )
-    ):
-        pass
-
-    return dict(query=Query, mutation=Mutation)
-
-
-def create_query_mutation_schema(class_config):
-    """
-        Creates a schema from defaults or allows overrides of any of these schemas
-        Each arg if overridden must provide a dict with a query and mutation key, each pointing to the
-        override query and mutation graphene.ObjectType
-        :param class_config
-        :param class_config.user_group: Handles User and Group queries and mutations (defined in rescape_graphene)
-        :param class_config.user_group_state: Handles UserState and GroupState queries and mutations. See the default UserState
-        and GroupState for an example
-        :param class_config.region: Handles Region queries and mutations. See the default Region for an example
-        :param class_config.project: Handles Project queries and mutations. See the default Project for an example
-        :param class_config.location: Handles Location queries and mutations. See the default Location for an example
-        :return:
-    """
-
-    obj = create_query_and_mutation_classes(class_config)
-    schema = Schema(query=R.prop('query', obj), mutation=R.prop('mutation', obj))
-    return dict(query=R.prop('query', obj), mutation=R.prop('mutation', obj), schema=schema)
-
-
-def create_schema(class_config={}):
-    return R.prop('schema', create_query_mutation_schema(class_config))
+    return create_schema(query_and_mutation_class_lookups)
 
 
 def dump_errors(result):
