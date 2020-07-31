@@ -32,7 +32,7 @@ def create_group_state_query(group_state_config):
 
         @login_required
         def resolve_group_states(self, info, **kwargs):
-            q_expressions = process_filter_kwargs(GroupState, kwargs)
+            q_expressions = process_filter_kwargs(GroupState, **kwargs)
 
             return R.prop('model_class', group_state_config).objects.filter(
                 *q_expressions

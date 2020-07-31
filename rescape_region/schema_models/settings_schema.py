@@ -61,7 +61,7 @@ class SettingsQuery(ObjectType):
 
     @login_required
     def resolve_settings(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Settings, kwargs)
+        q_expressions = process_filter_kwargs(Settings, **kwargs)
 
         return Settings.objects.filter(
             *q_expressions

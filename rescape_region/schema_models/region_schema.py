@@ -101,7 +101,7 @@ def region_resolver(manager_method, **kwargs):
     :return:
     """
 
-    q_expressions = process_filter_kwargs(get_region_model(), kwargs)
+    q_expressions = process_filter_kwargs(get_region_model(), **kwargs)
     return getattr(get_region_model().objects, manager_method)(
         *q_expressions
     )

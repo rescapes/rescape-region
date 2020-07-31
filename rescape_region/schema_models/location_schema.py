@@ -64,7 +64,7 @@ class LocationQuery(ObjectType):
 
     @login_required
     def resolve_locations(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Location, kwargs)
+        q_expressions = process_filter_kwargs(Location, **kwargs)
 
         return Location.objects.filter(
             *q_expressions
