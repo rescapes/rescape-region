@@ -4,9 +4,9 @@ import reversion
 from django.contrib.auth import get_user_model
 from django.db.models import (
     CharField,
-    DateTimeField, ForeignKey, ManyToManyField, BooleanField)
+    DateTimeField, ForeignKey, ManyToManyField, BooleanField, UniqueConstraint)
 from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import SET_NULL, CASCADE
+from django.contrib.gis.db.models import SET_NULL, CASCADE, Q
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
@@ -20,7 +20,7 @@ class Project(SafeDeleteModel, RevisionModelMixin):
     """
 
     # Unique human readable identifier for URLs, etc
-    key = CharField(max_length=50, unique=True, null=False)
+    key = CharField(max_length=50, null=False)
     name = CharField(max_length=50, null=False)
     # TODO probably unneeded. Locations have geojson
     geojson = JSONField(null=False, default=feature_collection_default)
@@ -38,6 +38,16 @@ class Project(SafeDeleteModel, RevisionModelMixin):
 
     class Meta:
         app_label = "rescape_region"
+        constraints = [
+            # https://stackoverflow.com/questions/33307892/django-unique-together-with-nullable-foreignkey
+            # This says that for deleted locations, user and key and deleted date must be unique
+            UniqueConstraint(fields=['user', 'deleted', 'key'],
+                             name='unique_project_with_deleted'),
+            # This says that for non-deleted locations, user and key must be unique
+            UniqueConstraint(fields=['user', 'key'],
+                             condition=Q(deleted=None),
+                             name='unique_project_without_deleted'),
+        ]
 
     def __str__(self):
         return self.name
