@@ -1,7 +1,7 @@
 import reversion
 from django.contrib.postgres.fields import JSONField
 from django.db.models import (
-    CharField)
+    CharField, Q, UniqueConstraint)
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default
@@ -15,7 +15,7 @@ class Region(SafeDeleteModel, RevisionModelMixin):
     """
 
     # Unique human readable identifier for URLs, etc
-    key = CharField(max_length=50, unique=True, null=False)
+    key = CharField(max_length=50, null=False)
     name = CharField(max_length=50, null=False)
     # Stores geojson from OSM that represents the Location.
     # Note that this isn't stored as a GEOS GeometryCollection because that structure doesn't include properties
@@ -24,10 +24,18 @@ class Region(SafeDeleteModel, RevisionModelMixin):
     geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=region_data_default)
 
-
     class Meta:
         app_label = "rescape_region"
+        constraints = [
+            # https://stackoverflow.com/questions/33307892/django-unique-together-with-nullable-foreignkey
+            # This says that for deleted regions, key and deleted date must be unique
+            UniqueConstraint(fields=['deleted', 'key'],
+                             name='unique_region_with_deleted'),
+            # This says that for non-deleted regions, key must be unique
+            UniqueConstraint(fields=['key'],
+                             condition=Q(deleted=None),
+                             name='unique_region_without_deleted'),
+        ]
 
     def __str__(self):
         return self.name
-

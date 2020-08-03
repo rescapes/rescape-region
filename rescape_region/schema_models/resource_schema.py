@@ -28,7 +28,7 @@ class ResourceType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
 
 raw_resource_fields = merge_with_django_properties(ResourceType, dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Resource, None, 'key', {})),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Resource, None, 'key', R.pick(['deleted']))),
     name=dict(create=REQUIRE),
     # This refers to the Resource, which is a representation of all the json fields of Resource.data
     data=dict(graphene_type=ResourceDataType, fields=resource_data_fields, default=lambda: dict()),

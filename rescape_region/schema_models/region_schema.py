@@ -24,7 +24,7 @@ from .region_data_schema import RegionDataType, region_data_fields
 
 raw_region_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, 'key', {})),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Region, None, 'key', R.pick(['deleted']))),
     name=dict(create=REQUIRE),
     # This refers to the RegionDataType, which is a representation of all the json fields of Region.data
     data=dict(graphene_type=RegionDataType, fields=region_data_fields, default=lambda: dict()),

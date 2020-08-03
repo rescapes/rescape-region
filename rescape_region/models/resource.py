@@ -1,7 +1,7 @@
 import reversion
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import JSONField
-from django.db.models import (CharField, ForeignKey)
+from django.db.models import (CharField, ForeignKey, UniqueConstraint, Q)
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.models.revision_mixin import RevisionModelMixin
@@ -46,7 +46,7 @@ class Resource(SafeDeleteModel, RevisionModelMixin):
     """
         Models a resource, such as water
     """
-    key = CharField(max_length=50, unique=True, null=False)
+    key = CharField(max_length=50, null=False)
     name = CharField(max_length=50, null=False)
     data = JSONField(null=False, default=default)
     # TODO we should probably have models.CASCADE here to delete a resource if the region goes away
@@ -54,6 +54,16 @@ class Resource(SafeDeleteModel, RevisionModelMixin):
 
     class Meta:
         app_label = "rescape_region"
+        constraints = [
+            # https://stackoverflow.com/questions/33307892/django-unique-together-with-nullable-foreignkey
+            # This says that for deleted resources, key and deleted date must be unique
+            UniqueConstraint(fields=['deleted', 'key'],
+                             name='unique_resource_with_deleted'),
+            # This says that for non-deleted resources, key must be unique
+            UniqueConstraint(fields=['key'],
+                             condition=Q(deleted=None),
+                             name='unique_resource_without_deleted'),
+        ]
 
     def __str__(self):
         return self.name

@@ -25,8 +25,8 @@ from ..models import Project
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['user_id']))),
-    name=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'name', R.pick(['user_id']))),
+    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['deleted', 'user_id']))),
+    name=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'name', R.pick(['deleted', 'user_id']))),
     # This refers to the ProjectDataType, which is a representation of all the json fields of Project.data
     data=dict(graphene_type=ProjectDataType, fields=project_data_fields, default=lambda: dict()),
     # This is the OSM geojson
