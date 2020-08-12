@@ -1,12 +1,20 @@
 from graphene import ObjectType, Float, List, Field, Int, Boolean
 from rescape_graphene import resolver_for_dict_field, \
-    resolver_for_dict_list, model_resolver_for_dict_field, type_modify_fields
+    resolver_for_dict_list, model_resolver_for_dict_field, type_modify_fields, FeatureCollectionDataType
+from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
 viewport_data_fields = dict(
     latitude=dict(type=Float),
     longitude=dict(type=Float),
-    zoom=dict(type=Int)
+    zoom=dict(type=Int),
+    # Overrides latitude, longitude, and zoom to support more complex types
+    extent=dict(
+        type=FeatureCollectionDataType,
+        graphene_type=FeatureCollectionDataType,
+        fields=feature_collection_data_type_fields,
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+    )
 )
 
 # Viewport settings within Mapbox

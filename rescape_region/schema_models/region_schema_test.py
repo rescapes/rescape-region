@@ -63,9 +63,20 @@ class RegionSchemaTestCase(TestCase):
                     # Optional default mapbox settings for the region
                     mapbox=dict(
                         viewport=dict(
-                            latitude=51.4750237087,
-                            longitude=6.15665815596,
-                            zoom=7
+                            # Extent can replace latitude, longitude, zoom for complex cases
+                            extent=dict(
+                                type='FeatureCollection',
+                                features=[dict(
+                                    type='Feature',
+                                    geometry=dict(
+                                        type='Polygon',
+                                        coordinates=[
+                                            [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                                             [51.4750237087, 6.15665815596],
+                                             [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                                    )
+                                )]
+                            ),
                         )
                     )
                 )
