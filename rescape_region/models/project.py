@@ -1,15 +1,13 @@
-from datetime import datetime
-
 import reversion
 from django.contrib.auth import get_user_model
+from django.contrib.gis.db.models import SET_NULL, CASCADE, Q
 from django.db.models import (
     CharField,
-    DateTimeField, ForeignKey, ManyToManyField, BooleanField, UniqueConstraint)
-from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import SET_NULL, CASCADE, Q
+    ForeignKey, ManyToManyField, UniqueConstraint)
+from jsonfield import JSONField
 from safedelete.models import SafeDeleteModel
 
-from rescape_region.model_helpers import feature_collection_default, project_data_default, get_location_schema
+from rescape_region.model_helpers import feature_collection_default, project_data_default
 from rescape_region.models.revision_mixin import RevisionModelMixin
 
 

@@ -1,7 +1,7 @@
 import reversion
-from django.contrib.postgres.fields import JSONField
 from django.db.models import (
     CharField, UniqueConstraint, Q)
+from jsonfield import JSONField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default
