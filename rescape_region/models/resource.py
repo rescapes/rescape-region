@@ -1,6 +1,6 @@
 import reversion
 from django.contrib.gis.db import models
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db.models import (CharField, ForeignKey, UniqueConstraint, Q)
 from safedelete.models import SafeDeleteModel
 

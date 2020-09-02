@@ -1,5 +1,5 @@
 import reversion
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db.models import CharField
 from safedelete.models import SafeDeleteModel
 

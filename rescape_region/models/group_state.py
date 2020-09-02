@@ -1,6 +1,6 @@
 import reversion
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db import models
 from django.db.models import OneToOneField
 from safedelete.models import SafeDeleteModel

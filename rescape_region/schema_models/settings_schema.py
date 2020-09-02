@@ -59,7 +59,6 @@ class SettingsQuery(ObjectType):
         **top_level_allowed_filter_arguments(settings_fields, RegionType)
     )
 
-    @login_required
     def resolve_settings(self, info, **kwargs):
         q_expressions = process_filter_kwargs(Settings, **kwargs)
 
