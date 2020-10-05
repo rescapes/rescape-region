@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='region',
             name='geojson',
-            field=models.fields.JSONField(default=rescape_region.model_helpers.feature_collection_default),
+            field=models.JSONField(default=rescape_region.model_helpers.feature_collection_default),
         ),
         migrations.AlterField(
             model_name='resource',
