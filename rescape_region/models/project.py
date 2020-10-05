@@ -4,7 +4,7 @@ from django.contrib.gis.db.models import SET_NULL, CASCADE, Q
 from django.db.models import (
     CharField,
     ForeignKey, ManyToManyField, UniqueConstraint)
-from jsonfield import JSONField
+from django.db.models import JSONField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import feature_collection_default, project_data_default
