@@ -41,7 +41,7 @@ MapboxDataType = type(
 )
 
 activity_data_fields = dict(
-    is_active=dict(type=Boolean)
+    isActive=dict(type=Boolean)
 )
 
 ActivityDataType = type(
