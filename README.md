@@ -33,6 +33,7 @@ source ~/.virtualenvs/rescape-region/bin/activate
 #### Install requirements
 Install requirements with latest versions
 ```bash
+# pur tries to use python 2, so use pip-upgrade instead
 pur -r requirements.txt && $VIRTUAL_ENV/bin/pip3 install --no-cache-dir  --upgrade -r requirements.txt
 ```
 
