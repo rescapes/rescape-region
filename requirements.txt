@@ -20,7 +20,7 @@ importlib-metadata==2.0.0
 inflection==0.5.1
 iso8601==0.1.13
 Jinja2==2.11.2
-wheel==0.34.2
+wheel==0.35.1
 twine==3.2.0
 jsonfield==3.1.0
 keyring==21.4.0
@@ -30,7 +30,7 @@ numpy==1.19.2
 packaging==20.4
 pandas==1.1.3
 Pillow==8.0.1
-pkginfo==1.6.0
+pkginfo==1.6.1
 pluggy==0.13.1
 promise==2.3
 psycopg2-binary==2.8.6
@@ -41,7 +41,7 @@ PyJWT==1.7.1
 pyparsing==2.4.7
 Pyphen==0.9.5
 pyramda==0.1
-pytest==6.1.1
+pytest==6.1.2
 pytest-cov==2.10.1
 pytest-django==4.1.0
 python-dateutil==2.8.1
@@ -49,7 +49,7 @@ pytz==2020.1
 readme-renderer==28.0
 requests==2.24.0
 requests-toolbelt==0.9.1
-rescape-graphene==0.3.61
+rescape-graphene==0.3.62
 rescape-python-helpers==0.0.38
 Rx==3.1.1
 simplejson==3.17.2
