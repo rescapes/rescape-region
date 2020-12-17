@@ -1,6 +1,7 @@
 import locale
 import logging
 
+import re
 from inflection import humanize
 from rescape_python_helpers import ramda as R
 
@@ -27,6 +28,7 @@ def stages_by_name(stages):
 
 def stages_by_key(stages):
     return R.map_prop_value_as_index('key', stages)
+
 
 def create_raw_nodes(delineator, resource):
     """
@@ -76,10 +78,10 @@ def create_raw_links(delineator, resource):
 
 def resolve_coordinates(default_location, coordinates, i):
     """
-        Resolves the lat/lon based on the given coordinates string. If it is NA then default to BRUSSELS_LOCATION
+        Resolves the lat/lon based on the given coordinates string. If it is NA then default it
     :param default_location: [lat, lon] representing the default location for coordinates marked 'NA'
     :param coordinates: comma separated lon/lat. We flip this since the software wants [lat, lon]
-    :return: lat/lon array
+    :return: lon, lat array
     """
 
     # TODO instead of aberrating we should create a visualizatoin to show things that are in the same place
@@ -92,7 +94,11 @@ def resolve_coordinates(default_location, coordinates, i):
     else:
         return dict(
             isGeneralized=False,
-            location=list(reversed(R.map(lambda coord: string_to_float(coord), coordinates.split(','))))
+            # Creates lon, lat for turf to use
+            location=list(reversed(R.map(
+                lambda coord: string_to_float(coord),
+                re.split(' |,', coordinates.strip('"').strip("'"))
+            )))
         )
 
 

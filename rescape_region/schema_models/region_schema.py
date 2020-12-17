@@ -60,7 +60,7 @@ RegionType._meta.fields['geojson'] = Field(
 
 region_fields = merge_with_django_properties(RegionType, raw_region_fields)
 
-# Paginated version of ProjectType
+# Paginated version of RegionType
 (RegionPaginatedType, region_paginated_fields) = itemgetter('type', 'fields')(
     create_paginated_type_mixin(RegionType, region_fields)
 )
