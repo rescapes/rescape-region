@@ -14,7 +14,7 @@ class Location(SafeDeleteModel, RevisionModelMixin):
     """
 
     # Unique human readable identifier for URLs, etc
-    key = CharField(max_length=20, unique=True, null=False)
+    key = CharField(max_length=50, unique=True, null=False)
     name = CharField(max_length=50, null=False)
     geojson = JSONField(null=False, default=feature_collection_default)
     data = JSONField(null=False, default=region_data_default)

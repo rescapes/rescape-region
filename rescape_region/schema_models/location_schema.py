@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field, ObjectType
@@ -5,8 +7,9 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
+from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
     top_level_allowed_filter_arguments, allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
@@ -55,20 +58,42 @@ LocationType._meta.fields['geojson'] = Field(
 )
 location_fields = merge_with_django_properties(LocationType, raw_location_fields)
 
+# Paginated version of LocationType
+(LocationPaginatedType, location_paginated_fields) = itemgetter('type', 'fields')(
+    create_paginated_type_mixin(LocationType, location_fields)
+)
+
 
 class LocationQuery(ObjectType):
     locations = graphene.List(
         LocationType,
         **top_level_allowed_filter_arguments(location_fields, LocationType)
     )
+    locations_paginated = Field(
+        LocationPaginatedType,
+        **top_level_allowed_filter_arguments(location_paginated_fields, LocationPaginatedType)
+    )
 
-    @login_required
-    def resolve_locations(self, info, **kwargs):
+    @staticmethod
+    def _resolve_locations(info, **kwargs):
         q_expressions = process_filter_kwargs(Location, **kwargs)
 
         return Location.objects.filter(
             *q_expressions
         )
+
+    @login_required
+    def resolve_locations(self, info, **kwargs):
+        return LocationQuery._resolve_locations(info, **kwargs)
+
+    @login_required
+    def resolve_locations_paginated(self, info, **kwargs):
+        return resolve_paginated_for_type(
+            LocationPaginatedType,
+            LocationQuery._resolve_locations,
+            **kwargs
+        )
+
 
 location_mutation_config = dict(
     class_name='Location',
@@ -129,6 +154,7 @@ class LocationMutation(graphene.ObjectType):
     create_location = CreateLocation.Field()
     update_location = UpdateLocation.Field()
 
+
 graphql_update_or_create_location = graphql_update_or_create(location_mutation_config, location_fields)
 graphql_query_locations = graphql_query(LocationType, location_fields, 'locations')
 
@@ -136,4 +162,10 @@ location_schema_config = dict(
     model_class=Location,
     graphene_class=LocationType,
     graphene_fields=location_fields,
+)
+
+graphql_query_locations_paginated = graphql_query(
+    LocationPaginatedType,
+    location_paginated_fields,
+    'locationsPaginated'
 )
