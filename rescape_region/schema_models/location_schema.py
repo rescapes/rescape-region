@@ -18,6 +18,7 @@ from rescape_graphene.schema_models.geojson.types.feature_collection import feat
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Location
+# This file is only used for tests in rescape_region
 from rescape_region.schema_models.location_data_schema import LocationDataType, location_data_fields
 
 raw_location_fields = dict(
@@ -60,23 +61,7 @@ location_fields = merge_with_django_properties(LocationType, raw_location_fields
 # Paginated version of LocationType
 (LocationPaginatedType, location_paginated_fields) = itemgetter('type', 'fields')(
     create_paginated_type_mixin(LocationType, location_fields)
-
 )
-
-
-def location_resolver(manager_method, **kwargs):
-    """
-
-    Resolves the locations
-    :param manager_method: 'filter', 'get', or 'count'
-    :param kwargs: Filter arguments for the Region
-    :return:
-    """
-
-    q_expressions = process_filter_kwargs(Location, **kwargs)
-    return getattr(Location.objects, manager_method)(
-        *q_expressions
-    )
 
 
 class LocationQuery(ObjectType):
@@ -84,7 +69,6 @@ class LocationQuery(ObjectType):
         LocationType,
         **top_level_allowed_filter_arguments(location_fields, LocationType)
     )
-
     locations_paginated = Field(
         LocationPaginatedType,
         **top_level_allowed_filter_arguments(location_paginated_fields, LocationPaginatedType)
@@ -92,15 +76,15 @@ class LocationQuery(ObjectType):
 
     @staticmethod
     def _resolve_locations(info, **kwargs):
-        return location_resolver('filter', **kwargs)
-
-    @login_required
-    def resolve_locations(self, info, **kwargs):
         q_expressions = process_filter_kwargs(Location, **kwargs)
 
         return Location.objects.filter(
             *q_expressions
         )
+
+    @login_required
+    def resolve_locations(self, info, **kwargs):
+        return LocationQuery._resolve_locations(info, **kwargs)
 
     @login_required
     def resolve_locations_paginated(self, info, **kwargs):
