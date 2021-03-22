@@ -168,14 +168,14 @@ LOGGING = {
         'info': {
             # Use for custom log info: logger = logging.getLogger("info")
             'handlers': ['django_info', 'console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'DEBUG',
         },
         'django': {
             # Requests only go to the console, don't log to file
             'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'django.db.backends': {
             # DB interactions only log warnings or greater to error file
@@ -186,26 +186,26 @@ LOGGING = {
             # Request errors log to error file
             'handlers': ['django_error', 'console'],
             'level': 'WARNING',
-            'propagate': True
+            'propagate': False
         },
         'graphene': {
             'handlers': ['django_error', 'console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'WARNING',
         },
         'graphql': {
             'handlers': ['django_error', 'console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'WARNING',
         },
         'rescape_region': {
             'handlers': ['django_info', 'console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'WARNING',
         },
         'rescape_graphene': {
             'handlers': ['django_error', 'django_info', 'console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'DEBUG',
         }
     },

@@ -43,7 +43,7 @@ def create_user_state_query(user_state_config):
 
         @login_required
         def resolve_user_states(self, info, **kwargs):
-            q_expressions = process_filter_kwargs(UserState, **kwargs)
+            q_expressions = process_filter_kwargs(UserState, **R.merge(dict(deleted__isnull=True), kwargs))
 
             return UserState.objects.filter(
                 *q_expressions

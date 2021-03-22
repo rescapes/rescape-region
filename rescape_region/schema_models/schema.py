@@ -1,10 +1,17 @@
+import json
 import logging
 import traceback
 
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import QuerySet
+from django.db.models.base import ModelBase, Model
+from graphene import ObjectType
+from graphene.types.base import BaseType
+from graphene_django.types import ErrorType
 from graphql import format_error
+from rescape_graphene import create_schema
 from rescape_python_helpers import ramda as R
 
-from rescape_graphene import create_schema
 from rescape_region.models import Region, Project, Location, Settings
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.group_state_schema import create_group_state_query_and_mutation_classes
@@ -15,7 +22,7 @@ from rescape_region.schema_models.resource_schema import resource_fields, Resour
 from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
 from rescape_region.schema_models.user_state_schema import create_user_state_query_and_mutation_classes
 
-logger = logging.getLogger('rescape_region')
+logger = logging.getLogger('rescape_graphene')
 
 default_class_config = dict(
     settings=dict(
@@ -54,6 +61,7 @@ default_class_config = dict(
         mutation=LocationMutation
     )
 )
+
 
 def create_default_schema(class_config={}):
     """
@@ -106,3 +114,51 @@ def dump_errors(result):
             error.stack = error.__traceback__
             # This hopefully includes the traceback
             logger.exception(format_error(error))
+
+class MyDjangoJSONEncoder(DjangoJSONEncoder):
+    """
+    JSONEncoder subclass that knows how to encode date/time, decimal types, and
+    UUIDs.
+    """
+    def default(self, o):
+        # See "Date Time String Format" in the ECMA-262 specification.
+        if isinstance(o, (Model, BaseType)):
+            return o.__dict__
+        else:
+            return super().default(o)
+
+# https://stackoverflow.com/questions/52711580/how-to-see-graphene-django-debug-logs
+def log_request_body(info, response_or_error):
+    body = info.context._body.decode('utf-8')
+    try:
+        json_body = json.loads(body)
+        (logger.error if isinstance(response_or_error, ErrorType) else logger.debug)(
+            f" User: {info.context.user} \n Action: {json_body['operationName']} \n Variables: {json_body['variables']} \n Body:  {json_body['query']}",
+        )
+        if isinstance(response_or_error, QuerySet):
+            count = response_or_error.count()
+            # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
+            ids = R.join(' ', ['', 'with ids', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
+            logger.debug(f'Query returned {count} results{ids}')
+        else:
+            # Just log top level types
+            if isinstance(response_or_error, (Model)):
+                mutation_response = json.dumps(
+                    R.omit(['_state'], response_or_error.__dict__),
+                    sort_keys=True,
+                    indent=1,
+                    cls=MyDjangoJSONEncoder
+                )
+                logger.debug(f'Mutation returned {mutation_response}')
+            elif isinstance(response_or_error, (BaseType)):
+                try:
+                    mutation_response = json.dumps(
+                        R.omit(['_state'], response_or_error.__dict__),
+                        sort_keys=True,
+                        indent=1,
+                    )
+                    logger.debug(f'Mutation returned {mutation_response}')
+                except:
+                    logger.debug(f'Mutation returned {response_or_error.__class__}')
+    except Exception as e:
+        logging.error(body)

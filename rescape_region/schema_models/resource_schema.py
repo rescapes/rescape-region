@@ -67,7 +67,7 @@ class ResourceQuery(ObjectType):
 
     @login_required
     def resolve_resources(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Resource, **kwargs)
+        q_expressions = process_filter_kwargs(Resource, **R.merge(dict(deleted__isnull=True), kwargs))
 
         return Resource.objects.filter(
             *q_expressions

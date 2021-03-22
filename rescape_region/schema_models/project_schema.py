@@ -121,7 +121,7 @@ def project_resolver(manager_method, **kwargs):
     :return:
     """
 
-    q_expressions = process_filter_kwargs(get_project_model(), **kwargs)
+    q_expressions = process_filter_kwargs(get_project_model(), **R.merge(dict(deleted__isnull=True), kwargs))
     return getattr(get_project_model().objects, manager_method)(
         *q_expressions
     )

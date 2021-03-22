@@ -2,6 +2,10 @@ from django.db import models
 from reversion.models import Version
 from rescape_python_helpers import ramda as R
 
+import logging
+
+logger = logging.getLogger('rescape_region')
+
 
 class RevisionModelMixin(models.Model):
 
@@ -48,7 +52,11 @@ class RevisionModelMixin(models.Model):
         if not self.instance_version:
             return None
 
-        return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
+        try:
+            return list(Version.objects.get_for_object(self).order_by('revision_id')).index(self.instance_version) + 1
+        except Exception as e:
+            logger.warning(e)
+            return -1
 
     @property
     def revision_id(self):

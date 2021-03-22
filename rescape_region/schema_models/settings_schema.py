@@ -60,7 +60,7 @@ class SettingsQuery(ObjectType):
     )
 
     def resolve_settings(self, info, **kwargs):
-        q_expressions = process_filter_kwargs(Settings, **kwargs)
+        q_expressions = process_filter_kwargs(Settings, **R.merge(dict(deleted__isnull=True), kwargs))
 
         return Settings.objects.filter(
             *q_expressions

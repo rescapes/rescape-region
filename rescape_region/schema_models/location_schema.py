@@ -11,7 +11,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
-    top_level_allowed_filter_arguments, allowed_filter_arguments
+    top_level_allowed_filter_arguments, allowed_filter_arguments, delete_if_marked_for_delete
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -76,9 +76,10 @@ class LocationQuery(ObjectType):
 
     @staticmethod
     def _resolve_locations(info, **kwargs):
-        q_expressions = process_filter_kwargs(Location, **kwargs)
+        q_expressions = process_filter_kwargs(Location, **R.merge(dict(deleted__isnull=True), kwargs))
 
         return Location.objects.filter(
+            deleted__isnull=True,
             *q_expressions
         )
 
@@ -114,20 +115,25 @@ class UpsertLocation(Mutation):
     @transaction.atomic
     @login_required
     def mutate(self, info, location_data=None):
-        # We must merge in existing location.data if we are updating data
-        if R.has('id', location_data) and R.has('data', location_data):
-            # New data gets priority, but this is a deep merge.
-            location_data['data'] = R.merge_deep(
-                Location.objects.get(id=location_data['id']).data,
-                location_data['data']
-            )
+        with transaction.atomic():
+            deleted_location_response = delete_if_marked_for_delete(Location, UpsertLocation, 'location', location_data)
+            if deleted_location_response:
+                return deleted_location_response
 
-        # Make sure that all props are unique that must be, either by modifying values or erring.
-        modified_location_data = enforce_unique_props(location_fields, location_data)
-        update_or_create_values = input_type_parameters_for_update_or_create(location_fields, modified_location_data)
+            # We must merge in existing location.data if we are updating data
+            if R.has('id', location_data) and R.has('data', location_data):
+                # New data gets priority, but this is a deep merge.
+                location_data['data'] = R.merge_deep(
+                    Location.objects.get(id=location_data['id']).data,
+                    location_data['data']
+                )
 
-        location, created = update_or_create_with_revision(Location, update_or_create_values)
-        return UpsertLocation(location=location)
+            # Make sure that all props are unique that must be, either by modifying values or erring.
+            modified_location_data = enforce_unique_props(location_fields, location_data)
+            update_or_create_values = input_type_parameters_for_update_or_create(location_fields, modified_location_data)
+
+            location, created = update_or_create_with_revision(Location, update_or_create_values)
+            return UpsertLocation(location=location)
 
 
 class CreateLocation(UpsertLocation):
