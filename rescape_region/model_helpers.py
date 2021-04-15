@@ -63,10 +63,11 @@ def user_state_data_default():
         userRegions=[]
     )
 
+def settings_data_default():
+    return dict()
 
 def group_state_data_default():
     return dict()
-
 
 def get_region_model():
     """
