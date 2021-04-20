@@ -35,7 +35,7 @@ pkginfo==1.6.1
 pluggy==0.13.1
 promise==2.3
 psycopg2-binary==2.8.6
-py==1.9.0
+py==1.10.0
 pycparser==2.20
 Pygments==2.7.3
 PyJWT==1.7.1
