@@ -14,10 +14,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rescape_region.settings")
 django.setup()
 
 from rescape_region.model_helpers import get_location_schema
-from rescape_region.schema_models.location_schema import graphql_update_or_create_location, graphql_query_locations
+from rescape_region.schema_models.location_schema import graphql_update_or_create_location, graphql_query_locations, \
+    graphql_query_locations_paginated
 from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
-    quiz_model_mutation_update
+    quiz_model_mutation_update, quiz_model_paginated_query
 from rescape_region.schema_models.user_sample import create_sample_users
 
 from snapshottest import TestCase
@@ -49,6 +50,19 @@ class LocationSchemaTestCase(TestCase):
                 name='Grand Place',
             )
         )
+
+    def test_query_pagination(self):
+        (result, new_result) = quiz_model_paginated_query(
+            self.client,
+            Location,
+            graphql_query_locations_paginated,
+            'locationsPaginated',
+            2,
+            dict(nameContains='Place'),
+            omit_props,
+            order_by='-name'
+        )
+        assert result['data']['locationsPaginated']['objects'][0]['name'] == "Petit Place"
 
     def test_query_order(self):
         result = quiz_model_query(
