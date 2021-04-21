@@ -52,15 +52,15 @@ ActivityDataType = type(
 
 
 def user_global_data_fields(class_config):
-    return {
+    return dict(
         # The mapbox state for the user's Global settings
-        'mapbox': dict(
+        mapbox=dict(
             type=MapboxDataType,
             graphene_type=MapboxDataType,
             fields=mapbox_data_fields,
             type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
-        ),
-    }
+        )
+    )
 
 
 # References the Global instance, dictating settings imposed on or chosen by a user globally

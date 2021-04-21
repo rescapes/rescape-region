@@ -11,7 +11,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
-    top_level_allowed_filter_arguments, allowed_filter_arguments, delete_if_marked_for_delete
+    top_level_allowed_filter_arguments, allowed_filter_arguments, delete_if_marked_for_delete, \
+    query_with_filter_and_order_kwargs
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -76,12 +77,8 @@ class LocationQuery(ObjectType):
 
     @staticmethod
     def _resolve_locations(info, **kwargs):
-        q_expressions = process_filter_kwargs(Location, **R.merge(dict(deleted__isnull=True), kwargs))
-
-        return Location.objects.filter(
-            deleted__isnull=True,
-            *q_expressions
-        )
+        # Default to not deleted, it can be overridden by kwargs
+        return query_with_filter_and_order_kwargs(Location, **R.merge(dict(deleted__isnull=True), kwargs))
 
     @login_required
     def resolve_locations(self, info, **kwargs):

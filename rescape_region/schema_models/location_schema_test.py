@@ -41,7 +41,27 @@ class LocationSchemaTestCase(TestCase):
         self.locations = create_sample_locations(get_location_schema()['model_class'])
 
     def test_query(self):
-        quiz_model_query(self.client, graphql_query_locations, 'locations', dict(name='Grand Place'))
+        quiz_model_query(
+            self.client,
+            graphql_query_locations,
+            'locations',
+            dict(
+                name='Grand Place',
+            )
+        )
+
+    def test_query_order(self):
+        result = quiz_model_query(
+            self.client,
+            graphql_query_locations,
+            'locations',
+            dict(
+                order_by='-name',
+            ),
+            expect_length=2
+        )
+        # Check ordering
+        assert result['data']['locations'][0]['name'] == 'Petit Place'
 
     def test_create(self):
         result, new_result = quiz_model_mutation_create(
