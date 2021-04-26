@@ -9,7 +9,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
+from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type, pagination_allowed_filter_arguments
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
     top_level_allowed_filter_arguments, allowed_filter_arguments, delete_if_marked_for_delete, \
     query_with_filter_and_order_kwargs
@@ -72,7 +72,7 @@ class LocationQuery(ObjectType):
     )
     locations_paginated = Field(
         LocationPaginatedType,
-        **top_level_allowed_filter_arguments(location_paginated_fields, LocationPaginatedType)
+        **pagination_allowed_filter_arguments(location_paginated_fields, LocationPaginatedType)
     )
 
     @staticmethod

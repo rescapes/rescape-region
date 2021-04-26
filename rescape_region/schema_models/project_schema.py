@@ -10,7 +10,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, \
     get_paginator, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
-from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type
+from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type, pagination_allowed_filter_arguments
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
     update_or_create_with_revision, top_level_allowed_filter_arguments, allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
@@ -92,7 +92,7 @@ class ProjectQuery(ObjectType):
     )
     projects_paginated = Field(
         ProjectPaginatedType,
-        **top_level_allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
+        **pagination_allowed_filter_arguments(project_paginated_fields, ProjectPaginatedType)
     )
 
     @staticmethod
