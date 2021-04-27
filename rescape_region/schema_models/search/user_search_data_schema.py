@@ -31,18 +31,18 @@ user_search_data_fields = dict(
             *type_and_args,
             resolver=resolver_for_dict_list
         )
-    ),
+    )
     # project_searches, etc here
 )
 
 UserSearchDataType = type(
     'UserSearchDataType',
     (ObjectType,),
-    type_modify_fields(user_search_data_fields)
+    user_search_data_fields
 )
 
 # This must be referenced in settings.py at USER_SEARCH_DATA_SCHEMA_CONFIG
 user_search_data_schema_config = dict(
     graphene_class=UserSearchDataType,
-    graphene_fields=UserSearchDataType
+    graphene_fields=user_search_data_fields
 )

@@ -11,7 +11,7 @@ from reversion.models import Version
 from snapshottest import TestCase
 
 from rescape_region.model_helpers import get_region_model, get_project_model, \
-    get_location_schema, get_user_search_schema, get_search_location_schema
+    get_location_schema, get_user_search_data_schema, get_search_location_schema
 from rescape_region.models import UserState
 from rescape_region.schema_models.scope.project.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields
@@ -48,8 +48,8 @@ default_class_config = dict(
         graphene_fields=get_location_schema()['graphene_fields']
     ),
     user_search=dict(
-        graphene_class=get_user_search_schema()['graphene_class'],
-        graphene_fields=get_user_search_schema()['graphene_fields']
+        graphene_class=get_user_search_data_schema()['graphene_class'],
+        graphene_fields=get_user_search_data_schema()['graphene_fields']
     )
 )
 user_state_schema = create_user_state_config(default_class_config)
@@ -102,7 +102,7 @@ class UserStateSchemaTestCase(TestCase):
         # user searches could also be in userProjects, but we'll ignore that
         self.user_searches = R.compose(
             # Forth Resolve persisted UserSearches
-            R.map(lambda id: get_user_search_schema()['model_class'].objects.get(id=id)),
+            R.map(lambda id: get_user_search_data_schema()['model_class'].objects.get(id=id)),
             # Third make ids unique
             lambda ids: list(set(ids)),
             # Chain to a flat list of user search ids

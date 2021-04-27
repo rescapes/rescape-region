@@ -126,7 +126,7 @@ def user_region_data_fields(class_config):
         ),
         # A list of user_searches that reference application specific classes
         user_search=user_search_field_for_user_state_scopes(
-            R.pick(['user_search_graphene_class', 'user_search_graphene_fields'])
+            *R.props(['graphene_class', 'graphene_fields'], R.prop('user_search', class_config))
         )
     )
 
@@ -177,8 +177,8 @@ def user_project_data_fields(class_config):
             type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
         ),
         # A list of user_searches that reference application specific classes
-        user_searches=user_search_field_for_user_state_scopes(
-            R.pick(['user_search_graphene_class', 'user_search_graphene_fields'])
+        user_search=user_search_field_for_user_state_scopes(
+            *R.props(['graphene_class', 'graphene_fields'], R.prop('user_search', class_config))
         )
     )
 

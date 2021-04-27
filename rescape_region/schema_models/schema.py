@@ -11,6 +11,7 @@ from graphql import format_error
 from rescape_graphene import create_schema
 from rescape_python_helpers import ramda as R
 
+from rescape_region.model_helpers import get_user_search_data_schema, get_location_schema
 from rescape_region.models import Region, Project, Location, Settings
 from rescape_region.models.resource import Resource
 from rescape_region.schema_models.user_state.group_state_schema import create_group_state_query_and_mutation_classes
@@ -53,11 +54,15 @@ default_class_config = dict(
         mutation=ResourceMutation
     ),
     location=dict(
-        model_class=Location,
-        graphene_class=LocationType,
-        graphene_fields=location_fields,
-        query=LocationQuery,
-        mutation=LocationMutation
+        model_class=get_location_schema()['model_class'],
+        graphene_class=get_location_schema()['graphene_class'],
+        graphene_fields=get_location_schema()['graphene_fields'],
+        query=get_location_schema()['query'],
+        mutation=get_location_schema()['mutation']
+    ),
+    user_search=dict(
+        graphene_class=get_user_search_data_schema()['graphene_class'],
+        graphene_fields=get_user_search_data_schema()['graphene_fields']
     )
 )
 

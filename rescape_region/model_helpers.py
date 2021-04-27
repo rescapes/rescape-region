@@ -122,19 +122,19 @@ def get_location_schema():
             "settings.LOCATION_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.LOCATION_SCHEMA_CONFIG
         )
 
-def get_user_search_schema():
+def get_user_search_data_schema():
     """
     Uses the same technique as get_user_model() to get the current location model from settings
     :return:
     """
     try:
-        modules = settings.USER_SEARCH_SCHEMA_CONFIG.split('.')
+        modules = settings.USER_SEARCH_DATA_SCHEMA_CONFIG.split('.')
         return getattr(
             importlib.import_module(R.join('.', R.init(modules))),
             R.last(modules)
         )
     except ValueError:
-        raise ImproperlyConfigured('''settings.USER_SEARCH_SCHEMA_CONFIG must point to the user_search schema config containing
+        raise ImproperlyConfigured('''settings.USER_SEARCH_DATA_SCHEMA_CONFIG must point to the user_search schema config containing
     {
         graphene_class=UserSearchType,
         graphene_fields=user_search_fields,
@@ -142,7 +142,7 @@ def get_user_search_schema():
 ''')
     except LookupError:
         raise ImproperlyConfigured(
-            "settings.USER_SEARCH_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.USER_SEARCH_SCHEMA_CONFIG
+            "settings.USER_SEARCH_DATA_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.USER_SEARCH_DATA_SCHEMA_CONFIG
         )
 
 

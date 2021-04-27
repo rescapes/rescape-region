@@ -25,7 +25,7 @@ user_search_location_data_fields = dict(
     search_location=dict(
         type=SearchLocationType,
         graphene_type=SearchLocationType,
-        fields=search_location_fields,
+        fields=location_fields,
         # References the model class
         type_modifier=lambda *type_and_args: Field(
             *type_and_args,
@@ -44,5 +44,5 @@ user_search_location_data_fields = dict(
 UserSearchLocationDataType = type(
     'UserSearchLocationDataType',
     (ObjectType,),
-    type_modify_fields(user_search_location_data_fields)
+    user_search_location_data_fields
 )
