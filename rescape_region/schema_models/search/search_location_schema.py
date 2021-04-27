@@ -3,29 +3,27 @@ from operator import itemgetter
 from rescape_python_helpers import ramda as R
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, ObjectType, List
+from graphene import InputObjectType, Mutation, Field, ObjectType
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin
 from rescape_graphene import enforce_unique_props
-from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type, pagination_allowed_filter_arguments
-from rescape_graphene.django_helpers.versioning import create_version_container_type, resolve_version_instance, \
-    versioning_allowed_filter_arguments
+from rescape_graphene.django_helpers.versioning import create_version_container_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, ALLOW, top_level_allowed_filter_arguments, fields_with_filter_fields, READ
+    update_or_create_with_revision, ALLOW, fields_with_filter_fields, READ
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 
 from rescape_region.models.search_location import SearchLocation
-from rescape_region.schema_models.location_data_schema import location_data_fields
-from rescape_region.schema_models.location_schema import location_fields
+from rescape_region.schema_models.scope.location.location_data_schema import location_data_fields
+from rescape_region.schema_models.scope.location.location_schema import location_fields
 from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
 from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
 from rescape_region.schema_models.search.search_identification_data_type import SearchIdentificationDataType, \
     search_identification_fields
-from rescape_region.schema_models.search_location_design_data_schema import SearchLocationDataType
+from rescape_region.schema_models.search.search_location_design_data_schema import SearchLocationDataType
 
 
 class SearchLocationType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):

@@ -1,8 +1,6 @@
 
 from rescape_python_helpers import ramda as R
 
-from rescape_region.models import Region
-from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.models.resource import Resource
 from rescape_region.helpers.sankey_helpers import generate_sankey_data
 

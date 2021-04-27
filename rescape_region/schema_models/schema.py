@@ -4,8 +4,7 @@ import traceback
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import QuerySet
-from django.db.models.base import ModelBase, Model
-from graphene import ObjectType
+from django.db.models.base import Model
 from graphene.types.base import BaseType
 from graphene_django.types import ErrorType
 from graphql import format_error
@@ -14,13 +13,13 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Region, Project, Location, Settings
 from rescape_region.models.resource import Resource
-from rescape_region.schema_models.group_state_schema import create_group_state_query_and_mutation_classes
-from rescape_region.schema_models.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
-from rescape_region.schema_models.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
-from rescape_region.schema_models.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
-from rescape_region.schema_models.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
-from rescape_region.schema_models.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
-from rescape_region.schema_models.user_state_schema import create_user_state_query_and_mutation_classes
+from rescape_region.schema_models.user_state.group_state_schema import create_group_state_query_and_mutation_classes
+from rescape_region.schema_models.scope.location.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
+from rescape_region.schema_models.scope.project.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
+from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
+from rescape_region.schema_models.resource.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
+from rescape_region.schema_models.settings.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
+from rescape_region.schema_models.user_state.user_state_schema import create_user_state_query_and_mutation_classes
 
 logger = logging.getLogger('rescape_graphene')
 

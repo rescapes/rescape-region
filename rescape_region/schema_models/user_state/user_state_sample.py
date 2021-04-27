@@ -2,9 +2,10 @@ from django.contrib.auth import get_user_model
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import UserState
-from rescape_region.schema_models.location_sample import create_sample_locations, create_sample_search_locations
-from rescape_region.schema_models.project_sample import create_sample_projects
-from rescape_region.schema_models.region_sample import create_sample_regions
+from rescape_region.schema_models.scope.location.location_sample import create_sample_locations, \
+    create_sample_search_locations
+from rescape_region.schema_models.scope.project.project_sample import create_sample_projects
+from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
 from rescape_region.schema_models.user_sample import create_sample_users
 
 sample_user_states = [
@@ -167,7 +168,7 @@ def user_state_scope_instances(scope_key, user_scope_key, scope_instances, data)
     )
 
 
-def form_sample_user_state_data(regions, projects, search_locations, data):
+def form_sample_user_state_data(regions, projects, data):
     """
     Given data in the form dict(region_keys=[...], ...), converts region_keys to
     regions=[{id:x}, {id:y}, ...] by resolving the regions
@@ -213,17 +214,31 @@ def create_sample_user_states(cls, region_cls, project_cls, location_cls, search
     for project in projects:
         project.locations.add(*locations)
 
-    sample_user_states_with_search_locations = R.map(
-        lambda user_region: R.merge(user_region, dict(user_searches=[
-            R.map(lambda search_location: dict(), search_locations)
-        ])),
-        R.str_paths_or('data.userRegions', sample_user_states)
-    )
+    # Merge search_locations into each userScope dict
+    def sample_user_state_with_search_locations(user_scope_name, sample_user_state):
+        return R.map(
+            lambda user_region: R.merge(user_region, dict(user_search=dict(
+                user_search_locations=R.map(lambda i_search_location: dict(
+                    search_location=i_search_location[1],
+                    # Set the first search_location to active
+                    activity=dict(active=i_search_location[0] == 0)
+                ), enumerate(search_locations))
+            ))),
+            R.str_paths_or(f'data.{user_scope_name}', sample_user_state)
+        )
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user
     user_states = R.map(
         lambda sample_user_state: create_sample_user_state(cls, regions, projects, sample_user_state),
-        sample_user_states
+        # Adds search_locations to each userState.data.[userRegions[*]|userProjects[*]].user_search.user_search_locations
+        R.compose(
+            lambda sample_user_states: R.map(
+                sample_user_state_with_search_locations('userProjects', sample_user_states)
+            ),
+            lambda sample_user_states: R.map(
+                sample_user_state_with_search_locations('userRegions', sample_user_states)
+            ),
+        )(sample_user_states)
     )
     return user_states

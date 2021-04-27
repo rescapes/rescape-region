@@ -8,8 +8,8 @@ from reversion.models import Version
 from rescape_region.model_helpers import get_location_schema, get_project_model
 from rescape_region.models.region import Region
 
-from rescape_region.schema_models.location_sample import create_sample_locations
-from rescape_region.schema_models.region_sample import create_sample_regions
+from rescape_region.schema_models.scope.location.location_sample import create_sample_locations
+from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update

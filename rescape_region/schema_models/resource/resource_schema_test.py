@@ -8,7 +8,7 @@ from snapshottest import TestCase
 
 from rescape_region.helpers.sankey_helpers import create_sankey_graph_from_resources
 from rescape_region.models import Region, Resource
-from rescape_region.schema_models.region_sample import create_sample_regions
+from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update

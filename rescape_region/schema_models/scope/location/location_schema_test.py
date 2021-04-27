@@ -8,13 +8,13 @@ import os
 import django
 from reversion.models import Version
 
-from ..models import Location
+from rescape_region.models import Location
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rescape_region.settings")
 django.setup()
 
 from rescape_region.model_helpers import get_location_schema
-from rescape_region.schema_models.location_schema import graphql_update_or_create_location, graphql_query_locations, \
+from rescape_region.schema_models.scope.location.location_schema import graphql_update_or_create_location, graphql_query_locations, \
     graphql_query_locations_paginated
 from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \

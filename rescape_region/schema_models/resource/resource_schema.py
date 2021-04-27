@@ -15,8 +15,8 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.helpers.sankey_helpers import add_sankey_graph_to_resource_dict
 from rescape_region.models.resource import Resource
-from rescape_region.schema_models.region_schema import RegionType
-from .resource_data_schema import ResourceDataType, resource_data_fields
+from rescape_region.schema_models.scope.region.region_schema import RegionType
+from rescape_region.schema_models.resource_data_schema import ResourceDataType, resource_data_fields
 
 
 class ResourceType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):

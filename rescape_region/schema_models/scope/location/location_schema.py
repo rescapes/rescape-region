@@ -10,8 +10,8 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
     DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type, pagination_allowed_filter_arguments
-from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, update_or_create_with_revision, \
-    top_level_allowed_filter_arguments, allowed_filter_arguments, delete_if_marked_for_delete, \
+from rescape_graphene.graphql_helpers.schema_helpers import update_or_create_with_revision, \
+    top_level_allowed_filter_arguments, delete_if_marked_for_delete, \
     query_with_filter_and_order_kwargs
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
@@ -20,7 +20,7 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.models import Location
 # This file is only used for tests in rescape_region
-from rescape_region.schema_models.location_data_schema import LocationDataType, location_data_fields
+from rescape_region.schema_models.scope.location.location_data_schema import LocationDataType, location_data_fields
 
 raw_location_fields = dict(
     id=dict(create=DENY, update=REQUIRE),

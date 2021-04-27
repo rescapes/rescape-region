@@ -8,20 +8,19 @@ from graphql_jwt.decorators import login_required
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
     DENY, FeatureCollectionDataType, resolver_for_dict_field, UserType, user_fields, \
-    get_paginator, create_paginated_type_mixin
+    create_paginated_type_mixin
 from rescape_graphene import increment_prop_until_unique, enforce_unique_props
 from rescape_graphene.django_helpers.pagination import resolve_paginated_for_type, pagination_allowed_filter_arguments
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, top_level_allowed_filter_arguments, allowed_filter_arguments
+    update_or_create_with_revision, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_project_model, get_location_schema
-from rescape_region.schema_models.region_schema import RegionType, region_fields
+from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
-from ..models import Project
 
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),

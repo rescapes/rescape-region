@@ -14,7 +14,7 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_region_model, get_project_model
 from rescape_region.models import UserState
-from rescape_region.schema_models.user_state_data_schema import UserStateDataType, user_state_data_fields
+from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
 
 
 def create_user_state_query_and_mutation_classes(class_config):

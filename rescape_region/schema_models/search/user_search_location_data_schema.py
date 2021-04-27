@@ -4,8 +4,8 @@ from rescape_graphene import resolver_for_dict_field, type_modify_fields, model_
 from rescape_graphene.graphql_helpers.schema_helpers import fields_with_filter_fields
 
 from rescape_region.models.search_location import SearchLocation
-from rescape_region.schema_models.location_schema import location_fields
-from rescape_region.schema_models.user_state_data_schema import ActivityDataType, \
+from rescape_region.schema_models.scope.location.location_schema import location_fields
+from rescape_region.schema_models.user_state.user_state_data_schema import ActivityDataType, \
     activity_data_fields
 
 search_location_fields = fields_with_filter_fields(
