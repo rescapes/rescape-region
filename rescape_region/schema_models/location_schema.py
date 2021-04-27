@@ -161,10 +161,11 @@ class LocationMutation(graphene.ObjectType):
 graphql_update_or_create_location = graphql_update_or_create(location_mutation_config, location_fields)
 graphql_query_locations = graphql_query(LocationType, location_fields, 'locations')
 
+# This must be referenced in settings.py
 location_schema_config = dict(
     model_class=Location,
     graphene_class=LocationType,
-    graphene_fields=location_fields,
+    graphene_fields=location_fields
 )
 
 graphql_query_locations_paginated = graphql_query(

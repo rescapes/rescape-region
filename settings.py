@@ -16,6 +16,8 @@ PROD = os.environ.get('ENV_TYPE') == 'prod'
 REGION_MODEL = 'rescape_region.region'
 PROJECT_MODEL = 'rescape_region.project'
 LOCATION_SCHEMA_CONFIG = 'rescape_region.schema_models.location_schema.location_schema_config'
+SEARCH_LOCATION_SCHEMA_CONFIG = 'rescape_region.schema_models.search_location_schema.search_location_schema_config'
+USER_SEARCH_DATA_SCHEMA_CONFIG = 'rescape_region.schema_models.user_search_data_schema.user_search_data_schema_config'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'dp&=7jt@y*^3kwfxh&!xufl9pu$!!t2vhvxozgf5y$xd(*(7w*'

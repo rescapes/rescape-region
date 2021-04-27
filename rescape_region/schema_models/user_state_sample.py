@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import UserState
+from rescape_region.schema_models.location_sample import create_sample_locations, create_sample_search_locations
 from rescape_region.schema_models.project_sample import create_sample_projects
 from rescape_region.schema_models.region_sample import create_sample_regions
 from rescape_region.schema_models.user_sample import create_sample_users
@@ -100,6 +101,8 @@ def create_sample_user_state(cls, regions, projects, user_state_dict):
             ]
         )
     ),
+    :param locations
+    :param search_locations Search locations that match 0 or more locations
     :return:
     """
     user = get_user_model().objects.get(username=user_state_dict['username'])
@@ -112,6 +115,7 @@ def create_sample_user_state(cls, regions, projects, user_state_dict):
             data=form_sample_user_state_data(
                 regions,
                 projects,
+                search_locations,
                 R.prop(
                     'data',
                     user_state_dict
@@ -163,7 +167,7 @@ def user_state_scope_instances(scope_key, user_scope_key, scope_instances, data)
     )
 
 
-def form_sample_user_state_data(regions, projects, data):
+def form_sample_user_state_data(regions, projects, search_locations, data):
     """
     Given data in the form dict(region_keys=[...], ...), converts region_keys to
     regions=[{id:x}, {id:y}, ...] by resolving the regions
@@ -194,7 +198,7 @@ def form_sample_user_state_data(regions, projects, data):
     )
 
 
-def create_sample_user_states(cls, region_cls, project_cls):
+def create_sample_user_states(cls, region_cls, project_cls, location_cls, search_location_cls):
     """
         Creates sample persisted users that contain references to persisted regions
     :return:
@@ -203,6 +207,18 @@ def create_sample_user_states(cls, region_cls, project_cls):
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
     regions = create_sample_regions(region_cls)
     projects = create_sample_projects(project_cls, users, regions)
+    locations = create_sample_locations(location_cls)
+    search_locations = create_sample_search_locations(search_location_cls, locations)
+    # Assign all the locations to each project
+    for project in projects:
+        project.locations.add(*locations)
+
+    sample_user_states_with_search_locations = R.map(
+        lambda user_region: R.merge(user_region, dict(user_searches=[
+            R.map(lambda search_location: dict(), search_locations)
+        ])),
+        R.str_paths_or('data.userRegions', sample_user_states)
+    )
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user

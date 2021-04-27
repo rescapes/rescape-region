@@ -1,6 +1,6 @@
+from graphene import ObjectType, Float, Field, Int, String
 from rescape_graphene import resolver_for_dict_field, \
-    resolver_for_dict_list, type_modify_fields
-from graphene import ObjectType, Float, List, Field, Int, String
+    type_modify_fields
 
 settings_viewport_data_fields = dict(
     latitude=dict(type=Float),

@@ -74,6 +74,29 @@ def UserGlobalDataType(class_config):
     )
 
 
+def user_search_field_for_user_state_scopes(user_search_graphene_class, user_search_graphene_fields):
+    """
+        user_searches is a list of dicts specific to the application
+        for instance each user_search type might contain fields of the
+        type django LocationSearch, RegionSearch, ProductSearch, which are models that
+        correspond to Location, Region, Product, but include filter properties.
+        It might be possible to generalize this here, and assume that every user_search
+        needs a config LocationSearch/Location, RegionSearch/Region, ProductSearch/Product
+        and corresponding graphene types. For now we'll just require a
+        user_searches_graphene_class that can point to all the application specific types via fields
+        :param user_search_graphene_class The graphene class that contains to application specific
+        fields
+        :param user_search_graphene_fields The graphene fields of the user_search_graphene_class
+        :return:
+    """
+    return dict(
+        type=user_search_graphene_class,
+        graphene_type=user_search_graphene_class,
+        fields=user_search_graphene_fields,
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
+    )
+
+
 def user_region_data_fields(class_config):
     region_class_config = R.prop('region', class_config)
     return dict(
@@ -84,8 +107,7 @@ def user_region_data_fields(class_config):
             fields=R.prop('graphene_fields', region_class_config),
             type_modifier=lambda *type_and_args: Field(
                 *type_and_args,
-                resolver=model_resolver_for_dict_field(R.prop('model_class', region_class_config)
-                                                       )
+                resolver=model_resolver_for_dict_field(R.prop('model_class', region_class_config))
             )
         ),
         # The mapbox state for the user's use of this Region
@@ -101,6 +123,10 @@ def user_region_data_fields(class_config):
             graphene_type=ActivityDataType,
             fields=activity_data_fields,
             type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        ),
+        # A list of user_searches that reference application specific classes
+        user_search=user_search_field_for_user_state_scopes(
+            R.pick(['user_search_graphene_class', 'user_search_graphene_fields'])
         )
     )
 
@@ -149,6 +175,10 @@ def user_project_data_fields(class_config):
             graphene_type=ActivityDataType,
             fields=activity_data_fields,
             type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+        ),
+        # A list of user_searches that reference application specific classes
+        user_searches=user_search_field_for_user_state_scopes(
+            R.pick(['user_search_graphene_class', 'user_search_graphene_fields'])
         )
     )
 

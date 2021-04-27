@@ -11,7 +11,7 @@ from reversion.models import Version
 from snapshottest import TestCase
 
 from rescape_region.model_helpers import get_region_model, get_project_model, \
-    get_location_schema
+    get_location_schema, get_user_search_schema, get_search_location_schema
 from rescape_region.models import UserState
 from rescape_region.schema_models.project_schema import project_fields, ProjectType
 from rescape_region.schema_models.region_schema import RegionType, region_fields
@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
 
 schema = create_default_schema()
+
+
+# The list of django/graphene configuration classes
+# This only for testing purposes. Applications that use rescape_region will define
+# some or all of these themselves
 default_class_config = dict(
     region=dict(
         model_class=get_region_model(),
@@ -41,6 +46,10 @@ default_class_config = dict(
         model_class=get_location_schema()['model_class'],
         graphene_class=get_location_schema()['graphene_class'],
         graphene_fields=get_location_schema()['graphene_fields']
+    ),
+    user_search=dict(
+        graphene_class=get_user_search_schema()['graphene_class'],
+        graphene_fields=get_user_search_schema()['graphene_fields']
     )
 )
 user_state_schema = create_user_state_config(default_class_config)
@@ -54,7 +63,13 @@ class UserStateSchemaTestCase(TestCase):
 
     def setUp(self):
         delete_sample_user_states()
-        self.user_states = create_sample_user_states(UserState, get_region_model(), get_project_model())
+        self.user_states = create_sample_user_states(
+            UserState,
+            get_region_model(),
+            get_project_model(),
+            get_location_schema()['model_class'],
+            get_search_location_schema()['model_class']
+        )
         # Gather all unique sample users
         self.users = list(set(R.map(
             lambda user_state: user_state.user,
@@ -83,6 +98,18 @@ class UserStateSchemaTestCase(TestCase):
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userProjects', user_state.__dict__))
         )(self.user_states)
+        # Gather all unique user searches from userRegions.
+        # user searches could also be in userProjects, but we'll ignore that
+        self.user_searches = R.compose(
+            # Forth Resolve persisted UserSearches
+            R.map(lambda id: get_user_search_schema()['model_class'].objects.get(id=id)),
+            # Third make ids unique
+            lambda ids: list(set(ids)),
+            # Chain to a flat list of user search ids
+            lambda user_regions: R.map(R.prop('id'), R.chain(R.item_str_path('userSearches'), user_regions)),
+            # First flat map the user regions of all user_states
+            R.chain(lambda user_state: R.item_str_path('data.userRegions', user_state.__dict__))
+        )(self.user_states)
 
     def test_query(self):
         quiz_model_query(
@@ -104,6 +131,7 @@ class UserStateSchemaTestCase(TestCase):
             data=form_sample_user_state_data(
                 self.regions,
                 self.projects,
+                self.search_locations,
                 dict(
                     userGlobal=dict(
                         mapbox=dict(viewport=dict(
@@ -166,6 +194,7 @@ class UserStateSchemaTestCase(TestCase):
             data=form_sample_user_state_data(
                 self.regions,
                 self.projects,
+                self.search_locations,
                 dict(
                     userRegions=[
                         dict(
