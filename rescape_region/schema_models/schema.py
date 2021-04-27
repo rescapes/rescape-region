@@ -88,8 +88,9 @@ def create_default_schema(class_config={}):
     user_state = create_user_state_query_and_mutation_classes(merged_class_config)
     group_state = create_group_state_query_and_mutation_classes(merged_class_config)
 
+    # Note that user_search is a data class, not a model class, so isn't queried/mutated directly, but via user_state
     query_and_mutation_class_lookups = R.merge(
-        merged_class_config,
+        R.omit(['user_search'], merged_class_config),
         dict(
             user_state=user_state,
             group_state=group_state

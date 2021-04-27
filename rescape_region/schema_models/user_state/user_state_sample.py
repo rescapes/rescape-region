@@ -116,7 +116,6 @@ def create_sample_user_state(cls, regions, projects, user_state_dict):
             data=form_sample_user_state_data(
                 regions,
                 projects,
-                search_locations,
                 R.prop(
                     'data',
                     user_state_dict

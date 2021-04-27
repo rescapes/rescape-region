@@ -77,7 +77,7 @@ def create_sample_search_location(cls, sample_location):
     :return:
     """
 
-    search_location = cls(street=dict(name=sample_location.name))
+    search_location = cls(street=dict(nameContains=sample_location.name))
     search_location.save()
     return search_location
 

@@ -1,6 +1,5 @@
 from operator import itemgetter
 
-from rescape_python_helpers import ramda as R
 import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field, ObjectType
@@ -11,19 +10,20 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import enforce_unique_props
 from rescape_graphene.django_helpers.versioning import create_version_container_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, ALLOW, fields_with_filter_fields, READ
+    update_or_create_with_revision, ALLOW
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
+from rescape_python_helpers import ramda as R
 
 from rescape_region.models.search_location import SearchLocation
-from rescape_region.schema_models.scope.location.location_data_schema import location_data_fields
-from rescape_region.schema_models.scope.location.location_schema import location_fields
 from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
 from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
+from rescape_region.schema_models.scope.location.location_data_schema import location_data_fields
+from rescape_region.schema_models.scope.location.location_schema import location_fields
 from rescape_region.schema_models.search.search_identification_data_type import SearchIdentificationDataType, \
     search_identification_fields
-from rescape_region.schema_models.search.search_location_design_data_schema import SearchLocationDataType
+from rescape_region.schema_models.search.search_location_data_schema import SearchLocationDataType
 
 
 class SearchLocationType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
@@ -55,50 +55,46 @@ SearchLocationType._meta.fields['data'] = Field(
 )
 
 # Search Fields include the top level filter arguments, so
-search_location_fields = fields_with_filter_fields(
-    merge_with_django_properties(
-        SearchLocationType,
-        dict(
-            # The id of the SearchLocation (not the id search for the location)
-            id=dict(create=DENY, update=REQUIRE),
-
-            # The id search properties, such as identification.id and identification.idContains
-            identification=dict(
-                graphene_type=SearchIdentificationDataType,
-                fields=search_identification_fields,
-                # Allow as related input as long as id so we can create/update search locations when saving search locations
-                related_input=ALLOW
-            ),
-
-            # The street search properties, such as identification.id and identification.idContains
-            street=dict(
-                graphene_type=SearchLocationStreetDataType,
-                fields=location_street_data_fields,
-                # Allow as related input as long as id so we can create/update search locations when saving search locations
-                related_input=ALLOW
-            ),
-            # This is the OSM geojson for the search_location
-            geojson=dict(
-                # TODO Do we need a SearchFeatureCollectionDataType?
-                graphene_type=FeatureCollectionDataType,
-                fields=feature_collection_data_type_fields,
-                # Allow as related input as long as id so we can create/update search locations when saving search locations
-                related_input=ALLOW
-            ),
-
-            data=dict(
-                graphene_type=SearchLocationDataType,
-                type=SearchLocationDataType,
-                fields=location_data_fields,
-                default=lambda: dict(streets=[]),
-                # Allow as related input as long as id so we can create/update search_locations when saving search locations
-                related_input=ALLOW
-            ),
-            **reversion_and_safe_delete_types
-        )
-    ),
+search_location_fields = merge_with_django_properties(
     SearchLocationType,
-    crud=READ
+    dict(
+        # The id of the SearchLocation (not the id search for the location)
+        id=dict(create=DENY, update=REQUIRE),
+
+        # The id search properties, such as identification.id and identification.idContains
+        identification=dict(
+            graphene_type=SearchIdentificationDataType,
+            fields=search_identification_fields,
+            # Allow as related input as long as id so we can create/update search locations when saving search locations
+            related_input=ALLOW
+        ),
+
+        # The street search properties, such as identification.id and identification.idContains
+        street=dict(
+            graphene_type=SearchLocationStreetDataType,
+            fields=location_street_data_fields,
+            # Allow as related input as long as id so we can create/update search locations when saving search locations
+            related_input=ALLOW
+        ),
+        # This is the OSM geojson for the search_location
+        geojson=dict(
+            # TODO Do we need a SearchFeatureCollectionDataType?
+            graphene_type=FeatureCollectionDataType,
+            fields=feature_collection_data_type_fields,
+            # Allow as related input as long as id so we can create/update search locations when saving search locations
+            related_input=ALLOW
+        ),
+
+        data=dict(
+            graphene_type=SearchLocationDataType,
+            type=SearchLocationDataType,
+            fields=location_data_fields,
+            default=lambda: dict(streets=[]),
+            # Allow as related input as long as id so we can create/update search_locations when saving search locations
+            related_input=ALLOW
+        ),
+        **reversion_and_safe_delete_types
+    )
 )
 
 # Paginated version of SearchLocationType

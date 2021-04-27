@@ -166,8 +166,8 @@ location_schema_config = dict(
     model_class=Location,
     graphene_class=LocationType,
     graphene_fields=location_fields,
-    query=graphql_query_locations,
-    mutation=graphql_update_or_create_location
+    query=LocationQuery,
+    mutation=LocationMutation
 )
 
 graphql_query_locations_paginated = graphql_query(

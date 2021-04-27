@@ -1,5 +1,5 @@
 from graphene import ObjectType, Field
-from rescape_graphene import resolver_for_dict_field, type_modify_fields, model_resolver_for_dict_field
+from rescape_graphene import resolver_for_dict_field, model_resolver_for_dict_field
 # Params used to limit what locations are available to the Region
 from rescape_graphene.graphql_helpers.schema_helpers import fields_with_filter_fields
 
@@ -8,15 +8,16 @@ from rescape_region.schema_models.scope.location.location_schema import location
 from rescape_region.schema_models.user_state.user_state_data_schema import ActivityDataType, \
     activity_data_fields
 
-search_location_fields = fields_with_filter_fields(
-    location_fields,
-    'SearchLocationType'
-)
+search_location_fields = location_fields
 
 SearchLocationType = type(
     'SearchLocationType',
     (ObjectType,),
-    search_location_fields
+    fields_with_filter_fields(
+        search_location_fields,
+        'SearchLocationType',
+        create_filter_fields_for_mutations=True
+    )
 )
 
 # The sample user search data fields for rescape-region. This must be overridden in applications
@@ -25,7 +26,7 @@ user_search_location_data_fields = dict(
     search_location=dict(
         type=SearchLocationType,
         graphene_type=SearchLocationType,
-        fields=location_fields,
+        fields=search_location_fields,
         # References the model class
         type_modifier=lambda *type_and_args: Field(
             *type_and_args,
@@ -38,11 +39,13 @@ user_search_location_data_fields = dict(
         graphene_type=ActivityDataType,
         fields=activity_data_fields,
         type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
-    ),
+    )
 )
 
 UserSearchLocationDataType = type(
     'UserSearchLocationDataType',
     (ObjectType,),
-    user_search_location_data_fields
+    fields_with_filter_fields(
+        user_search_location_data_fields, 'UserSearchLocationDataType',
+        create_filter_fields_for_mutations=True)
 )
