@@ -63,6 +63,7 @@ DATABASES = {
         'PASSWORD': os.environ.get('SOP_DB_PASS', 'test'),
         'HOST': os.environ.get('SOP_DB_HOST'),
         'PORT': os.environ.get('SOP_DB_PORT', ''),
+        'DISABLE_SERVER_SIDE_CURSORS': True
     }
 }
 

@@ -215,28 +215,35 @@ def create_sample_user_states(cls, region_cls, project_cls, location_cls, search
 
     # Merge search_locations into each userScope dict
     def sample_user_state_with_search_locations(user_scope_name, sample_user_state):
-        return R.map(
-            lambda user_region: R.merge(user_region, dict(user_search=dict(
-                user_search_locations=R.map(lambda i_search_location: dict(
-                    search_location=i_search_location[1],
-                    # Set the first search_location to active
-                    activity=dict(active=i_search_location[0] == 0)
-                ), enumerate(search_locations))
-            ))),
-            R.str_paths_or(f'data.{user_scope_name}', sample_user_state)
+        return R.fake_lens_path_set(
+            f'data.{user_scope_name}'.split('.'),
+            R.map(
+                lambda user_scope: R.merge(user_scope, dict(userSearch=dict(
+                    userSearchLocations=R.map(lambda i_search_location: dict(
+                        # Just return with the id since the full data is in the database
+                        searchLocation=R.pick(['id'], i_search_location[1]),
+                        # Set the first search_location to active
+                        activity=dict(isActive=i_search_location[0] == 0)
+                    ), enumerate(search_locations))
+                ))),
+                R.item_str_path(f'data.{user_scope_name}', sample_user_state)
+            ),
+            sample_user_state
         )
 
     # Convert all sample user_state dicts to persisted UserState instances
     # Use the username to match a real user
     user_states = R.map(
         lambda sample_user_state: create_sample_user_state(cls, regions, projects, sample_user_state),
-        # Adds search_locations to each userState.data.[userRegions[*]|userProjects[*]].user_search.user_search_locations
+        # Adds search_locations to each userState.data.[userRegions[*]|userProjects[*]].user_search.userSearchLocations
         R.compose(
             lambda sample_user_states: R.map(
-                sample_user_state_with_search_locations('userProjects', sample_user_states)
+                lambda sample_user_state: sample_user_state_with_search_locations('userProjects', sample_user_state),
+                sample_user_states
             ),
             lambda sample_user_states: R.map(
-                sample_user_state_with_search_locations('userRegions', sample_user_states)
+                lambda sample_user_state: sample_user_state_with_search_locations('userRegions', sample_user_state),
+                sample_user_states
             ),
         )(sample_user_states)
     )

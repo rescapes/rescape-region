@@ -27,11 +27,17 @@ raw_location_fields = dict(
     key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(Location, None, 'key', {})),
     name=dict(create=REQUIRE),
     # This refers to the LocationDataType, which is a representation of all the json fields of Location.data
-    data=dict(graphene_type=LocationDataType, fields=location_data_fields, default=lambda: dict()),
+    data=dict(
+        graphene_type=LocationDataType,
+        fields=location_data_fields,
+        default=lambda: dict(),
+        #type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+    ),
     # This is the OSM geojson
     geojson=dict(
         graphene_type=FeatureCollectionDataType,
-        fields=feature_collection_data_type_fields
+        fields=feature_collection_data_type_fields,
+        #type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field)
     ),
     **reversion_and_safe_delete_types
 )

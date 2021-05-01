@@ -11,11 +11,9 @@ from reversion.models import Version
 from snapshottest import TestCase
 
 from rescape_region.model_helpers import get_region_model, get_project_model, \
-    get_location_schema, get_user_search_data_schema, get_search_location_schema
+    get_location_schema, get_search_location_schema
 from rescape_region.models import UserState
-from rescape_region.schema_models.scope.project.project_schema import project_fields, ProjectType
-from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields
-from rescape_region.schema_models.schema import create_default_schema
+from rescape_region.schema_models.schema import create_default_schema, default_class_config
 from rescape_region.schema_models.user_sample import create_sample_user
 from rescape_region.schema_models.user_state.user_state_schema import create_user_state_config
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
@@ -24,34 +22,9 @@ from .user_state_sample import delete_sample_user_states, create_sample_user_sta
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
-
 schema = create_default_schema()
 
 
-# The list of django/graphene configuration classes
-# This only for testing purposes. Applications that use rescape_region will define
-# some or all of these themselves
-default_class_config = dict(
-    region=dict(
-        model_class=get_region_model(),
-        graphene_class=RegionType,
-        graphene_fields=region_fields
-    ),
-    project=dict(
-        model_class=get_project_model(),
-        graphene_class=ProjectType,
-        graphene_fields=project_fields
-    ),
-    location=dict(
-        model_class=get_location_schema()['model_class'],
-        graphene_class=get_location_schema()['graphene_class'],
-        graphene_fields=get_location_schema()['graphene_fields']
-    ),
-    user_search=dict(
-        graphene_class=get_user_search_data_schema()['graphene_class'],
-        graphene_fields=get_user_search_data_schema()['graphene_fields']
-    )
-)
 user_state_schema = create_user_state_config(default_class_config)
 
 
@@ -98,15 +71,22 @@ class UserStateSchemaTestCase(TestCase):
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userProjects', user_state.__dict__))
         )(self.user_states)
-        # Gather all unique user searches from userRegions.
+
+        def extract_search_location_ids(user_regions):
+            return R.map(
+                R.item_str_path('searchLocation.id'),
+                R.chain(R.item_str_path('userSearch.userSearchLocations'), user_regions)
+            )
+
+        # Gather all unique searches locations from userRegions.
         # user searches could also be in userProjects, but we'll ignore that
-        self.user_searches = R.compose(
+        self.search_locations = R.compose(
             # Forth Resolve persisted UserSearches
-            R.map(lambda id: get_user_search_data_schema()['model_class'].objects.get(id=id)),
+            lambda ids: R.map(lambda id: get_search_location_schema()['model_class'].objects.get(id=id), ids),
             # Third make ids unique
             lambda ids: list(set(ids)),
-            # Chain to a flat list of user search ids
-            lambda user_regions: R.map(R.prop('id'), R.chain(R.item_str_path('userSearches'), user_regions)),
+            # Chain to a flat list of user search location ids
+            lambda user_regions: extract_search_location_ids(user_regions),
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userRegions', user_state.__dict__))
         )(self.user_states)
@@ -149,18 +129,36 @@ class UserStateSchemaTestCase(TestCase):
                                 latitude=50.5915,
                                 longitude=2.0165,
                                 zoom=7
-                            ))
+                            )),
+                            userSearch=dict(
+                                userSearchLocations=R.map(
+                                    lambda search_location: dict(
+                                        searchLocation=R.pick(['id'], search_location),
+                                        activity=dict(isActive=True)
+                                    ),
+                                    self.search_locations
+                                )
+                            )
                         )
                     ],
                     userProjects=[
                         dict(
-                            # Assign the first prjoect
+                            # Assign the first project
                             project=dict(key=R.prop('key', R.head(self.projects))),
                             mapbox=dict(viewport=dict(
                                 latitude=50.5915,
                                 longitude=2.0165,
                                 zoom=7
-                            ))
+                            )),
+                            userSearch=dict(
+                                userSearchLocations=R.map(
+                                    lambda search_location: dict(
+                                        searchLocation=R.pick(['id'], search_location),
+                                        activity=dict(isActive=True)
+                                    ),
+                                    self.search_locations
+                                )
+                            )
                         )
                     ]
                 )

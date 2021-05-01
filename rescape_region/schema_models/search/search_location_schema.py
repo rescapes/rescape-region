@@ -10,7 +10,7 @@ from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, g
 from rescape_graphene import enforce_unique_props
 from rescape_graphene.django_helpers.versioning import create_version_container_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, ALLOW
+    update_or_create_with_revision, ALLOW, top_level_allowed_filter_arguments
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -19,11 +19,11 @@ from rescape_python_helpers import ramda as R
 from rescape_region.models.search_location import SearchLocation
 from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
 from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
-from rescape_region.schema_models.scope.location.location_data_schema import location_data_fields
 from rescape_region.schema_models.scope.location.location_schema import location_fields
 from rescape_region.schema_models.search.search_identification_data_type import SearchIdentificationDataType, \
     search_identification_fields
-from rescape_region.schema_models.search.search_location_data_schema import SearchLocationDataType
+from rescape_region.schema_models.search.search_location_data_schema import SearchLocationDataType, \
+    search_location_data_fields
 
 
 class SearchLocationType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
@@ -88,7 +88,7 @@ search_location_fields = merge_with_django_properties(
         data=dict(
             graphene_type=SearchLocationDataType,
             type=SearchLocationDataType,
-            fields=location_data_fields,
+            fields=search_location_data_fields,
             default=lambda: dict(streets=[]),
             # Allow as related input as long as id so we can create/update search_locations when saving search locations
             related_input=ALLOW
@@ -111,7 +111,7 @@ search_location_fields = merge_with_django_properties(
 class SearchLocationQuery(ObjectType):
     search_locations = graphene.List(
         SearchLocationType,
-        **search_location_fields
+        **top_level_allowed_filter_arguments(search_location_fields, SearchLocationType)
     )
 
     @staticmethod
@@ -210,7 +210,7 @@ class CreateSearchLocation(UpsertSearchLocation):
                 location_fields,
                 CREATE,
                 SearchLocationType,
-                create_filter_fields_for_mutations=True
+                create_filter_fields_for_search_type=True
             )
         )(required=True)
 
@@ -227,7 +227,7 @@ class UpdateSearchLocation(UpsertSearchLocation):
                 location_fields,
                 UPDATE,
                 SearchLocationType,
-                create_filter_fields_for_mutations=True
+                create_filter_fields_for_search_type=True
             )
         )(required=True)
 

@@ -12,7 +12,7 @@ from rescape_graphene.schema_models.django_object_type_revisioned_mixin import r
     DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R
 
-from rescape_region.model_helpers import get_region_model, get_project_model
+from rescape_region.model_helpers import get_region_model, get_project_model, get_search_location_schema
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
 
@@ -117,8 +117,28 @@ def create_user_state_config(class_config):
 
     # The scope instance types expected in user_state.data
     user_state_scopes = [
-        dict(prop='userRegions', scope_instance_path='region', model=get_region_model()),
-        dict(prop='userProjects', scope_instance_path='project', model=get_project_model())
+        dict(pick=dict(userRegions=[dict(region=True)]), model=get_region_model()),
+        dict(pick=dict(userProjects=[dict(project=True)]), model=get_project_model()),
+        dict(pick=dict(
+            userRegions=[
+                dict(
+                    userSearch=dict(
+                        userSearchLocations=[
+                            dict(searchLocation=True)
+                        ]
+                    )
+                )
+            ],
+            userProjects=[
+                dict(
+                    userSearch=dict(
+                        userSearchLocations=[
+                            dict(searchLocation=True)
+                        ]
+                    )
+                )
+            ]
+        ), model=get_search_location_schema()['model']),
     ]
 
     @R.curry
@@ -134,7 +154,7 @@ def create_user_state_config(class_config):
         :param model:
         :return:
         """
-        user_scope_instances = R.prop_or([], R.prop('prop', user_state_scope), new_data)
+        user_scope_instances = R.pick_deep(R.prop('pick', user_state_scope), new_data)
         return R.map(
             lambda user_scope_instance: find_scope_instance(
                 R.prop('model', user_state_scope),
@@ -212,7 +232,8 @@ def create_user_state_config(class_config):
 
         class Arguments:
             user_state_data = type('CreateUserStateInputType', (InputObjectType,),
-                                   input_type_fields(user_state_fields, CREATE, UserStateType))(required=True)
+                                   input_type_fields(user_state_fields, CREATE, UserStateType)
+                                   )(required=True)
 
     class UpdateUserState(UpsertUserState):
         """

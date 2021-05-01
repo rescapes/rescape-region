@@ -1,29 +1,22 @@
 from graphene import ObjectType, Field
-from rescape_graphene import resolver_for_dict_field, model_resolver_for_dict_field
-# Params used to limit what locations are available to the Region
-from rescape_graphene.graphql_helpers.schema_helpers import fields_with_filter_fields
+from rescape_graphene import resolver_for_dict_field, model_resolver_for_dict_field, type_modify_fields
 
 from rescape_region.models.search_location import SearchLocation
-from rescape_region.schema_models.scope.location.location_schema import location_fields
+from rescape_region.schema_models.search.search_location_schema import search_location_fields, SearchLocationType
 from rescape_region.schema_models.user_state.user_state_data_schema import ActivityDataType, \
     activity_data_fields
 
-search_location_fields = location_fields
+# Params used to limit what locations are available to the Region
 
-SearchLocationType = type(
-    'SearchLocationType',
-    (ObjectType,),
-    fields_with_filter_fields(
-        search_location_fields,
-        'SearchLocationType',
-        create_filter_fields_for_mutations=True
-    )
-)
+
+# We don't add filter fields at this level. The filter fields start at search_location.data, search_location.geojson,
+# etc. We don't want a search_location.dataContains field as part of the SearchLocationType class
+
 
 # The sample user search data fields for rescape-region. This must be overridden in applications
 # that use rescape-region
 user_search_location_data_fields = dict(
-    search_location=dict(
+    searchLocation=dict(
         type=SearchLocationType,
         graphene_type=SearchLocationType,
         fields=search_location_fields,
@@ -45,7 +38,5 @@ user_search_location_data_fields = dict(
 UserSearchLocationDataType = type(
     'UserSearchLocationDataType',
     (ObjectType,),
-    fields_with_filter_fields(
-        user_search_location_data_fields, 'UserSearchLocationDataType',
-        create_filter_fields_for_mutations=True)
+    type_modify_fields(user_search_location_data_fields),
 )
