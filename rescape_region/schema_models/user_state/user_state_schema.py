@@ -10,10 +10,11 @@ from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on
     top_level_allowed_filter_arguments, process_filter_kwargs
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
-from rescape_python_helpers import ramda as R
+from rescape_python_helpers import ramda as R, compact
 
 from rescape_region.model_helpers import get_region_model, get_project_model, get_search_location_schema
 from rescape_region.models import UserState
+from json import dumps
 from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
 
 
@@ -117,53 +118,60 @@ def create_user_state_config(class_config):
 
     # The scope instance types expected in user_state.data
     user_state_scopes = [
-        dict(pick=dict(userRegions=[dict(region=True)]), model=get_region_model()),
-        dict(pick=dict(userProjects=[dict(project=True)]), model=get_project_model()),
+        # dict(region=True) means search all userRegions for that dict
+        dict(pick=dict(userRegions=dict(region=True)), key='region', model=get_region_model()),
+        # dict(project=True) means search all userProjects for that dict
+        dict(pick=dict(userProjects=dict(project=True)), key='project', model=get_project_model()),
         dict(pick=dict(
             userRegions=[
                 dict(
                     userSearch=dict(
-                        userSearchLocations=[
-                            dict(searchLocation=True)
-                        ]
+                        # dict(searchLocation=True) means search all userSearchLocations for that dict
+                        userSearchLocations=dict(searchLocation=True)
                     )
                 )
             ],
             userProjects=[
                 dict(
                     userSearch=dict(
-                        userSearchLocations=[
-                            dict(searchLocation=True)
-                        ]
+                        userSearchLocations=dict(searchLocation=True)
+
                     )
                 )
             ]
-        ), model=get_search_location_schema()['model']),
+        ), key='searchLocation', model=get_search_location_schema()['model_class']),
     ]
 
     @R.curry
-    def find_scope_instance(model, scope_id):
-        return model.objects.all_with_deleted().filter(id=scope_id).values('id', 'name')
+    def find_scope_instances_by_id(model, scope_ids):
+        return model.objects.all_with_deleted().filter(id__in=scope_ids)
 
     @R.curry
     def find_scope_instances(new_data, user_state_scope):
         """
             Retrieve the scope instances to verify the Ids
-        :param new_data:
-        :param path:
-        :param model:
-        :return:
+        :param new_data: The data to search
+        :param user_state_scope Dict with 'pick' in the shape of the instances we are looking for in new_data,
+        e.g. dict(userRegions={region: True}) to search new_data.userRegions[] for all occurrences of {region:...}
+         and 'key' which indicates the actually key of the instance (e.g. 'region' for regions)
+        :return: dict(ids=The ids found, instances=Instances actually in the database)
         """
-        user_scope_instances = R.pick_deep(R.prop('pick', user_state_scope), new_data)
-        return R.map(
-            lambda user_scope_instance: find_scope_instance(
-                R.prop('model', user_state_scope),
-                R.item_path(
-                    [R.prop('scope_instance_path', user_state_scope), 'id'],
-                    user_scope_instance)
-            ),
-            user_scope_instances
-        )
+
+        def until(key, value):
+            return key != R.prop('key', user_state_scope)
+
+        return R.compose(
+            lambda scope_ids: dict(ids=scope_ids, instances=list(
+                find_scope_instances_by_id(R.prop('model', user_state_scope), scope_ids))),
+            lambda scope_ids: R.unique_by(R.identity, scope_ids),
+            lambda scope_objs: compact(R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs)),
+            # Use the pick key property to find the scope instances in the data
+            lambda data: list(R.values(R.flatten_dct_until(
+                R.pick_deep(R.prop('pick', user_state_scope), data),
+                until,
+                '.'
+            )))
+        )(new_data)
 
     class UpsertUserState(Mutation):
         """
@@ -182,10 +190,15 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_instances = R.chain(find_scope_instances(new_data), user_state_scopes)
-            if R.any_satisfy(lambda query: not R.equals(1, query.count()), validated_scope_instances):
-                raise Exception(
-                    f"Some scope instances being saved in user_state do not exist. Found the following: {validated_scope_instances}. UserState.data is {new_data}")
+            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data), user_state_scopes)
+            for i, validated_scope_instances_and_ids in enumerate(validated_scope_instances_and_ids_sets):
+                if R.length(validated_scope_instances_and_ids['ids']) != R.length(validated_scope_instances_and_ids['instances']):
+                    ids = R.join(', ', validated_scope_instances_and_ids['ids'])
+                    instances_string = R.join(', ', R.map(lambda instance: str(instance), validated_scope_instances_and_ids['instances']))
+                    scope = R.merge(user_state_scopes[i], dict(model=user_state_scopes[i]['model'].__name__))
+                    raise Exception(
+                        f"For scope {dumps(scope)} Some scope ids among ids:[{ids}] being saved in user state do not exist. Found the following instances in the database: {instances_string or 'None'}. UserState.data is {dumps(new_data)}"
+                    )
 
             # id or user.id can be used to identify the existing instance
             id_props = R.compact_dict(

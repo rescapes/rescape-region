@@ -24,15 +24,15 @@ class SearchLocation(SafeDeleteModel, RevisionModelMixin):
     """
 
     # Search for matches with the id and key (location.id, location.key)
-    identification = JSONField(default=default_search_identification)
+    identification = JSONField(null=True, default=default_search_identification)
 
     # Search for matches with the street name (location.name)
-    street = JSONField(default=default_search_street)
+    street = JSONField(null=True, default=default_search_street)
 
-    # Search for matches with the location.geojson fields
-    geojson = JSONField(null=False, default=geojson_default)
+    # Search for matches with True location.geojson fields
+    geojson = JSONField(null=True, default=geojson_default)
     # Search for matches with the location.data fields
-    data = JSONField(null=False, default=data_default)
+    data = JSONField(null=True, default=data_default)
 
     class Meta:
         app_label = "rescape_region"
