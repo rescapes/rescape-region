@@ -3,7 +3,7 @@ from rescape_graphene.graphql_helpers.schema_helpers import fields_with_filter_f
 
 from rescape_region.schema_models.jurisdiction.jurisdiction_data_schema import jurisdiction_data_fields
 
-search_jurisdiction_fields = fields_with_filter_fields(
+search_jurisdiction_data_fields = fields_with_filter_fields(
     jurisdiction_data_fields,
     'SearchJurisdictionDataType',
     create_filter_fields_for_search_type=True
@@ -12,5 +12,5 @@ search_jurisdiction_fields = fields_with_filter_fields(
 SearchJurisdictionDataType = type(
     'SearchJurisdictionDataType',
     (ObjectType,),
-    type_modify_fields(search_jurisdiction_fields)
+    type_modify_fields(search_jurisdiction_data_fields)
 )

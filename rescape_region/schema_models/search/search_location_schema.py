@@ -20,6 +20,8 @@ from rescape_python_helpers import ramda as R
 from rescape_region.models import SearchJurisdiction
 from rescape_region.models.search_location import SearchLocation
 from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType
+from rescape_region.schema_models.jurisdiction.search_jurisdiction_schema import SearchJurisdictionType, \
+    search_jurisdiction_fields
 from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
 from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
 from rescape_region.schema_models.scope.location.location_schema import location_fields
@@ -47,16 +49,12 @@ SearchLocationType._meta.fields['street'] = Field(
     resolver=resolver_for_dict_field
 )
 
-SearchLocationType._meta.fields['jurisdiction'] = Field(
-    SearchLocationStreetDataType,
-    resolver=resolver_for_dict_field
-)
-
 # Modify the geojson field to use the geometry collection resolver
 SearchLocationType._meta.fields['geojson'] = Field(
     FeatureCollectionDataType,
     resolver=resolver_for_dict_field
 )
+
 SearchLocationType._meta.fields['data'] = Field(
     SearchLocationDataType,
     resolver=resolver_for_dict_field
@@ -84,17 +82,16 @@ search_location_fields = merge_with_django_properties(
             # Allow as related input as long as id so we can create/update search locations when saving search locations
             related_input=ALLOW
         ),
-        # The jurisdiction search properties, where each in the list is a jursidiction scope
+
+        # The jurisdiction search properties, where each in the list is a jurisdiction scope
         jurisdictions=dict(
-            graphene_type=SearchJurisdictionDataType,
-            fields=location_street_data_fields,
+            graphene_type=SearchJurisdictionType,
+            fields=search_jurisdiction_fields,
             # Allow as related input as long as id so we can create/update search locations when saving search locations
             related_input=ALLOW,
-            type_modifier=lambda *type_and_args: List(
-                *type_and_args,
-                resolver=model_resolver_for_dict_field(SearchJurisdiction)
-            )
+            type_modifier=lambda *type_and_args: List(*type_and_args)
         ),
+
         # This is the OSM geojson for the search_location
         geojson=dict(
             # TODO Do we need a SearchFeatureCollectionDataType?
@@ -114,16 +111,6 @@ search_location_fields = merge_with_django_properties(
         ),
         **reversion_and_safe_delete_types
     )
-)
-
-# Paginated version of SearchLocationType
-(SearchLocationPaginatedType, search_location_paginated_fields) = itemgetter('type', 'fields')(
-    create_paginated_type_mixin(SearchLocationType, search_location_fields)
-)
-
-# Revision version of SearchLocationType
-(SearchLocationVersionedType, search_location_versioned_fields) = itemgetter('type', 'fields')(
-    create_version_container_type(SearchLocationType, search_location_fields)
 )
 
 
@@ -181,38 +168,35 @@ class UpsertSearchLocation(Mutation):
         if deleted_search_location_response:
             return deleted_search_location_response
 
-        # Remove the many to many values. They are saved separately
-        modified_search_location_data = R.omit(
-            ['jurisdictions', 'intersections'],
-            search_location_data
-        )
+        modified_search_location_data = R.compose(
+            # Make sure that all props are unique that must be, either by modifying values or erring.
+            lambda data: enforce_unique_props(search_location_fields, data),
+            # Remove the many to many values. They are saved separately
+            lambda data: R.omit(
+                ['jurisdictions'],
+                data
+            )
+        )(search_location_data)
 
-        # Make sure that all props are unique that must be, either by modifying values or erring.
-        modified_search_location_data = enforce_unique_props(search_location_fields, search_location_data)
         update_or_create_values = input_type_parameters_for_update_or_create(search_location_fields,
                                                                              modified_search_location_data)
         search_location, created = update_or_create_with_revision(SearchLocation, update_or_create_values)
 
-        # Create or Update the Intersection if needed.
-        # Intersections are a rare instance that can be created during the creation of locations
-        # We only allow the intersection.data property. Other properties of intersection are derived
-        # from location, such as node_id, node_type, and geojson
-        if R.prop_or(False, 'intersections', search_location_data):
-            existing_search_intersections = search_location.intersections.all()
-            for i, search_intersection_data in enumerate(R.prop('intersections', search_location_data)):
-                # Zip with merge existing search intersections with anything coming in.
-                # There can be any number of searches to match intersection properties
-                # But mostly likely there would be 0, 1, or 2 since we only need 1 SearchIntersection
-                # to match the properties of an Intersection, and Locations only have two Intersections
-                # Create the SearchIntersection or update it if it matches and existing one
-                search_intersection, created = update_or_create_with_revision(
-                    SearchLocation,
+        # SearchJurisdictions can be created during the creation of search_locations
+        if R.prop_or(False, 'jurisidictions', search_location_data):
+            existing_search_intersections_by_id = R.index_by(R.prop('id'), search_location.jurisdictions.all())
+            for search_jurisdiction_unsaved in R.prop('intersections', search_location_data):
+                # existing instances have an id
+                search_jursidiction_id = R.prop_or(None, 'id', search_jurisdiction_unsaved)
+                search_jurisdiction, created = update_or_create_with_revision(
+                    SearchJurisdiction,
                     R.merge(
-                        # Merge the existing at the same index if defined
-                        existing_search_intersections[i] if R.length(search_location) > i else {},
-                        search_intersection_data
+                        R.prop(search_jursidiction_id, existing_search_intersections_by_id) if search_jursidiction_id else {},
+                        search_jurisdiction_unsaved
                     )
                 )
+                # Once saved, add it to the search location
+                search_location.jurisdictions.add(search_jurisdiction)
 
         return UpsertSearchLocation(search_location=search_location)
 

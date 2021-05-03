@@ -30,7 +30,7 @@ class SearchLocation(SafeDeleteModel, RevisionModelMixin):
     street = JSONField(null=True, default=default_search_street)
 
     # The jurisdictions to search when looking for locations
-    jurisdictions = ManyToManyField('SearchJurisdiction'),
+    jurisdictions = ManyToManyField('SearchJurisdiction')
 
     # Search for matches with True location.geojson fields
     geojson = JSONField(null=True, default=geojson_default)

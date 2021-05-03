@@ -12,12 +12,16 @@ from rescape_graphene.django_helpers.pagination import resolve_paginated_for_typ
 from rescape_graphene.django_helpers.versioning import create_version_container_type, resolve_version_instance, \
     versioning_allowed_filter_arguments
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, top_level_allowed_filter_arguments, fields_with_filter_fields, READ
-from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin
+    update_or_create_with_revision, top_level_allowed_filter_arguments, fields_with_filter_fields, READ, \
+    merge_with_django_properties, DENY, REQUIRE, ALLOW
+from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin, \
+    reversion_and_safe_delete_types
+from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 
 from rescape_region.schema_models.jurisdiction.jurisdiction_schema import jurisdiction_fields, \
     jurisdiction_versioned_fields, jurisdiction_paginated_fields
-from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType
+from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType, \
+    search_jurisdiction_data_fields
 from rescape_region.models.search_jurisdiction import SearchJurisdiction
 
 
@@ -38,8 +42,33 @@ SearchJurisdictionType._meta.fields['data'] = Field(
     resolver=resolver_for_dict_field
 )
 
+
 # Search Fields include the top level filter arguments, so
-search_jurisdiction_fields = fields_with_filter_fields(jurisdiction_fields, SearchJurisdictionType, crud=READ)
+search_jurisdiction_fields = merge_with_django_properties(
+    SearchJurisdictionType,
+    dict(
+        # The id of the SearchJurisidiction (not the id search for the Jursidiction)
+        id=dict(create=DENY, update=REQUIRE),
+
+        # This is the OSM geojson for the search_location
+        geojson=dict(
+            # TODO Do we need a SearchFeatureCollectionDataType?
+            graphene_type=FeatureCollectionDataType,
+            fields=feature_collection_data_type_fields,
+            related_input=ALLOW
+        ),
+
+        data=dict(
+            graphene_type=SearchJurisdictionDataType,
+            type=SearchJurisdictionDataType,
+            fields=search_jurisdiction_data_fields,
+            default=lambda: dict(streets=[]),
+            # Allow as related input as long as id so we can create/update search_locations when saving search locations
+            related_input=ALLOW
+        ),
+        **reversion_and_safe_delete_types
+    )
+)
 
 # Paginated version of SearchJurisdictionType
 (SearchJurisdictionPaginatedType, search_jurisdiction_paginated_fields) = itemgetter('type', 'fields')(
@@ -57,15 +86,7 @@ search_jurisdiction_fields = fields_with_filter_fields(jurisdiction_fields, Sear
 class SearchJurisdictionQuery(ObjectType):
     jurisdictions = graphene.List(
         SearchJurisdictionType,
-        **search_jurisdiction_fields
-    )
-    jurisdictions_paginated = Field(
-        SearchJurisdictionPaginatedType,
-        **pagination_allowed_filter_arguments(search_jurisdiction_paginated_fields, SearchJurisdictionPaginatedType)
-    )
-    search_jurisdictions_versioned = Field(
-        SearchJurisdictionVersionedType,
-        **versioning_allowed_filter_arguments(search_jurisdiction_versioned_fields, SearchJurisdictionVersionedType)
+        **top_level_allowed_filter_arguments(search_jurisdiction_fields, SearchJurisdictionType)
     )
 
     @staticmethod
@@ -74,23 +95,6 @@ class SearchJurisdictionQuery(ObjectType):
 
     def resolve_search_jurisdictions(self, info, **kwargs):
         return search_jurisdiction_resolver(info, **kwargs)
-
-    def resolve_search_jurisdictions_paginated(self, info, **kwargs):
-        return resolve_paginated_for_type(
-            SearchJurisdictionPaginatedType,
-            SearchJurisdictionQuery._resolve_search_jurisdictions,
-            **kwargs
-        )
-
-    def resolve_search_jurisdictions_versioned(self, info, **kwargs):
-        """
-            Get the version history of the jurisdiction matching the kwargs
-        :param info:
-        :param kwargs: id is the only thing required
-        :return: A list of versions
-        """
-        return resolve_version_instance(SearchJurisdictionVersionedType, search_jurisdiction_resolver, **kwargs)
-
 
 def search_jurisdiction_resolver(manager_method, **kwargs):
     """
@@ -188,16 +192,3 @@ graphql_query_jurisdictions = graphql_query(SearchJurisdictionType, jurisdiction
 
 def graphql_query_jurisdictions_limited(search_jurisdiction_fields):
     return graphql_query(SearchJurisdictionType, search_jurisdiction_fields, 'searchJurisdictions')
-
-
-graphql_query_jurisdictions_paginated = graphql_query(
-    SearchJurisdictionPaginatedType,
-    jurisdiction_paginated_fields,
-    'searchJurisdictionsPaginated'
-)
-
-graphql_query_search_jurisdictions_versioned = graphql_query(
-    SearchJurisdictionVersionedType,
-    jurisdiction_versioned_fields,
-    'searchJurisdictionsVersioned'
-)

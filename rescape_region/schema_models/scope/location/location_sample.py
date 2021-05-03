@@ -1,6 +1,8 @@
 from rescape_python_helpers import ramda as R
 from django.db import transaction
 
+from rescape_region.models import SearchJurisdiction
+
 sample_locations = [
     dict(
         key='grandPlace',
@@ -77,8 +79,12 @@ def create_sample_search_location(cls, sample_location):
     :return:
     """
 
-    search_location = cls(street=dict(nameContains=sample_location.name))
+    search_location = cls(
+        street=dict(nameContains=sample_location.name)
+    )
     search_location.save()
+    search_jurisdictions = R.map(lambda instance: instance.save() or instance, [SearchJurisdiction(data=dict(country='Nowhere'))])
+    search_location.jurisdictions.add(*search_jurisdictions)
     return search_location
 
 def delete_sample_search_locations(cls):
