@@ -2,11 +2,12 @@ from operator import itemgetter
 
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, ObjectType
+from graphene import InputObjectType, Mutation, Field, ObjectType, List
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin
+    DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin, resolver_for_dict_list, \
+    model_resolver_for_dict_field
 from rescape_graphene import enforce_unique_props
 from rescape_graphene.django_helpers.versioning import create_version_container_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
@@ -16,7 +17,9 @@ from rescape_graphene.schema_models.django_object_type_revisioned_mixin import r
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
+from rescape_region.models import SearchJurisdiction
 from rescape_region.models.search_location import SearchLocation
+from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType
 from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
 from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
 from rescape_region.schema_models.scope.location.location_schema import location_fields
@@ -40,6 +43,11 @@ SearchLocationType._meta.fields['identification'] = Field(
 )
 
 SearchLocationType._meta.fields['street'] = Field(
+    SearchLocationStreetDataType,
+    resolver=resolver_for_dict_field
+)
+
+SearchLocationType._meta.fields['jurisdiction'] = Field(
     SearchLocationStreetDataType,
     resolver=resolver_for_dict_field
 )
@@ -75,6 +83,17 @@ search_location_fields = merge_with_django_properties(
             fields=location_street_data_fields,
             # Allow as related input as long as id so we can create/update search locations when saving search locations
             related_input=ALLOW
+        ),
+        # The jurisdiction search properties, where each in the list is a jursidiction scope
+        jurisdictions=dict(
+            graphene_type=SearchJurisdictionDataType,
+            fields=location_street_data_fields,
+            # Allow as related input as long as id so we can create/update search locations when saving search locations
+            related_input=ALLOW,
+            type_modifier=lambda *type_and_args: List(
+                *type_and_args,
+                resolver=model_resolver_for_dict_field(SearchJurisdiction)
+            )
         ),
         # This is the OSM geojson for the search_location
         geojson=dict(

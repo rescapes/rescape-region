@@ -1,5 +1,5 @@
 import reversion
-from django.db.models import JSONField
+from django.db.models import JSONField, ManyToManyField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.models.revision_mixin import RevisionModelMixin
@@ -29,8 +29,12 @@ class SearchLocation(SafeDeleteModel, RevisionModelMixin):
     # Search for matches with the street name (location.name)
     street = JSONField(null=True, default=default_search_street)
 
+    # The jurisdictions to search when looking for locations
+    jurisdictions = ManyToManyField('SearchJurisdiction'),
+
     # Search for matches with True location.geojson fields
     geojson = JSONField(null=True, default=geojson_default)
+
     # Search for matches with the location.data fields
     data = JSONField(null=True, default=data_default)
 

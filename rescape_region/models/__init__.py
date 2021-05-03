@@ -5,4 +5,6 @@ from .group_state import GroupState
 from .settings import Settings
 from .location import Location
 from .search_location import SearchLocation
+from .jurisdiction import Jurisdiction
 from .resource import Resource
+from .search_jurisdiction import SearchJurisdiction
