@@ -1,17 +1,13 @@
-from operator import itemgetter
-
 import graphene
 from django.db import transaction
 from graphene import InputObjectType, Mutation, Field, ObjectType, List
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
-    DENY, FeatureCollectionDataType, resolver_for_dict_field, create_paginated_type_mixin, resolver_for_dict_list, \
-    model_resolver_for_dict_field
+    DENY, FeatureCollectionDataType, resolver_for_dict_field
 from rescape_graphene import enforce_unique_props
-from rescape_graphene.django_helpers.versioning import create_version_container_type
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
-    update_or_create_with_revision, ALLOW, top_level_allowed_filter_arguments
+    update_or_create_with_revision, ALLOW, top_level_allowed_filter_arguments, type_modify_fields
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -19,11 +15,10 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.models import SearchJurisdiction
 from rescape_region.models.search_location import SearchLocation
-from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType
 from rescape_region.schema_models.jurisdiction.search_jurisdiction_schema import SearchJurisdictionType, \
     search_jurisdiction_fields
-from rescape_region.schema_models.location_street.location_street_data_schema import location_street_data_fields
-from rescape_region.schema_models.location_street.search_location_street_data_schema import SearchLocationStreetDataType
+from rescape_region.schema_models.location_street.search_location_street_data_schema import \
+    SearchLocationStreetDataType, search_location_street_data_fields
 from rescape_region.schema_models.scope.location.location_schema import location_fields
 from rescape_region.schema_models.search.search_identification_data_type import SearchIdentificationDataType, \
     search_identification_fields
@@ -78,7 +73,7 @@ search_location_fields = merge_with_django_properties(
         # The street search properties, such as identification.id and identification.idContains
         street=dict(
             graphene_type=SearchLocationStreetDataType,
-            fields=location_street_data_fields,
+            fields=search_location_street_data_fields,
             # Allow as related input as long as id so we can create/update search locations when saving search locations
             related_input=ALLOW
         ),
@@ -183,7 +178,7 @@ class UpsertSearchLocation(Mutation):
         search_location, created = update_or_create_with_revision(SearchLocation, update_or_create_values)
 
         # SearchJurisdictions can be created during the creation of search_locations
-        if R.prop_or(False, 'jurisidictions', search_location_data):
+        if R.prop_or(False, 'jurisdictions', search_location_data):
             existing_search_intersections_by_id = R.index_by(R.prop('id'), search_location.jurisdictions.all())
             for search_jurisdiction_unsaved in R.prop('intersections', search_location_data):
                 # existing instances have an id
@@ -210,10 +205,9 @@ class CreateSearchLocation(UpsertSearchLocation):
         search_location_data = type(
             'CreateSearchLocationInputType', (InputObjectType,),
             input_type_fields(
-                location_fields,
+                search_location_fields,
                 CREATE,
-                SearchLocationType,
-                create_filter_fields_for_search_type=True
+                SearchLocationType
             )
         )(required=True)
 
@@ -227,10 +221,9 @@ class UpdateSearchLocation(UpsertSearchLocation):
         search_location_data = type(
             'UpdateSearchLocationInputType', (InputObjectType,),
             input_type_fields(
-                location_fields,
+                search_location_fields,
                 UPDATE,
-                SearchLocationType,
-                create_filter_fields_for_search_type=True
+                SearchLocationType
             )
         )(required=True)
 
@@ -254,5 +247,7 @@ def graphql_query_locations_limited(search_location_fields):
 search_location_schema_config = dict(
     model_class=SearchLocation,
     graphene_class=SearchLocationType,
-    graphene_fields=search_location_fields
+    graphene_fields=search_location_fields,
+    query=SearchLocationQuery,
+    mutation=SearchLocationMutation
 )

@@ -42,7 +42,6 @@ SearchJurisdictionType._meta.fields['data'] = Field(
     resolver=resolver_for_dict_field
 )
 
-
 # Search Fields include the top level filter arguments, so
 search_jurisdiction_fields = merge_with_django_properties(
     SearchJurisdictionType,
@@ -95,6 +94,7 @@ class SearchJurisdictionQuery(ObjectType):
 
     def resolve_search_jurisdictions(self, info, **kwargs):
         return search_jurisdiction_resolver(info, **kwargs)
+
 
 def search_jurisdiction_resolver(manager_method, **kwargs):
     """
@@ -155,10 +155,9 @@ class CreateSearchJurisdiction(UpsertSearchJurisdiction):
             'CreateSearchJurisdictionInputType',
             (InputObjectType,),
             input_type_fields(
-                jurisdiction_fields,
+                search_jurisdiction_fields,
                 CREATE,
-                SearchJurisdictionType,
-                create_filter_fields_for_search_type=True
+                SearchJurisdictionType
             )
         )(required=True)
 
@@ -172,10 +171,10 @@ class UpdateSearchJurisdiction(UpsertSearchJurisdiction):
         search_jurisdiction_data = type(
             'UpdateSearchJurisdictionInputType', (InputObjectType,),
             top_level_allowed_filter_arguments(
-                jurisdiction_fields,
+                search_jurisdiction_fields,
                 UPDATE,
-                SearchJurisdictionType,
-                create_filter_fields_for_search_type=True)
+                SearchJurisdictionType
+            )
         )(required=True)
 
 
