@@ -199,22 +199,23 @@ def form_sample_user_state_data(regions, projects, data):
 
 
 def create_sample_user_states(
-        cls, region_cls, project_cls, location_cls, search_location_cls, create_sample_locations
+        cls, region_cls, project_cls, location_cls, search_location_cls, create_sample_locations=create_local_sample_locations
 ):
     """
-    :param cls:
+    :param cls: The UserState class
     :param region_cls:
     :param project_cls:
     :param location_cls:
     :param search_location_cls:
-    :param create_sample_locations: Defaults to locatio
+    :param create_sample_locations: Defaults to create_local_sample_locations. Expects
+    the location_cls as the only arg
     :return:
     """
     users = create_sample_users()
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
     regions = create_sample_regions(region_cls)
     projects = create_sample_projects(project_cls, users, regions)
-    locations = create_sample_locations(location_cls) or create_local_sample_locations(location_cls)
+    locations = create_sample_locations(location_cls)
     search_locations = create_sample_search_locations(search_location_cls, locations)
     # Assign all the locations to each project
     for project in projects:
