@@ -3,7 +3,7 @@ from django.db import transaction
 
 from rescape_region.models import SearchJurisdiction
 
-sample_locations = [
+_sample_locations = [
     dict(
         key='grandPlace',
         name='Grand Place',
@@ -56,10 +56,11 @@ def delete_sample_locations(cls):
     cls.objects.all().delete()
 
 
-def create_sample_locations(cls):
+def create_sample_locations(cls, sample_locations=_sample_locations):
     """
         Create sample locations
     :param cls: THe Location class
+    :param sample_locations Defaults to _sample_locations defined in this file. Apps using this can pass their own
     :return:
     """
     delete_sample_locations(cls)
