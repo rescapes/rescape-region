@@ -8,7 +8,7 @@ from reversion.models import Version
 from rescape_region.model_helpers import get_location_schema, get_project_model
 from rescape_region.models.region import Region
 
-from rescape_region.schema_models.scope.location.location_sample import create_sample_locations
+from rescape_region.schema_models.scope.location.location_sample import create_local_sample_locations
 from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
 from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
@@ -36,7 +36,7 @@ class ProjectSchemaTestCase(TestCase):
         self.client = client_for_testing(schema, self.users[0])
         regions = create_sample_regions(Region)
         self.projects = create_sample_projects(get_project_model(), self.users, regions)
-        self.locations = create_sample_locations(get_location_schema()['model_class'])
+        self.locations = create_local_sample_locations(get_location_schema()['model_class'])
 
     def test_query(self):
         quiz_model_query(self.client, graphql_query_projects, 'projects', dict(name='Gare'))

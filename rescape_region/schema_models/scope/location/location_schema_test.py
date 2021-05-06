@@ -23,7 +23,7 @@ from rescape_region.schema_models.user_sample import create_sample_users
 
 from snapshottest import TestCase
 
-from .location_sample import create_sample_locations
+from .location_sample import create_local_sample_locations
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class LocationSchemaTestCase(TestCase):
     def setUp(self):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
-        self.locations = create_sample_locations(get_location_schema()['model_class'])
+        self.locations = create_local_sample_locations(get_location_schema()['model_class'])
 
     def test_query(self):
         quiz_model_query(

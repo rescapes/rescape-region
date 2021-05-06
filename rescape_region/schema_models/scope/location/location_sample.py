@@ -3,7 +3,7 @@ from django.db import transaction
 
 from rescape_region.models import SearchJurisdiction
 
-_sample_locations = [
+local_sample_locations = [
     dict(
         key='grandPlace',
         name='Grand Place',
@@ -56,7 +56,7 @@ def delete_sample_locations(cls):
     cls.objects.all().delete()
 
 
-def create_sample_locations(cls, sample_locations=_sample_locations):
+def create_local_sample_locations(cls, sample_locations=local_sample_locations):
     """
         Create sample locations
     :param cls: THe Location class

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rescape_python_helpers import ramda as R
 
 from rescape_region.models import UserState
-from rescape_region.schema_models.scope.location.location_sample import create_sample_locations, \
+from rescape_region.schema_models.scope.location.location_sample import create_local_sample_locations, \
     create_sample_search_locations
 from rescape_region.schema_models.scope.project.project_sample import create_sample_projects
 from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
@@ -198,16 +198,23 @@ def form_sample_user_state_data(regions, projects, data):
     )
 
 
-def create_sample_user_states(cls, region_cls, project_cls, location_cls, search_location_cls):
+def create_sample_user_states(
+        cls, region_cls, project_cls, location_cls, search_location_cls, create_sample_locations
+):
     """
-        Creates sample persisted users that contain references to persisted regions
+    :param cls:
+    :param region_cls:
+    :param project_cls:
+    :param location_cls:
+    :param search_location_cls:
+    :param create_sample_locations: Defaults to locatio
     :return:
     """
     users = create_sample_users()
     # Create regions for the users to associate with. A region also needs and owner so we pass users to the function
     regions = create_sample_regions(region_cls)
     projects = create_sample_projects(project_cls, users, regions)
-    locations = create_sample_locations(location_cls)
+    locations = create_sample_locations(location_cls) or create_local_sample_locations(location_cls)
     search_locations = create_sample_search_locations(search_location_cls, locations)
     # Assign all the locations to each project
     for project in projects:
