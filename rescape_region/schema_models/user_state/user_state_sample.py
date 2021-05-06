@@ -3,7 +3,7 @@ from rescape_python_helpers import ramda as R
 
 from rescape_region.models import UserState
 from rescape_region.schema_models.scope.location.location_sample import create_local_sample_locations, \
-    create_sample_search_locations
+    create_local_sample_search_locations
 from rescape_region.schema_models.scope.project.project_sample import create_sample_projects
 from rescape_region.schema_models.scope.region.region_sample import create_sample_regions
 from rescape_region.schema_models.user_sample import create_sample_users
@@ -199,7 +199,9 @@ def form_sample_user_state_data(regions, projects, data):
 
 
 def create_sample_user_states(
-        cls, region_cls, project_cls, location_cls, search_location_cls, create_sample_locations=create_local_sample_locations
+        cls, region_cls, project_cls, location_cls, search_location_cls,
+        create_sample_locations=create_local_sample_locations,
+        create_sample_search_locations=create_local_sample_search_locations
 ):
     """
     :param cls: The UserState class

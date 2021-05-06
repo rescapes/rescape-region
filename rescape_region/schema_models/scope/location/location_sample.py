@@ -71,17 +71,17 @@ def create_local_sample_locations(cls, sample_locations=local_sample_locations):
         enumerate(sample_locations)
     )
 
-def create_sample_search_location(cls, sample_location):
+def create_sample_search_location(cls, search_location_dict):
     """
         Matches the location name with street.name of a new search location
 
     :param cls:
-    :param sample_location:
+    :param search_location_dict:
     :return:
     """
 
     search_location = cls(
-        street=dict(nameContains=sample_location.name)
+        street=dict(nameContains=search_location_dict.name)
     )
     search_location.save()
     search_jurisdictions = R.map(lambda instance: instance.save() or instance, [SearchJurisdiction(data=dict(country='Nowhere'))])
@@ -92,7 +92,7 @@ def delete_sample_search_locations(cls):
     cls.objects.all().delete()
 
 
-def create_sample_search_locations(cls, sample_locations):
+def create_local_sample_search_locations(cls, sample_locations):
     """
         Create a sample search location that matches each location by name
     :param cls:
