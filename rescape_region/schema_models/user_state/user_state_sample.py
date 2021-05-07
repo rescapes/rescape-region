@@ -211,6 +211,9 @@ def create_sample_user_states(
     :param search_location_cls:
     :param create_sample_locations: Defaults to create_local_sample_locations. Expects
     the location_cls as the only arg
+    :param create_search_sample_locations: Defaults to create_local_sample_search_locations. Expects
+    the serach_location_cls and a list of sample locations. The locations can be ignored
+    if creating samples independent of the locations
     :return:
     """
     users = create_sample_users()

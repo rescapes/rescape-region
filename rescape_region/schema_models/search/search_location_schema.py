@@ -1,6 +1,6 @@
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, ObjectType, List
+from graphene import InputObjectType, Mutation, Field, ObjectType, List, String
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import REQUIRE, graphql_update_or_create, graphql_query, guess_update_or_create, \
     CREATE, UPDATE, input_type_parameters_for_update_or_create, input_type_fields, merge_with_django_properties, \
@@ -61,6 +61,7 @@ search_location_fields = merge_with_django_properties(
     dict(
         # The id of the SearchLocation (not the id search for the location)
         id=dict(create=DENY, update=REQUIRE),
+        name=dict(type=String),
 
         # The id search properties, such as identification.id and identification.idContains
         identification=dict(

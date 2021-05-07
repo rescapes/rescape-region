@@ -1,5 +1,5 @@
 import reversion
-from django.db.models import JSONField, ManyToManyField
+from django.db.models import JSONField, ManyToManyField, CharField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.models import SearchJurisdiction
@@ -23,6 +23,9 @@ class SearchLocation(SafeDeleteModel, RevisionModelMixin):
     """
         Models a location search that can match zero to many locations
     """
+
+    # Optional name of the search.
+    name = CharField(max_length=100, null=True)
 
     # Search for matches with the id and key (location.id, location.key)
     identification = JSONField(null=True, default=default_search_identification)

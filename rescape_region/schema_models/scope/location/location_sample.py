@@ -81,6 +81,7 @@ def create_sample_search_location(cls, search_location_dict):
     """
 
     search_location = cls(
+        name=f"Searchin' for {search_location_dict.name}",
         street=dict(nameContains=search_location_dict.name)
     )
     search_location.save()
