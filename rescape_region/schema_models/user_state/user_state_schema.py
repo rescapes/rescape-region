@@ -95,22 +95,16 @@ def create_user_state_config(class_config):
         # these are a dict of properties that need to go on user_regions and user_projects
         # at the same level as userSearch. For instance, a user's saved app selections could go here
         # additional_user_scope_schemas = dict(
-        # style_selection = dict(
-        #             model_class=...
-        #             graphene_class=...
-        #             graphene_fields=...
-        #             query=...
-        #             mutation=...
-        #         ),
-        #           ...
+        # userDesignFeatureLayers=dict(
+        #    graphene_class=UserDesignFeatureDataType,
+        #    graphene_fields=user_design_feature_data_fields
         # )
         # additional_user_scopes explains the path to Django models within additional_user_scope_schemas
         # additional_django_model_user_scopes = dict(
-        #   style_selection=dict(
-        #       user_styles=dict(style=True)
-        #   )
+        # userDesignFeatureLayers=dict(
+        #   designFeature=True
         # )
-        # Would match the list of some django style model instances
+        # Would match the list of some django DesignFeature model instances
     )
     :return:
     """
@@ -154,7 +148,9 @@ def create_user_state_config(class_config):
         resolve=guess_update_or_create
     )
 
-    additional_django_model_user_scopes = R.prop('additional_user_scopes', class_config)
+    additional_django_model_user_scopes = R.prop('additional_django_model_user_scopes', class_config)\
+        if R.prop_or(None, 'additional_user_scopes', class_config) else {}
+
     # The scope instance types expected in user_state.data
     django_modal_user_state_scopes = [
         # dict(region=True) means search all userRegions for that dict
