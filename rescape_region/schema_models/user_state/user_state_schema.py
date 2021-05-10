@@ -1,3 +1,5 @@
+from json import dumps
+
 import graphene
 from graphene import Field, Mutation, InputObjectType, ObjectType
 from graphene_django.types import DjangoObjectType
@@ -14,7 +16,6 @@ from rescape_python_helpers import ramda as R, compact
 
 from rescape_region.model_helpers import get_region_model, get_project_model, get_search_location_schema
 from rescape_region.models import UserState
-from json import dumps
 from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
 
 
@@ -56,23 +57,60 @@ def create_user_state_query(user_state_config):
 def create_user_state_config(class_config):
     """
         Creates the UserStateType based on specific class_config
-    :param class_config: A dict containing class configurations. Right now it's only region in the form
+    :param class_config: A dict containing class configurations. The default is:
     dict(
-        region=dict(
-            model_class=...,
-            graphene_class=...,
-            fields=...
-        )
-        project=dict(
-            model_class=...,
-            graphene_class=...,
-            fields=...
+        settings=dict(
+            model_class=Settings,
+            graphene_class=SettingsType,
+            graphene_fields=settings_fields,
+            query=SettingsQuery,
+            mutation=SettingsMutation
         ),
-        location=dict(
-            model_class=...,
-            graphene_class=...,
-            fields=...
-        )
+        region=dict(
+            model_class=Region,
+            graphene_class=RegionType,
+            graphene_fields=region_fields,
+            query=RegionQuery,
+            mutation=RegionMutation
+        ),
+        project=dict(
+            model_class=Project,
+            graphene_class=ProjectType,
+            graphene_fields=project_fields,
+            query=ProjectQuery,
+            mutation=ProjectMutation
+        ),
+        resource=dict(
+            model_class=Resource,
+            graphene_class=ResourceType,
+            graphene_fields=resource_fields,
+            query=ResourceQuery,
+            mutation=ResourceMutation
+        ),
+        location=get_location_schema(),
+        user_search=get_user_search_data_schema(),
+        search_location=get_search_location_schema()
+        # additional_user_scope_schemas and additional_user_scopes
+        # are passed in from a calling app
+        # these are a dict of properties that need to go on user_regions and user_projects
+        # at the same level as userSearch. For instance, a user's saved app selections could go here
+        # additional_user_scope_schemas = dict(
+        # style_selection = dict(
+        #             model_class=...
+        #             graphene_class=...
+        #             graphene_fields=...
+        #             query=...
+        #             mutation=...
+        #         ),
+        #           ...
+        # )
+        # additional_user_scopes explains the path to Django models within additional_user_scope_schemas
+        # additional_django_model_user_scopes = dict(
+        #   style_selection=dict(
+        #       user_styles=dict(style=True)
+        #   )
+        # )
+        # Would match the list of some django style model instances
     )
     :return:
     """
@@ -116,8 +154,9 @@ def create_user_state_config(class_config):
         resolve=guess_update_or_create
     )
 
+    additional_django_model_user_scopes = R.prop('additional_user_scopes', class_config)
     # The scope instance types expected in user_state.data
-    user_state_scopes = [
+    django_modal_user_state_scopes = [
         # dict(region=True) means search all userRegions for that dict
         dict(pick=dict(userRegions=dict(region=True)), key='region', model=get_region_model()),
         # dict(project=True) means search all userProjects for that dict
@@ -128,15 +167,17 @@ def create_user_state_config(class_config):
                     userSearch=dict(
                         # dict(searchLocation=True) means search all userSearchLocations for that dict
                         userSearchLocations=dict(searchLocation=True)
-                    )
+                    ),
+                    **additional_django_model_user_scopes
                 )
             ],
             userProjects=[
                 dict(
                     userSearch=dict(
+                        # dict(searchLocation=True) means search all userSearchLocations for that dict
                         userSearchLocations=dict(searchLocation=True)
-
-                    )
+                    ),
+                    **additional_django_model_user_scopes
                 )
             ]
         ), key='searchLocation', model=get_search_location_schema()['model_class']),
@@ -190,12 +231,14 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data), user_state_scopes)
+            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data), django_modal_user_state_scopes)
             for i, validated_scope_instances_and_ids in enumerate(validated_scope_instances_and_ids_sets):
-                if R.length(validated_scope_instances_and_ids['ids']) != R.length(validated_scope_instances_and_ids['instances']):
+                if R.length(validated_scope_instances_and_ids['ids']) != R.length(
+                        validated_scope_instances_and_ids['instances']):
                     ids = R.join(', ', validated_scope_instances_and_ids['ids'])
-                    instances_string = R.join(', ', R.map(lambda instance: str(instance), validated_scope_instances_and_ids['instances']))
-                    scope = R.merge(user_state_scopes[i], dict(model=user_state_scopes[i]['model'].__name__))
+                    instances_string = R.join(', ', R.map(lambda instance: str(instance),
+                                                          validated_scope_instances_and_ids['instances']))
+                    scope = R.merge(django_modal_user_state_scopes[i], dict(model=django_modal_user_state_scopes[i]['model'].__name__))
                     raise Exception(
                         f"For scope {dumps(scope)} Some scope ids among ids:[{ids}] being saved in user state do not exist. Found the following instances in the database: {instances_string or 'None'}. UserState.data is {dumps(new_data)}"
                     )

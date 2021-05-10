@@ -118,10 +118,11 @@ class SearchLocationQuery(ObjectType):
 
     @staticmethod
     def _resolve_search_locations(info, **kwargs):
+        # TODO for use with versioning, pagination
         return search_location_resolver('filter', **kwargs)
 
     def resolve_search_locations(self, info, **kwargs):
-        return search_location_resolver(info, **kwargs)
+        return search_location_resolver('filter', **kwargs)
 
 
 def search_location_resolver(manager_method, **kwargs):
@@ -158,7 +159,7 @@ class UpsertSearchLocation(Mutation):
     @transaction.atomic
     def mutate(self, info, search_location_data=None):
         deleted_search_location_response = delete_if_marked_for_delete(
-            SearchLocation, UpsertSearchLocation, 'searchLocation',
+            SearchLocation, UpsertSearchLocation, 'search_location',
             search_location_data
         )
         if deleted_search_location_response:

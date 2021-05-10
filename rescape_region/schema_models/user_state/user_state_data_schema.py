@@ -99,6 +99,10 @@ def user_search_field_for_user_state_scopes(user_search_graphene_class, user_sea
 
 def user_region_data_fields(class_config):
     region_class_config = R.prop('region', class_config)
+    additional_user_scope_schemas = dict(
+        additional_user_scope_schemas=R.prop('additional_user_scopes', class_config)
+    ) if R.prop_or(None, 'additional_user_scopes', class_config) else {}
+
     return dict(
         # References a Region.
         region=dict(
@@ -127,7 +131,8 @@ def user_region_data_fields(class_config):
         # A list of user_searches that reference application specific classes
         userSearch=user_search_field_for_user_state_scopes(
             *R.props(['graphene_class', 'graphene_fields'], R.prop('user_search', class_config))
-        )
+        ),
+        **additional_user_scope_schemas
     )
 
 
@@ -145,6 +150,10 @@ def UserRegionDataType(class_config):
 def user_project_data_fields(class_config):
     project_class_config = R.prop('project', class_config)
     location_class_config = R.prop('location', class_config)
+    additional_user_scope_schemas = dict(
+        additional_user_scope_schemas=R.prop('additional_user_scopes', class_config)
+    ) if R.prop_or(None, 'additional_user_scopes', class_config) else {}
+
     return dict(
         # References a Project
         project=dict(
@@ -179,7 +188,8 @@ def user_project_data_fields(class_config):
         # A list of user_searches that reference application specific classes
         userSearch=user_search_field_for_user_state_scopes(
             *R.props(['graphene_class', 'graphene_fields'], R.prop('user_search', class_config))
-        )
+        ),
+        **additional_user_scope_schemas
     )
 
 
@@ -196,6 +206,8 @@ def UserProjectDataType(class_config):
 
 # User State for their use of Regions, Projects, etc
 def user_state_data_fields(class_config):
+
+
     return dict(
         userGlobal=dict(
             type=UserGlobalDataType(class_config),
@@ -215,6 +227,7 @@ def user_state_data_fields(class_config):
             fields=user_project_data_fields(class_config),
             type_modifier=lambda *type_and_args: List(*type_and_args, resolver=resolver_for_dict_list)
         )
+
     )
 
 
