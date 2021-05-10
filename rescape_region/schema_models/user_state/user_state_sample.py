@@ -201,7 +201,8 @@ def form_sample_user_state_data(regions, projects, data):
 def create_sample_user_states(
         cls, region_cls, project_cls, location_cls, search_location_cls,
         create_sample_locations=create_local_sample_locations,
-        create_sample_search_locations=create_local_sample_search_locations
+        create_sample_search_locations=create_local_sample_search_locations,
+        create_additional_scope_instance_properties=lambda user_scope_instance: user_scope_instance
 ):
     """
     :param cls: The UserState class
@@ -214,6 +215,9 @@ def create_sample_user_states(
     :param create_search_sample_locations: Defaults to create_local_sample_search_locations. Expects
     the serach_location_cls and a list of sample locations. The locations can be ignored
     if creating samples independent of the locations
+    :param create_additional_scope_instance_properties Function that takes each user_scope_instance
+    and adds properties to it if needed. This corresponds with schemas defined by users in
+    additional_user_scope_schemas
     :return:
     """
     users = create_sample_users()
@@ -227,18 +231,28 @@ def create_sample_user_states(
         project.locations.add(*locations)
 
     # Merge search_locations into each userScope dict
-    def sample_user_state_with_search_locations(user_scope_name, sample_user_state):
+    def sample_user_state_with_search_locations_and_additional_scope_instances(user_scope_name, sample_user_state):
         return R.fake_lens_path_set(
             f'data.{user_scope_name}'.split('.'),
             R.map(
-                lambda user_scope: R.merge(user_scope, dict(userSearch=dict(
-                    userSearchLocations=R.map(lambda i_search_location: dict(
-                        # Just return with the id since the full data is in the database
-                        searchLocation=R.pick(['id'], i_search_location[1]),
-                        # Set the first search_location to active
-                        activity=dict(isActive=i_search_location[0] == 0)
-                    ), enumerate(search_locations))
-                ))),
+                lambda user_scope: R.compose(
+                    # Gives applications a chance to add the needed additional scope instances,
+                    # e.g. userDesignFeatures
+                    lambda user_scope: create_additional_scope_instance_properties(user_scope),
+                    lambda user_scope: R.merge(
+                        user_scope,
+                        dict(
+                            userSearch=dict(
+                                userSearchLocations=R.map(lambda i_search_location: dict(
+                                    # Just return with the id since the full data is in the database
+                                    searchLocation=R.pick(['id'], i_search_location[1]),
+                                    # Set the first search_location to active
+                                    activity=dict(isActive=i_search_location[0] == 0)
+                                ), enumerate(search_locations))
+                            )
+                        )
+                    )
+                )(user_scope),
                 R.item_str_path(f'data.{user_scope_name}', sample_user_state)
             ),
             sample_user_state
@@ -251,11 +265,13 @@ def create_sample_user_states(
         # Adds search_locations to each userState.data.[userRegions[*]|userProjects[*]].user_search.userSearchLocations
         R.compose(
             lambda sample_user_states: R.map(
-                lambda sample_user_state: sample_user_state_with_search_locations('userProjects', sample_user_state),
+                lambda sample_user_state: sample_user_state_with_search_locations_and_additional_scope_instances(
+                    'userProjects', sample_user_state),
                 sample_user_states
             ),
             lambda sample_user_states: R.map(
-                lambda sample_user_state: sample_user_state_with_search_locations('userRegions', sample_user_state),
+                lambda sample_user_state: sample_user_state_with_search_locations_and_additional_scope_instances(
+                    'userRegions', sample_user_state),
                 sample_user_states
             ),
         )(sample_user_states)

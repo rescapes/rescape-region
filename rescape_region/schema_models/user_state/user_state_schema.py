@@ -149,7 +149,7 @@ def create_user_state_config(class_config):
     )
 
     additional_django_model_user_scopes = R.prop('additional_django_model_user_scopes', class_config)\
-        if R.prop_or(None, 'additional_user_scopes', class_config) else {}
+        if R.prop_or(None, 'additional_django_model_user_scopes', class_config) else {}
 
     # The scope instance types expected in user_state.data
     django_modal_user_state_scopes = [

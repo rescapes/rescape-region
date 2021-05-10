@@ -22,10 +22,7 @@ from .user_state_sample import delete_sample_user_states, create_sample_user_sta
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['created', 'updated', 'createdAt', 'updatedAt', 'dateJoined']
-schema = create_default_schema()
-
-
-user_state_schema = create_user_state_config(default_class_config)
+schema = lambda: create_default_schema()
 
 
 @pytest.mark.django_db
@@ -36,6 +33,7 @@ class UserStateSchemaTestCase(TestCase):
 
     def setUp(self):
         delete_sample_user_states()
+        self.user_state_schema = create_user_state_config(default_class_config)
         self.user_states = create_sample_user_states(
             UserState,
             get_region_model(),
@@ -48,7 +46,7 @@ class UserStateSchemaTestCase(TestCase):
             lambda user_state: user_state.user,
             self.user_states
         )))
-        self.client = client_for_testing(schema, self.users[0])
+        self.client = client_for_testing(schema(), self.users[0])
         # Gather all unique sample regions
         self.regions = R.compose(
             # Forth Resolve persisted Regions
@@ -94,7 +92,7 @@ class UserStateSchemaTestCase(TestCase):
     def test_query(self):
         quiz_model_query(
             self.client,
-            R.prop('graphql_query', user_state_schema),
+            R.prop('graphql_query', self.user_state_schema),
             'userStates',
             dict(user=dict(id=R.prop('id', R.head(self.users))))
         )
@@ -167,7 +165,7 @@ class UserStateSchemaTestCase(TestCase):
 
         result, _ = quiz_model_mutation_create(
             self.client,
-            R.prop('graphql_mutation', user_state_schema),
+            R.prop('graphql_mutation', self.user_state_schema),
             'createUserState.userState',
             sample_user_state_data,
             # The second create should update, since we can only have one userState per user
@@ -224,7 +222,7 @@ class UserStateSchemaTestCase(TestCase):
 
         result, update_result = quiz_model_mutation_update(
             self.client,
-            R.prop('graphql_mutation', user_state_schema),
+            R.prop('graphql_mutation', self.user_state_schema),
             'createUserState.userState',
             'updateUserState.userState',
             sample_user_state_data,
