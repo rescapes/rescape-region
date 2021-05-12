@@ -88,6 +88,8 @@ class UserStateSchemaTestCase(TestCase):
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userRegions', user_state.__dict__))
         )(self.user_states)
+        # Can be set by inheritors
+        self.additional_user_scope_data = {}
 
     def test_query(self):
         quiz_model_query(
@@ -136,7 +138,8 @@ class UserStateSchemaTestCase(TestCase):
                                     ),
                                     self.search_locations
                                 )
-                            )
+                            ),
+                            **self.additional_user_scope_data
                         )
                     ],
                     userProjects=[
@@ -156,7 +159,8 @@ class UserStateSchemaTestCase(TestCase):
                                     ),
                                     self.search_locations
                                 )
-                            )
+                            ),
+                            **self.additional_user_scope_data
                         )
                     ]
                 )

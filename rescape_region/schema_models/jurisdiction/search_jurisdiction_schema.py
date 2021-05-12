@@ -186,7 +186,7 @@ class SearchJurisdictionMutation(graphene.ObjectType):
 graphql_update_or_create_jurisdiction = graphql_update_or_create(search_jurisdiction_mutation_config,
                                                                  search_jurisdiction_fields)
 # Just use jurisdiction_fields, the search fields will be added automatically
-graphql_query_jurisdictions = graphql_query(SearchJurisdictionType, jurisdiction_fields, 'searchJurisdictions')
+graphql_query_jurisdictions = graphql_query(SearchJurisdictionType, search_jurisdiction_fields, 'searchJurisdictions')
 
 
 def graphql_query_jurisdictions_limited(search_jurisdiction_fields):

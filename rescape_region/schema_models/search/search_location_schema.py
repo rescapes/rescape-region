@@ -238,7 +238,7 @@ class SearchLocationMutation(graphene.ObjectType):
 graphql_update_or_create_search_location = graphql_update_or_create(search_location_mutation_config,
                                                                     search_location_fields)
 # Just use location fields here, the search fields will be added automatically
-graphql_query_search_locations = graphql_query(SearchLocationType, location_fields, 'searchLocations')
+graphql_query_search_locations = graphql_query(SearchLocationType, search_location_fields, 'searchLocations')
 
 
 def graphql_query_locations_limited(search_location_fields):
