@@ -24,7 +24,7 @@ from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema i
     search_jurisdiction_data_fields
 from rescape_region.models.search_jurisdiction import SearchJurisdiction
 
-from rescape_python_helpers import ramda as R
+from rescape_python_helpers import ramda as R, memoize
 
 raw_search_jurisdiction_fields = lambda add_filter=lambda *args, **kwargs: args[0]: dict(
     # The id of the SearchJurisidiction (not the id search for the Jursidiction)
