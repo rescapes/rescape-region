@@ -2,7 +2,7 @@ from operator import itemgetter
 
 import graphene
 from django.db import transaction
-from graphene import InputObjectType, Mutation, Field, ObjectType
+from graphene import InputObjectType, Mutation, Field, ObjectType, Int
 from graphene_django.types import DjangoObjectType
 from rescape_graphene import enforce_unique_props
 from rescape_graphene import graphql_update_or_create, graphql_query, guess_update_or_create, \
@@ -18,6 +18,7 @@ from rescape_graphene.schema_models.django_object_type_revisioned_mixin import D
     reversion_and_safe_delete_types
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 
+from rescape_region.schema_models.jurisdiction.jurisdiction_data_schema import jurisdiction_data_fields
 from rescape_region.schema_models.jurisdiction.jurisdiction_schema import jurisdiction_fields, \
     jurisdiction_versioned_fields, jurisdiction_paginated_fields
 from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType, \
@@ -28,7 +29,7 @@ from rescape_python_helpers import ramda as R, memoize
 
 raw_search_jurisdiction_fields = lambda add_filter=lambda *args, **kwargs: args[0]: dict(
     # The id of the SearchJurisidiction (not the id search for the Jursidiction)
-    id=dict(create=DENY, update=REQUIRE),
+    id=dict(type=Int, create=DENY, update=REQUIRE),
 
     # This is the OSM geojson for the search_location
     geojson=dict(
@@ -41,7 +42,7 @@ raw_search_jurisdiction_fields = lambda add_filter=lambda *args, **kwargs: args[
     data=dict(
         graphene_type=SearchJurisdictionDataType,
         type=SearchJurisdictionDataType,
-        fields=add_filter(search_jurisdiction_data_fields, SearchJurisdictionDataType,
+        fields=add_filter(jurisdiction_data_fields, SearchJurisdictionDataType,
                           create_filter_fields_for_search_type=True),
         default=lambda: dict(streets=[]),
         # Allow as related input as long as id so we can create/update search_locations when saving search locations
@@ -58,20 +59,12 @@ def create_search_jurisdiction_type(class_name):
         R.merge_all([
             dict(id=graphene.Int(source='pk')),
             type_modify_fields(raw_search_jurisdiction_fields(fields_with_filter_fields)),
-            dict(Meta=type('Meta', (object,), dict(model=SearchLocation)))
+            dict(Meta=type('Meta', (object,), dict(model=SearchJurisdiction)))
         ])
     )
 
 
 SearchJurisdictionType = create_search_jurisdiction_type('SearchJurisdictionType')
-
-
-class SearchJurisdictionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
-    id = graphene.Int(source='pk')
-
-    class Meta:
-        model = SearchJurisdiction
-
 
 # Modify the geojson field to use the geometry collection resolver
 SearchJurisdictionType._meta.fields['geojson'] = Field(
@@ -182,7 +175,8 @@ class CreateSearchJurisdiction(UpsertSearchJurisdiction):
             input_type_fields(
                 search_jurisdiction_fields,
                 CREATE,
-                SearchJurisdictionType
+                SearchJurisdictionType,
+                with_filter_fields=False
             )
         )(required=True)
 
@@ -195,10 +189,11 @@ class UpdateSearchJurisdiction(UpsertSearchJurisdiction):
     class Arguments:
         search_jurisdiction_data = type(
             'UpdateSearchJurisdictionInputType', (InputObjectType,),
-            top_level_allowed_filter_arguments(
+            input_type_fields(
                 search_jurisdiction_fields,
                 UPDATE,
-                SearchJurisdictionType
+                SearchJurisdictionType,
+                with_filter_fields=False
             )
         )(required=True)
 
