@@ -13,7 +13,7 @@ from rescape_graphene.django_helpers.versioning import create_version_container_
     versioning_allowed_filter_arguments
 from rescape_graphene.graphql_helpers.schema_helpers import process_filter_kwargs, delete_if_marked_for_delete, \
     update_or_create_with_revision, top_level_allowed_filter_arguments, fields_with_filter_fields, READ, \
-    merge_with_django_properties, DENY, REQUIRE, ALLOW
+    merge_with_django_properties, DENY, REQUIRE, ALLOW, type_modify_fields
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import DjangoObjectTypeRevisionedMixin, \
     reversion_and_safe_delete_types
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
@@ -23,6 +23,47 @@ from rescape_region.schema_models.jurisdiction.jurisdiction_schema import jurisd
 from rescape_region.schema_models.jurisdiction.search_jurisdiction_data_schema import SearchJurisdictionDataType, \
     search_jurisdiction_data_fields
 from rescape_region.models.search_jurisdiction import SearchJurisdiction
+
+from rescape_python_helpers import ramda as R
+
+raw_search_jurisdiction_fields = lambda add_filter=lambda *args, **kwargs: args[0]: dict(
+    # The id of the SearchJurisidiction (not the id search for the Jursidiction)
+    id=dict(create=DENY, update=REQUIRE),
+
+    # This is the OSM geojson for the search_location
+    geojson=dict(
+        # TODO Do we need a SearchFeatureCollectionDataType?
+        graphene_type=FeatureCollectionDataType,
+        fields=feature_collection_data_type_fields,
+        related_input=ALLOW
+    ),
+
+    data=dict(
+        graphene_type=SearchJurisdictionDataType,
+        type=SearchJurisdictionDataType,
+        fields=add_filter(search_jurisdiction_data_fields, SearchJurisdictionDataType,
+                          create_filter_fields_for_search_type=True),
+        default=lambda: dict(streets=[]),
+        # Allow as related input as long as id so we can create/update search_locations when saving search locations
+        related_input=ALLOW
+    ),
+    **reversion_and_safe_delete_types
+)
+
+
+@memoize()
+def create_search_jurisdiction_type(class_name):
+    return type(
+        class_name, (DjangoObjectType, DjangoObjectTypeRevisionedMixin),
+        R.merge_all([
+            dict(id=graphene.Int(source='pk')),
+            type_modify_fields(raw_search_jurisdiction_fields(fields_with_filter_fields)),
+            dict(Meta=type('Meta', (object,), dict(model=SearchLocation)))
+        ])
+    )
+
+
+SearchJurisdictionType = create_search_jurisdiction_type('SearchJurisdictionType')
 
 
 class SearchJurisdictionType(DjangoObjectType, DjangoObjectTypeRevisionedMixin):
@@ -45,28 +86,7 @@ SearchJurisdictionType._meta.fields['data'] = Field(
 # Search Fields include the top level filter arguments, so
 search_jurisdiction_fields = merge_with_django_properties(
     SearchJurisdictionType,
-    dict(
-        # The id of the SearchJurisidiction (not the id search for the Jursidiction)
-        id=dict(create=DENY, update=REQUIRE),
-
-        # This is the OSM geojson for the search_location
-        geojson=dict(
-            # TODO Do we need a SearchFeatureCollectionDataType?
-            graphene_type=FeatureCollectionDataType,
-            fields=feature_collection_data_type_fields,
-            related_input=ALLOW
-        ),
-
-        data=dict(
-            graphene_type=SearchJurisdictionDataType,
-            type=SearchJurisdictionDataType,
-            fields=search_jurisdiction_data_fields,
-            default=lambda: dict(streets=[]),
-            # Allow as related input as long as id so we can create/update search_locations when saving search locations
-            related_input=ALLOW
-        ),
-        **reversion_and_safe_delete_types
-    )
+    raw_search_jurisdiction_fields(fields_with_filter_fields)
 )
 
 # Paginated version of SearchJurisdictionType
@@ -85,7 +105,12 @@ search_jurisdiction_fields = merge_with_django_properties(
 class SearchJurisdictionQuery(ObjectType):
     jurisdictions = graphene.List(
         SearchJurisdictionType,
-        **top_level_allowed_filter_arguments(search_jurisdiction_fields, SearchJurisdictionType)
+        **top_level_allowed_filter_arguments(
+            raw_search_jurisdiction_fields(fields_with_filter_fields),
+            SearchJurisdictionType,
+            # fields_with_filter_fields puts filters on inner props. We don't want filters top-level
+            with_filter_fields=False
+        )
     )
 
     @staticmethod
