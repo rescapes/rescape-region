@@ -110,7 +110,7 @@ class SearchJurisdictionQuery(ObjectType):
     def _resolve_search_jurisdictions(info, **kwargs):
         return search_jurisdiction_resolver('filter', **kwargs)
 
-    def resolve_search_jurisdictions(self, info, **kwargs):
+    def resolve_jurisdictions(self, info, **kwargs):
         return search_jurisdiction_resolver(info, **kwargs)
 
 

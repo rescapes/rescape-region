@@ -203,11 +203,12 @@ def create_user_state_config(class_config):
             lambda scope_ids: R.unique_by(R.identity, scope_ids),
             lambda scope_objs: compact(R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs)),
             # Use the pick key property to find the scope instances in the data
-            lambda data: list(R.values(R.flatten_dct_until(
+            # Use filter to remove null items/empty lists
+            lambda data: R.filter(R.identity, list(R.values(R.flatten_dct_until(
                 R.pick_deep(R.prop('pick', user_state_scope), data),
                 until,
                 '.'
-            )))
+            ))))
         )(new_data)
 
     class UpsertUserState(Mutation):
