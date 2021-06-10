@@ -148,7 +148,7 @@ def create_user_state_config(class_config):
         resolve=guess_update_or_create
     )
 
-    additional_django_model_user_scopes = R.prop('additional_django_model_user_scopes', class_config)\
+    additional_django_model_user_scopes = R.prop('additional_django_model_user_scopes', class_config) \
         if R.prop_or(None, 'additional_django_model_user_scopes', class_config) else {}
 
     # The scope instance types expected in user_state.data
@@ -203,11 +203,15 @@ def create_user_state_config(class_config):
             lambda scope_ids: R.unique_by(R.identity, scope_ids),
             lambda scope_objs: compact(R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs)),
             # Use the pick key property to find the scope instances in the data
-            lambda data: list(R.values(R.flatten_dct_until(
-                R.pick_deep(R.prop('pick', user_state_scope), data),
-                until,
-                '.'
-            )))
+            # If we don't match anything we can get null or an empty item. Filter/compact these out
+            lambda data: R.filter(
+                lambda item: item and (not isinstance(item, list) or R.length(item) != 0),
+                list(R.values(R.flatten_dct_until(
+                    R.pick_deep(R.prop('pick', user_state_scope), data),
+                    until,
+                    '.'
+                )))
+            )
         )(new_data)
 
     class UpsertUserState(Mutation):
@@ -227,14 +231,16 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data), django_modal_user_state_scopes)
+            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data),
+                                                           django_modal_user_state_scopes)
             for i, validated_scope_instances_and_ids in enumerate(validated_scope_instances_and_ids_sets):
                 if R.length(validated_scope_instances_and_ids['ids']) != R.length(
                         validated_scope_instances_and_ids['instances']):
                     ids = R.join(', ', validated_scope_instances_and_ids['ids'])
                     instances_string = R.join(', ', R.map(lambda instance: str(instance),
                                                           validated_scope_instances_and_ids['instances']))
-                    scope = R.merge(django_modal_user_state_scopes[i], dict(model=django_modal_user_state_scopes[i]['model'].__name__))
+                    scope = R.merge(django_modal_user_state_scopes[i],
+                                    dict(model=django_modal_user_state_scopes[i]['model'].__name__))
                     raise Exception(
                         f"For scope {dumps(scope)} Some scope ids among ids:[{ids}] being saved in user state do not exist. Found the following instances in the database: {instances_string or 'None'}. UserState.data is {dumps(new_data)}"
                     )
