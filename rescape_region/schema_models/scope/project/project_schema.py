@@ -18,13 +18,17 @@ from rescape_graphene.schema_models.django_object_type_revisioned_mixin import r
 from rescape_graphene.schema_models.geojson.types.feature_collection import feature_collection_data_type_fields
 from rescape_python_helpers import ramda as R
 
-from rescape_region.model_helpers import get_project_model, get_location_schema
+from rescape_region.model_helpers import get_project_model, get_location_for_project_schema
 from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields
 from .project_data_schema import ProjectDataType, project_data_fields
 
+location_type = get_location_for_project_schema()['graphene_class']
+location_fields = get_location_for_project_schema()['graphene_fields']
+
 raw_project_fields = dict(
     id=dict(create=DENY, update=REQUIRE),
-    key=dict(create=REQUIRE, unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['deleted', 'user_id']))),
+    key=dict(create=REQUIRE,
+             unique_with=increment_prop_until_unique(get_project_model(), None, 'key', R.pick(['deleted', 'user_id']))),
     name=dict(create=REQUIRE),
     # This refers to the ProjectDataType, which is a representation of all the json fields of Project.data
     data=dict(graphene_type=ProjectDataType, fields=project_data_fields, default=lambda: dict()),
@@ -36,8 +40,8 @@ raw_project_fields = dict(
     region=dict(graphene_type=RegionType, fields=region_fields),
     # The locations of the project. The Graphene type is dynamic to support application specific location classes
     locations=dict(
-        graphene_type=get_location_schema()['graphene_class'],
-        fields=get_location_schema()['graphene_fields'],
+        graphene_type=lambda: location_type,
+        fields=lambda: location_fields,
         type_modifier=lambda *type_and_args: List(*type_and_args)
     ),
     # This is a Foreign Key. Graphene generates these relationships for us, but we need it here to
@@ -203,8 +207,3 @@ def graphql_query_projects_limited(project_fields):
     return graphql_query(ProjectType, project_fields, 'projects')
 
 
-graphql_query_projects_paginated = graphql_query(
-    ProjectPaginatedType,
-    project_paginated_fields,
-    'projectsPaginated'
-)

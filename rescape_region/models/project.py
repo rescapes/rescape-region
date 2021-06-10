@@ -29,7 +29,7 @@ class Project(SafeDeleteModel, RevisionModelMixin):
     # reaching Project from Region
     region = ForeignKey('Region', null=True, on_delete=SET_NULL, related_name='+', )
     # Locations in the project. It might be better in some cases to leave this empty and specify locations by queries
-    locations = ManyToManyField('Location', blank=True)
+    locations = ManyToManyField('Location', blank=True, related_name='projects')
 
     # Projects must be owned by someone
     user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='+', )

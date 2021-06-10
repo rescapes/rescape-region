@@ -15,6 +15,7 @@ PROD = os.environ.get('ENV_TYPE') == 'prod'
 # Django models that can be overridden in packages that use this package
 REGION_MODEL = 'rescape_region.region'
 PROJECT_MODEL = 'rescape_region.project'
+LOCATION_SCHEMA_FOR_PROJECT_CONFIG = 'rescape_region.schema_models.scope.location.location_schema_helpers.location_schema_config'
 LOCATION_SCHEMA_CONFIG = 'rescape_region.schema_models.scope.location.location_schema.location_schema_config'
 SEARCH_LOCATION_SCHEMA_CONFIG = 'rescape_region.schema_models.search.search_location_schema.search_location_schema_config'
 USER_SEARCH_DATA_SCHEMA_CONFIG = 'rescape_region.schema_models.search.user_search_data_schema.user_search_data_schema_config'

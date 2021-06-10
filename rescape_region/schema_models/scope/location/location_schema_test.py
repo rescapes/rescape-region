@@ -8,7 +8,9 @@ import os
 import django
 from reversion.models import Version
 
-from rescape_region.models import Location
+from rescape_region.models import Location, Region, Project
+from ..project.project_sample import create_sample_projects
+from ..region.region_sample import create_sample_regions
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rescape_region.settings")
 django.setup()
@@ -40,6 +42,10 @@ class LocationSchemaTestCase(TestCase):
         users = create_sample_users()
         self.client = client_for_testing(schema, users[0])
         self.locations = create_local_sample_locations(get_location_schema()['model_class'])
+        self.regions = create_sample_regions(Region)
+        self.projects = create_sample_projects(Project, users, self.regions)
+        for project in self.projects:
+            project.locations.add(*self.locations)
 
     def test_query(self):
         quiz_model_query(
@@ -50,6 +56,18 @@ class LocationSchemaTestCase(TestCase):
                 name='Grand Place',
             )
         )
+
+    def test_query_with_project_reference(self):
+        quiz_model_query(
+            self.client,
+            graphql_query_locations,
+            'locations',
+            dict(
+                name='Grand Place',
+                projects=[R.pick(['id'], self.projects[0])]
+            )
+        )
+
 
     def test_query_pagination(self):
         (result, new_result) = quiz_model_paginated_query(

@@ -11,52 +11,60 @@ from graphql import format_error
 from rescape_graphene import create_schema
 from rescape_python_helpers import ramda as R
 
-from rescape_region.model_helpers import get_user_search_data_schema, get_location_schema, get_search_location_schema
-from rescape_region.models import Region, Project, Location, Settings
-from rescape_region.models.resource import Resource
+from rescape_region.schema_models.scope.project.project_schema import ProjectType, project_fields, ProjectQuery, \
+    ProjectMutation
 from rescape_region.schema_models.user_state.group_state_schema import create_group_state_query_and_mutation_classes
-from rescape_region.schema_models.scope.location.location_schema import location_fields, LocationType, LocationQuery, LocationMutation
-from rescape_region.schema_models.scope.project.project_schema import ProjectType, project_fields, ProjectQuery, ProjectMutation
-from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields, RegionQuery, RegionMutation
-from rescape_region.schema_models.resource.resource_schema import resource_fields, ResourceType, ResourceQuery, ResourceMutation
-from rescape_region.schema_models.settings.settings_schema import SettingsType, settings_fields, SettingsQuery, SettingsMutation
 from rescape_region.schema_models.user_state.user_state_schema import create_user_state_query_and_mutation_classes
 
 logger = logging.getLogger('rescape_graphene')
 
-default_class_config = dict(
-    settings=dict(
-        model_class=Settings,
-        graphene_class=SettingsType,
-        graphene_fields=settings_fields,
-        query=SettingsQuery,
-        mutation=SettingsMutation
-    ),
-    region=dict(
-        model_class=Region,
-        graphene_class=RegionType,
-        graphene_fields=region_fields,
-        query=RegionQuery,
-        mutation=RegionMutation
-    ),
-    project=dict(
-        model_class=Project,
-        graphene_class=ProjectType,
-        graphene_fields=project_fields,
-        query=ProjectQuery,
-        mutation=ProjectMutation
-    ),
-    resource=dict(
-        model_class=Resource,
-        graphene_class=ResourceType,
-        graphene_fields=resource_fields,
-        query=ResourceQuery,
-        mutation=ResourceMutation
-    ),
-    location=get_location_schema(),
-    user_search=get_user_search_data_schema(),
-    search_location=get_search_location_schema()
-)
+
+def default_class_config():
+    # Import here to prevent circular dependencies
+    from rescape_region.model_helpers import get_user_search_data_schema, get_location_schema, \
+        get_search_location_schema
+    from rescape_region.models import Region, Project, Settings
+    from rescape_region.models.resource import Resource
+    from rescape_region.schema_models.scope.region.region_schema import RegionType, region_fields, RegionQuery, \
+        RegionMutation
+    from rescape_region.schema_models.resource.resource_schema import resource_fields, ResourceType, ResourceQuery, \
+        ResourceMutation
+    from rescape_region.schema_models.settings.settings_schema import SettingsType, settings_fields, SettingsQuery, \
+        SettingsMutation
+
+    return dict(
+        settings=dict(
+            model_class=Settings,
+            graphene_class=SettingsType,
+            graphene_fields=settings_fields,
+            query=SettingsQuery,
+            mutation=SettingsMutation
+        ),
+        region=dict(
+            model_class=Region,
+            graphene_class=RegionType,
+            graphene_fields=region_fields,
+            query=RegionQuery,
+            mutation=RegionMutation
+        ),
+        project=dict(
+            model_class=Project,
+            graphene_class=ProjectType,
+            graphene_fields=project_fields,
+            query=ProjectQuery,
+            mutation=ProjectMutation
+        ),
+        resource=dict(
+            model_class=Resource,
+            graphene_class=ResourceType,
+            graphene_fields=resource_fields,
+            query=ResourceQuery,
+            mutation=ResourceMutation
+        ),
+        location=get_location_schema(),
+        user_search=get_user_search_data_schema(),
+        search_location=get_search_location_schema()
+    )
 
 
 def create_default_schema(class_config={}):
@@ -70,7 +78,7 @@ def create_default_schema(class_config={}):
 
     # Merge the incoming class_config with our defaults
     merged_class_config = R.merge(
-        default_class_config,
+        default_class_config(),
         class_config
     )
 
@@ -84,7 +92,8 @@ def create_default_schema(class_config={}):
     # additional_user_scope_schemas and additional_django_model_user_scopes are used for configured
     # UserStateSchema
     query_and_mutation_class_lookups = R.merge(
-        R.omit(['user_search', 'additional_user_scope_schemas', 'additional_django_model_user_scopes'], merged_class_config),
+        R.omit(['user_search', 'additional_user_scope_schemas', 'additional_django_model_user_scopes'],
+               merged_class_config),
         dict(
             user_state=user_state,
             group_state=group_state
@@ -114,17 +123,20 @@ def dump_errors(result):
             # This hopefully includes the traceback
             logger.exception(format_error(error))
 
+
 class MyDjangoJSONEncoder(DjangoJSONEncoder):
     """
     JSONEncoder subclass that knows how to encode date/time, decimal types, and
     UUIDs.
     """
+
     def default(self, o):
         # See "Date Time String Format" in the ECMA-262 specification.
         if isinstance(o, (Model, BaseType)):
             return o.__dict__
         else:
             return super().default(o)
+
 
 # https://stackoverflow.com/questions/52711580/how-to-see-graphene-django-debug-logs
 def log_request_body(info, response_or_error):
@@ -137,7 +149,8 @@ def log_request_body(info, response_or_error):
         if isinstance(response_or_error, QuerySet):
             count = response_or_error.count()
             # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
-            ids = R.join(' ', ['', 'with ids', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
+            ids = R.join(' ',
+                         ['', 'with ids', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
             logger.debug(f'Query returned {count} results{ids}')
         else:
             # Just log top level types

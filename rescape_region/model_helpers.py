@@ -122,6 +122,31 @@ def get_location_schema():
             "settings.LOCATION_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.LOCATION_SCHEMA_CONFIG
         )
 
+def get_location_for_project_schema():
+    """
+
+    Like get_location_schema() but without reverse relationships that cause circular dependencies
+    :return:
+    """
+    try:
+        modules = settings.LOCATION_SCHEMA_FOR_PROJECT_CONFIG.split('.')
+        return getattr(
+            importlib.import_module(R.join('.', R.init(modules))),
+            R.last(modules)
+        )
+    except ValueError:
+        raise ImproperlyConfigured('''settings.LOCATION_SCHEMA_FOR_PROJECT_CONFIG must point to the location schema config containing
+    {
+        model_class=Location,
+        graphene_class=LocationType,
+        graphene_fields=location_fields,
+    }
+''')
+    except LookupError:
+        raise ImproperlyConfigured(
+            "settings.LOCATION_SCHEMA_CONFIG refers to model '%s' that has not been installed" % settings.LOCATION_SCHEMA_CONFIG
+        )
+
 def get_user_search_data_schema():
     """
     Uses the same technique as get_user_model() to get the current location model from settings

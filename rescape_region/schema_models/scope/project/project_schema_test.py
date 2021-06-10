@@ -14,17 +14,17 @@ from rescape_region.schema_models.schema import create_default_schema
 from rescape_graphene.graphql_helpers.schema_validating_helpers import quiz_model_query, quiz_model_mutation_create, \
     quiz_model_mutation_update
 from rescape_region.schema_models.user_sample import create_sample_users
-from .project_schema import graphql_query_projects, graphql_update_or_create_project
 
 from snapshottest import TestCase
 
 from .project_sample import create_sample_projects
+from .project_schema import graphql_query_projects, graphql_update_or_create_project
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 omit_props = ['createdAt', 'updatedAt']
 
-schema = create_default_schema()
+
 
 
 @pytest.mark.django_db
@@ -32,6 +32,7 @@ class ProjectSchemaTestCase(TestCase):
     client = None
 
     def setUp(self):
+        schema = create_default_schema()
         self.users = create_sample_users()
         self.client = client_for_testing(schema, self.users[0])
         regions = create_sample_regions(Region)
