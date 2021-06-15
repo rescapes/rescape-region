@@ -17,6 +17,7 @@ from rescape_python_helpers import ramda as R, compact
 from rescape_region.model_helpers import get_region_model, get_project_model, get_search_location_schema
 from rescape_region.models import UserState
 from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
+from rescape_graphene.graphql_helpers.json_field_helpers import resolve_selections, pick_selections
 
 
 def create_user_state_query_and_mutation_classes(class_config):
@@ -52,6 +53,30 @@ def create_user_state_query(user_state_config):
             )
 
     return UserStateQuery
+
+
+def resolver_for_data_field(resource, context, **kwargs):
+    """
+        Like resolver_for_dict_field, but default the data property to {userRegions:[], userProjects:[]}
+        in case a mutation messes it up (This should be a temporary problem until we fix the mutation).
+    :param resource:
+    :param context:
+    :params kwargs: Arguments to filter with
+    :return:
+    """
+    selections = resolve_selections(context)
+    field_name = context.field_name
+    data = getattr(resource, field_name) if (hasattr(resource, field_name) and R.prop(field_name, resource)) else {}
+    data['userRegions'] = R.prop_or([], 'userRegions', data)
+    data['userProjects'] = R.prop_or([], 'userProjects', data)
+
+    # We only let this value through if it matches the kwargs
+    # TODO data doesn't include full values for embedded model values, rather just {id: ...}. So if kwargs have
+    # searches on other values of the model this will fail. The solution is to load the model values, but I
+    # need some way to figure out where they are in data
+    passes = R.dict_matches_params_deep(kwargs, data)
+    # Pick the selections from our resource json field value default to {} if resource[field_name] is null
+    return pick_selections(selections, data) if passes else namedtuple('DataTuple', [])()
 
 
 def create_user_state_config(class_config):
@@ -123,7 +148,7 @@ def create_user_state_config(class_config):
     # Django model to generate the fields
     UserStateType._meta.fields['data'] = Field(
         UserStateDataType(class_config),
-        resolver=resolver_for_dict_field
+        resolver=resolver_for_data_field
     )
 
     user_state_fields = merge_with_django_properties(UserStateType, dict(

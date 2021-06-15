@@ -150,7 +150,7 @@ def log_request_body(info, response_or_error):
             count = response_or_error.count()
             # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
             ids = R.join(' ',
-                         ['', 'with ids', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
+                         ['', 'having ids:', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
             logger.debug(f'Query returned {count} results{ids}')
         else:
             # Just log top level types
