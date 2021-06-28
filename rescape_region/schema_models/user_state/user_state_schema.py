@@ -248,7 +248,7 @@ def create_user_state_config(class_config):
                 **scope_dict
             ),
             lambda scope_objs: dict(
-                scope_path=scope_objs[0]['key'],
+                scope_path=scope_objs[0]['key'] if R.length(scope_objs) else None,
                 # Unique by id or accept if there is no id
                 scope_objs=R.unique_by(lambda obj: R.prop_or(str(now()), 'id', obj['value']), scope_objs),
                 scope_ids=R.unique_by(
