@@ -61,7 +61,7 @@ search_location_fields = merge_with_django_properties(
     dict(
         # The id of the SearchLocation (not the id search for the location)
         id=dict(create=DENY, update=REQUIRE),
-        name=dict(type=String),
+        name=dict(type=String, related_input=ALLOW),
 
         # The id search properties, such as identification.id and identification.idContains
         identification=dict(

@@ -33,7 +33,7 @@ class UserStateSchemaTestCase(TestCase):
 
     def setUp(self):
         delete_sample_user_states()
-        self.user_state_schema = create_user_state_config(default_class_config)
+        self.user_state_schema = create_user_state_config(default_class_config())
         self.user_states = create_sample_user_states(
             UserState,
             get_region_model(),
@@ -131,12 +131,21 @@ class UserStateSchemaTestCase(TestCase):
                                 zoom=7
                             )),
                             userSearch=dict(
-                                userSearchLocations=R.map(
-                                    lambda search_location: dict(
-                                        searchLocation=R.pick(['id'], search_location),
-                                        activity=dict(isActive=True)
+                                userSearchLocations=R.concat(
+                                    R.map(
+                                        lambda search_location: dict(
+                                            searchLocation=R.pick(['id'], search_location),
+                                            activity=dict(isActive=True)
+                                        ),
+                                        self.search_locations
                                     ),
-                                    self.search_locations
+                                    # Search locations can be created on the fly
+                                    [
+                                        dict(
+                                            searchLocation=dict(name="I am a new search"),
+                                            activity=dict(isActive=True)
+                                        )
+                                    ]
                                 )
                             ),
                             **self.additional_user_scope_data

@@ -9,7 +9,7 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
     enforce_unique_props, resolver_for_dict_field, user_fields
 from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision, \
-    top_level_allowed_filter_arguments, process_filter_kwargs
+    top_level_allowed_filter_arguments, process_filter_kwargs, ALLOW
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
 from rescape_python_helpers import ramda as R, compact
@@ -182,26 +182,35 @@ def create_user_state_config(class_config):
         dict(pick=dict(userRegions=dict(region=True)), key='region', model=get_region_model()),
         # dict(project=True) means search all userProjects for that dict
         dict(pick=dict(userProjects=dict(project=True)), key='project', model=get_project_model()),
-        dict(pick=dict(
-            userRegions=[
-                dict(
-                    userSearch=dict(
-                        # dict(searchLocation=True) means search all userSearchLocations for that dict
-                        userSearchLocations=dict(searchLocation=True)
-                    ),
-                    **additional_django_model_user_scopes
-                )
-            ],
-            userProjects=[
-                dict(
-                    userSearch=dict(
-                        # dict(searchLocation=True) means search all userSearchLocations for that dict
-                        userSearchLocations=dict(searchLocation=True)
-                    ),
-                    **additional_django_model_user_scopes
-                )
-            ]
-        ), key='searchLocation', model=get_search_location_schema()['model_class']),
+        dict(
+            pick=dict(
+                userRegions=[
+                    dict(
+                        userSearch=dict(
+                            # dict(searchLocation=True) means search all userSearchLocations for that dict
+                            userSearchLocations=dict(
+                                searchLocation=True,
+
+                            )
+                        ),
+                        **additional_django_model_user_scopes
+                    )
+                ],
+                userProjects=[
+                    dict(
+                        userSearch=dict(
+                            # dict(searchLocation=True) means search all userSearchLocations for that dict
+                            userSearchLocations=dict(searchLocation=True)
+                        ),
+                        **additional_django_model_user_scopes
+                    )
+                ]
+            ),
+            key='searchLocation',
+            model=get_search_location_schema()['model_class'],
+            # These can be modified when userState is mutated
+            can_mutate_related=True
+        ),
     ]
 
     @R.curry
@@ -211,31 +220,49 @@ def create_user_state_config(class_config):
     @R.curry
     def find_scope_instances(new_data, user_state_scope):
         """
-            Retrieve the scope instances to verify the Ids
+            Retrieve the scope instances to verify the Ids.
+            Scope instances must have ids unless they are allowed to be created/updated
+            during the userState mutation (such as searchLocations)
         :param new_data: The data to search
         :param user_state_scope Dict with 'pick' in the shape of the instances we are looking for in new_data,
         e.g. dict(userRegions={region: True}) to search new_data.userRegions[] for all occurrences of {region:...}
          and 'key' which indicates the actually key of the instance (e.g. 'region' for regions)
-        :return: dict(ids=The ids found, instances=Instances actually in the database)
+        :return: dict(ids=The ids found, instances=Instances actually in the database, scope_objs=objs passed in)
         """
 
         def until(key, value):
             return key != R.prop('key', user_state_scope)
 
         return R.compose(
-            lambda scope_ids: dict(ids=scope_ids, instances=list(
-                find_scope_instances_by_id(R.prop('model', user_state_scope), scope_ids))),
-            lambda scope_ids: R.unique_by(R.identity, scope_ids),
-            lambda scope_objs: compact(R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs)),
+            lambda scope_dict: dict(
+                # See which instances with ids are actually in the database
+                # If any are missing we have an invalid update
+                instances=list(
+                    find_scope_instances_by_id(R.prop('model', user_state_scope), scope_dict['scope_ids'])
+                ),
+                **scope_dict
+            ),
+            lambda scope_objs: dict(
+                scope_objs=scope_objs,
+                scope_ids=R.unique_by(
+                    R.identity,
+                    compact(
+                        R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs))
+                )
+            ),
             # Use the pick key property to find the scope instances in the data
             # If we don't match anything we can get null or an empty item. Filter/compact these out
             lambda data: R.filter(
                 lambda item: item and (not isinstance(item, list) or R.length(item) != 0),
-                list(R.values(R.flatten_dct_until(
-                    R.pick_deep(R.prop('pick', user_state_scope), data),
-                    until,
-                    '.'
-                )))
+                list(
+                    R.values(
+                        R.flatten_dct_until(
+                            R.pick_deep(R.prop('pick', user_state_scope), data),
+                            until,
+                            '.'
+                        )
+                    )
+                )
             )
         )(new_data)
 
@@ -256,19 +283,28 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_instances_and_ids_sets = R.map(find_scope_instances(new_data),
-                                                           django_modal_user_state_scopes)
-            for i, validated_scope_instances_and_ids in enumerate(validated_scope_instances_and_ids_sets):
-                if R.length(validated_scope_instances_and_ids['ids']) != R.length(
-                        validated_scope_instances_and_ids['instances']):
-                    ids = R.join(', ', validated_scope_instances_and_ids['ids'])
+            validated_scope_objs_instances_and_ids_sets = R.map(find_scope_instances(new_data),
+                                                                django_modal_user_state_scopes)
+            for i, validated_scope_objs_instances_and_ids in enumerate(validated_scope_objs_instances_and_ids_sets):
+                scope = R.merge(django_modal_user_state_scopes[i],
+                                dict(model=django_modal_user_state_scopes[i]['model'].__name__))
+
+                if R.length(validated_scope_objs_instances_and_ids['ids']) != R.length(
+                        validated_scope_objs_instances_and_ids['instances']):
+                    ids = R.join(', ', validated_scope_objs_instances_and_ids['ids'])
                     instances_string = R.join(', ', R.map(lambda instance: str(instance),
-                                                          validated_scope_instances_and_ids['instances']))
-                    scope = R.merge(django_modal_user_state_scopes[i],
-                                    dict(model=django_modal_user_state_scopes[i]['model'].__name__))
+                                                          validated_scope_objs_instances_and_ids['instances']))
                     raise Exception(
                         f"For scope {dumps(scope)} Some scope ids among ids:[{ids}] being saved in user state do not exist. Found the following instances in the database: {instances_string or 'None'}. UserState.data is {dumps(new_data)}"
                     )
+                # This indicates that scope_objs were submitted that didn't have ids
+                # This is allowed if those scope_objs can be created/updated when the userState is mutated
+                if validated_scope_objs_instances_and_ids['can_mutate_related']:
+                    for scope_obj in validated_scope_objs_instances_and_ids['scope_objs']:
+                        scope['model'].update_or_create(
+                           defaults=R.omit(['id'], scope_obj),
+                           **R.pick(['id'], scope_obj)
+                        )
 
             # id or user.id can be used to identify the existing instance
             id_props = R.compact_dict(
