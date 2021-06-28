@@ -1,6 +1,7 @@
 from json import dumps
 
 import graphene
+from django.utils.timezone import now
 from graphene import Field, Mutation, InputObjectType, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
@@ -227,7 +228,11 @@ def create_user_state_config(class_config):
         :param user_state_scope Dict with 'pick' in the shape of the instances we are looking for in new_data,
         e.g. dict(userRegions={region: True}) to search new_data.userRegions[] for all occurrences of {region:...}
          and 'key' which indicates the actually key of the instance (e.g. 'region' for regions)
-        :return: dict(ids=The ids found, instances=Instances actually in the database, scope_objs=objs passed in)
+        :return: dict(
+            scope_ids=The ids found,
+            instances=Instances actually in the database,
+            scope_objs=objs passed in form dict(key=dotted path to object, value=the object)
+        )
         """
 
         def until(key, value):
@@ -243,26 +248,31 @@ def create_user_state_config(class_config):
                 **scope_dict
             ),
             lambda scope_objs: dict(
-                scope_objs=scope_objs,
+                scope_path=scope_objs[0]['key'],
+                # Unique by id or accept if there is no id
+                scope_objs=R.unique_by(lambda obj: R.prop_or(str(now()), 'id', obj['value']), scope_objs),
                 scope_ids=R.unique_by(
                     R.identity,
                     compact(
-                        R.map(lambda scope_obj: R.prop_or(None, 'id', scope_obj), scope_objs))
+                        R.map(
+                            lambda scope_obj: R.prop_or(None, 'id', scope_obj['value']), scope_objs
+                        )
+                    )
                 )
             ),
             # Use the pick key property to find the scope instances in the data
             # If we don't match anything we can get null or an empty item. Filter/compact these out
-            lambda data: R.filter(
-                lambda item: item and (not isinstance(item, list) or R.length(item) != 0),
-                list(
-                    R.values(
-                        R.flatten_dct_until(
-                            R.pick_deep(R.prop('pick', user_state_scope), data),
-                            until,
-                            '.'
-                        )
-                    )
-                )
+            R.filter(
+                lambda obj: obj['value'] and (not isinstance(obj['value'], list) or R.length(obj['value']) != 0)
+            ),
+            R.map(
+                lambda pair: dict(key=pair[0], value=pair[1])
+            ),
+            lambda flattened_data: R.to_pairs(flattened_data),
+            lambda data: R.flatten_dct_until(
+                R.pick_deep(R.prop('pick', user_state_scope), data),
+                until,
+                '.'
             )
         )(new_data)
 
@@ -283,15 +293,19 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_objs_instances_and_ids_sets = R.map(find_scope_instances(new_data),
-                                                                django_modal_user_state_scopes)
+            validated_scope_objs_instances_and_ids_sets = R.map(
+                find_scope_instances(new_data),
+                django_modal_user_state_scopes
+            )
             for i, validated_scope_objs_instances_and_ids in enumerate(validated_scope_objs_instances_and_ids_sets):
-                scope = R.merge(django_modal_user_state_scopes[i],
-                                dict(model=django_modal_user_state_scopes[i]['model'].__name__))
+                scope = R.merge(
+                    django_modal_user_state_scopes[i],
+                    dict(model=django_modal_user_state_scopes[i]['model'].__name__)
+                )
 
-                if R.length(validated_scope_objs_instances_and_ids['ids']) != R.length(
+                if R.length(validated_scope_objs_instances_and_ids['scope_ids']) != R.length(
                         validated_scope_objs_instances_and_ids['instances']):
-                    ids = R.join(', ', validated_scope_objs_instances_and_ids['ids'])
+                    ids = R.join(', ', validated_scope_objs_instances_and_ids['scope_ids'])
                     instances_string = R.join(', ', R.map(lambda instance: str(instance),
                                                           validated_scope_objs_instances_and_ids['instances']))
                     raise Exception(
@@ -299,38 +313,57 @@ def create_user_state_config(class_config):
                     )
                 # This indicates that scope_objs were submitted that didn't have ids
                 # This is allowed if those scope_objs can be created/updated when the userState is mutated
-                if validated_scope_objs_instances_and_ids['can_mutate_related']:
-                    for scope_obj in validated_scope_objs_instances_and_ids['scope_objs']:
-                        scope['model'].update_or_create(
-                           defaults=R.omit(['id'], scope_obj),
-                           **R.pick(['id'], scope_obj)
-                        )
+                if R.prop_or(False, 'can_mutate_related', scope):
+                    for scope_obj_key_value in validated_scope_objs_instances_and_ids['scope_objs']:
+                        scope_obj = scope_obj_key_value['value']
+                        scope_obj_path = scope_obj_key_value['key']
+                        if R.length(R.keys(R.omit(['id'], scope_obj))):
+                            if R.prop_or(False, 'id', scope_obj):
+                                # Update, we don't need the result since it's already in user_state.data
+                                django_modal_user_state_scopes[i]['model'].objects.update_or_create(
+                                    defaults=R.omit(['id'], scope_obj),
+                                    **R.pick(['id'], scope_obj)
+                                )
+                            else:
+                                # Create
+                                instance = django_modal_user_state_scopes[i]['model'](**scope_obj)
+                                instance.save()
+                                # We need to replace the object
+                                # passed in with an object containing the id of the instance
+                                new_data = R.fake_lens_path_set(
+                                    scope_obj_path.split('.'),
+                                    R.pick(['id'], instance),
+                                    new_data
+                                )
+
+            # Update user_state_data with the new instances if any
+            modified_user_state_data = R.merge(user_state_data, dict(data=new_data))
 
             # id or user.id can be used to identify the existing instance
             id_props = R.compact_dict(
                 dict(
-                    id=R.prop_or(None, 'id', user_state_data),
-                    user_id=R.item_str_path_or(None, 'user.id', user_state_data)
+                    id=R.prop_or(None, 'id', new_data),
+                    user_id=R.item_str_path_or(None, 'user.id', new_data)
                 )
             )
 
-            def fetch_and_merge(user_state_data, props):
+            def fetch_and_merge(modified_user_state_data, props):
                 existing = UserState.objects.filter(**props)
                 # If the user doesn't have a user state yet
                 if not R.length(existing):
-                    return user_state_data
+                    return modified_user_state_data
 
                 return merge_data_fields_on_update(
                     ['data'],
                     R.head(existing),
                     # Merge existing's id in case it wasn't in user_state_data
-                    R.merge(user_state_data, R.pick(['id'], existing))
+                    R.merge(modified_user_state_data, R.pick(['id'], existing))
                 )
 
             modified_data = R.if_else(
                 R.compose(R.length, R.keys),
-                lambda props: fetch_and_merge(user_state_data, props),
-                lambda x: user_state_data
+                lambda props: fetch_and_merge(modified_user_state_data, props),
+                lambda _: modified_user_state_data
             )(id_props)
 
             update_or_create_values = input_type_parameters_for_update_or_create(
