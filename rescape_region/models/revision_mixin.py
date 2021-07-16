@@ -34,7 +34,7 @@ class RevisionModelMixin(models.Model):
         if hasattr(self, 'created_at_unrevisioned'):
             return self.created_at_unrevisioned
 
-        return self.initial_version.date_created if \
+        return self.initial_version.revision.date_created if \
             self.pk and self.initial_version else None
 
     @property
