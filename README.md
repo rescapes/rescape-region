@@ -105,4 +105,3 @@ ALTER ROLE test_user SUPERUSER;
  ./manage.py createsuperuser
  # or
 echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('test', 'test@nowhere.man', 'testpass')" | ./manage.py shell
-

@@ -193,7 +193,7 @@ class UpsertSearchLocation(Mutation):
                     )
                 )
                 # Once saved, add it to the search location
-                search_location.jurisdictions.add(search_jurisdiction)
+                search_location.jurisdictions.set(search_jurisdiction)
 
         return UpsertSearchLocation(search_location=search_location)
 

@@ -86,7 +86,7 @@ def create_sample_search_location(cls, search_location_dict):
     )
     search_location.save()
     search_jurisdictions = R.map(lambda instance: instance.save() or instance, [SearchJurisdiction(data=dict(country='Nowhere'))])
-    search_location.jurisdictions.add(*search_jurisdictions)
+    search_location.jurisdictions.set(*search_jurisdictions)
     return search_location
 
 def delete_sample_search_locations(cls):

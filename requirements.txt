@@ -51,7 +51,7 @@ readme-renderer==29.0
 requests==2.25.1
 requests-toolbelt==0.9.1
 rescape-graphene==0.4.10
-rescape-python-helpers==0.0.42
+rescape-python-helpers==0.0.47
 simplejson==3.17.2
 singledispatch==3.6.1
 six==1.15.0
