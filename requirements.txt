@@ -72,3 +72,4 @@ zipp==3.4.1
 django-reversion==3.0.9
 django-reversion-compare==0.14.0
 pur==5.4.0
+bumpversion==0.6.0
