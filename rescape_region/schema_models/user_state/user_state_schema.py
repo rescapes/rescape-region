@@ -315,18 +315,22 @@ def create_user_state_config(class_config):
                 # This is allowed if those scope_objs can be created/updated when the userState is mutated
                 if R.prop_or(False, 'can_mutate_related', scope):
                     for scope_obj_key_value in validated_scope_objs_instances_and_ids['scope_objs']:
+                        model = django_modal_user_state_scopes[i]['model']
+                        def omit_to_many(scope_obj):
+                            return R.omit(R.map(R.prop('attname'), model._meta.many_to_many), scope_obj)
+
                         scope_obj = scope_obj_key_value['value']
                         scope_obj_path = scope_obj_key_value['key']
                         if R.length(R.keys(R.omit(['id'], scope_obj))):
                             if R.prop_or(False, 'id', scope_obj):
                                 # Update, we don't need the result since it's already in user_state.data
-                                django_modal_user_state_scopes[i]['model'].objects.update_or_create(
-                                    defaults=R.omit(['id'], scope_obj),
+                                instance, created = model.objects.update_or_create(
+                                    defaults=R.omit(['id'], omit_to_many(scope_obj)),
                                     **R.pick(['id'], scope_obj)
                                 )
                             else:
                                 # Create
-                                instance = django_modal_user_state_scopes[i]['model'](**scope_obj)
+                                instance = model(**omit_to_many(scope_obj))
                                 instance.save()
                                 # We need to replace the object
                                 # passed in with an object containing the id of the instance
@@ -335,6 +339,9 @@ def create_user_state_config(class_config):
                                     R.pick(['id'], instance),
                                     new_data
                                 )
+                        for to_many in model._meta.many_to_many:
+                            if to_many.attname in R.keys(scope_obj):
+                                getattr(instance, to_many.attname).set(scope_obj[to_many.attname])
 
             # Update user_state_data with the new instances if any
             modified_user_state_data = R.merge(user_state_data, dict(data=new_data))
