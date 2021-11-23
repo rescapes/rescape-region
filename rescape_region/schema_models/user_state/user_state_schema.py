@@ -367,7 +367,7 @@ def create_user_state_config(class_config):
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
             updated_new_data = copy.deepcopy(new_data)
-            old_user_state_data = UserState.objects.get(id=user_state_data['id']).data
+            old_user_state_data = UserState.objects.get(id=user_state_data['id']).data if R.prop_or(None, 'id', user_state_data) else None
 
             # If any scope instances specified in new_data don't exist, throw an error
             validated_scope_objs_instances_and_ids_sets = R.map(
@@ -399,7 +399,7 @@ def create_user_state_config(class_config):
 
             # If either userProjects or userRegions are null, it means those scope instances aren't part
             # of the update, so merge in the old values
-            if user_state_data['id'] and R.any_satisfy(
+            if R.prop_or(None, 'id', user_state_data) and R.any_satisfy(
                     lambda user_scope_key: not R.prop_or(None, user_scope_key, updated_new_data),
                     ['userProjects', 'userRegions']
             ):
