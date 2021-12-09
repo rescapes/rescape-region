@@ -5,7 +5,7 @@ import datetime
 import os
 
 TEST_RUNNER = 'snapshottest.django.TestRunner'
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,9 +38,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'safedelete',
     'graphene_django',
-    'rescape_region',
     'reversion',
-    'reversion_compare'
+    'reversion_compare',
+    'rescape_region'
 ]
 
 STATIC_URL = '/static/'

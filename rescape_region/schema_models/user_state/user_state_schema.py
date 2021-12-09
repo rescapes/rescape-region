@@ -365,7 +365,7 @@ def create_user_state_config(class_config):
             """
 
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
-            new_data = R.prop_or({}, 'data', user_state_data)
+            new_data = R.prop_or({},     'data', user_state_data)
             updated_new_data = copy.deepcopy(new_data)
             old_user_state_data = UserState.objects.get(id=user_state_data['id']).data if R.prop_or(None, 'id', user_state_data) else None
 

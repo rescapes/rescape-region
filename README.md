@@ -7,7 +7,7 @@ A Django app to support limiting users by geographic region
 Quick start
 -----------
 
-1. Add "region-app" to your INSTALLED_APPS setting like this::
+1. Add "rescape-region" to your INSTALLED_APPS setting like this::
 
     INSTALLED_APPS = [
         ...
@@ -42,7 +42,7 @@ Replace the path with your code directory
 
 ```bash
 export RESCAPE_REGION_BASE_DIR=/Users/andy/code/rescape-region
-export RESCAPE_REGION_PROJECT_DIR=$RESCAPE_REGION_BASE_DIR/urbinsight
+export RESCAPE_REGION_PROJECT_DIR=$RESCAPE_REGION_BASE_DIR/rescape-region
 export PYTHONPATH=.:$RESCAPE_REGION_BASE_DIR:$RESCAPE_REGION_PROJECT_DIR
 ```
 
