@@ -147,7 +147,7 @@ def log_request_body(info, response_or_error):
         (logger.error if isinstance(response_or_error, ErrorType) else logger.debug)(
             f" User: {info.context.user} \n Action: {json_body['operationName']} \n Variables: {json_body['variables']} \n Body:  {json_body['query']}",
         )
-        if isinstance(response_or_error._meta, MutationOptions):
+        if hasattr(response_or_error, '_meta') and isinstance(response_or_error._meta, MutationOptions):
             # Just log top level types
             if isinstance(response_or_error, (Model)):
                 mutation_response = json.dumps(
