@@ -6,6 +6,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import QuerySet
 from django.db.models.base import Model
 from graphene.types.base import BaseType
+from graphene.types.mutation import MutationOptions
 from graphene_django.types import ErrorType
 from graphql import format_error
 from rescape_graphene import create_schema
@@ -146,13 +147,7 @@ def log_request_body(info, response_or_error):
         (logger.error if isinstance(response_or_error, ErrorType) else logger.debug)(
             f" User: {info.context.user} \n Action: {json_body['operationName']} \n Variables: {json_body['variables']} \n Body:  {json_body['query']}",
         )
-        if isinstance(response_or_error, QuerySet):
-            count = response_or_error.count()
-            # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
-            ids = R.join(' ',
-                         ['', 'having ids:', R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
-            logger.debug(f'Query returned {count} results{ids}')
-        else:
+        if isinstance(response_or_error._meta, MutationOptions):
             # Just log top level types
             if isinstance(response_or_error, (Model)):
                 mutation_response = json.dumps(
@@ -172,5 +167,13 @@ def log_request_body(info, response_or_error):
                     logger.debug(f'Mutation returned {mutation_response}')
                 except:
                     logger.debug(f'Mutation returned {response_or_error.__class__}')
+        else:
+            count = response_or_error.count()
+            # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
+            ids = R.join(' ',
+                         ['', 'having ids:',
+                          R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
+            logger.debug(f'Query returned {count} results{ids}')
+
     except Exception as e:
         logging.error(body)
