@@ -544,5 +544,6 @@ def handle_can_mutate_related(model, scope, updated_new_data, validated_scope_ob
                     )
             for to_many in model._meta.many_to_many:
                 if to_many.attname in R.keys(scope_obj):
-                    getattr(instance, to_many.attname).set(scope_obj[to_many.attname])
+                    # Set existing related values to the created/updated instances
+                    getattr(instance, to_many.attname).set(R.map(R.prop('id'), scope_obj[to_many.attname]))
     return updated_new_data
