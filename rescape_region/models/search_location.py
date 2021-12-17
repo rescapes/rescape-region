@@ -27,6 +27,9 @@ class SearchLocation(SafeDeleteModel, RevisionModelMixin):
     # Optional name of the search.
     name = CharField(max_length=100, null=True)
 
+    # Optional way to know what type of search it is, such as 'mapbox' to specify searches only done on the map
+    category = CharField(max_length=100, null=True)
+
     # Search for matches with the id and key (location.id, location.key)
     identification = JSONField(null=True, default=default_search_identification)
 

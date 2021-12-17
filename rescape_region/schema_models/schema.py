@@ -168,12 +168,23 @@ def log_request_body(info, response_or_error):
                 except:
                     logger.debug(f'Mutation returned {response_or_error.__class__}')
         else:
-            count = response_or_error.count()
-            # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
-            ids = R.join(' ',
-                         ['', 'having ids:',
-                          R.join(', ', R.map(R.prop("id"), response_or_error))]) if count < 100 else ""
-            logger.debug(f'Query returned {count} results{ids}')
+            if hasattr(response_or_error, 'objects'):
+                count = response_or_error.objects.count()
+                # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
+                ids = R.join(' ',
+                             ['', 'having ids:',
+                              R.join(', ', R.map(R.prop("id"), response_or_error.objects.values('id')))]) if count < 100 else ""
+                logger.debug(f'Paginated Query Page {response_or_error.page} of page size {response_or_error.page_size} out of total pages {response_or_error.pages} returned {count} results{ids}')
+            elif hasattr(response_or_error, 'count'):
+                count = response_or_error.count()
+                # Log up to 100 ids, don't log if it's a larger set because it might be a paging query
+                ids = R.join(' ',
+                             ['', 'having ids:',
+                              R.join(', ', R.map(R.prop("id"), response_or_error.values('id')))]) if count < 100 else ""
+                logger.debug(f'Query returned {count} results{ids}')
+            else:
+                id = R.prop('id', response_or_error)
+                logger.debug(f'Query returned single result {id}')
 
     except Exception as e:
         logging.error(body)
