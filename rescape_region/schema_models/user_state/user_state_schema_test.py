@@ -18,6 +18,7 @@ from rescape_region.schema_models.user_sample import create_sample_user
 from rescape_region.schema_models.user_state.user_state_schema import create_user_state_config
 from .user_state_sample import delete_sample_user_states, create_sample_user_states, \
     form_sample_user_state_data
+from ..scope.location.location_sample import create_local_sample_locations
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -69,6 +70,7 @@ class UserStateSchemaTestCase(TestCase):
             # First flat map the user regions of all user_states
             R.chain(lambda user_state: R.item_str_path('data.userProjects', user_state.__dict__))
         )(self.user_states)
+        self.locations = create_local_sample_locations(get_location_schema()['model_class'])
 
         def extract_search_location_ids(user_regions):
             return R.map(
@@ -155,6 +157,31 @@ class UserStateSchemaTestCase(TestCase):
                         dict(
                             # Assign the first project
                             project=dict(key=R.prop('key', R.head(self.projects))),
+                            mapbox=dict(viewport=dict(
+                                latitude=50.5915,
+                                longitude=2.0165,
+                                zoom=7
+                            )),
+                            userSearch=dict(
+                                userSearchLocations=R.map(
+                                    lambda search_location: dict(
+                                        searchLocation=R.pick(['id'], search_location),
+                                        activity=dict(isActive=True)
+                                    ),
+                                    self.search_locations
+                                )
+                            ),
+                            **self.additional_user_scope_data
+                        ),
+                        dict(
+                            # Create a new project when creating the userProject
+                            project=dict(
+                                user=R.pick(['id'], user),
+                                region=R.pick(['id'], R.head(self.regions)),
+                                key='newProject',
+                                         name='New Project',
+                                         locations=R.map(R.pick(['id']), self.locations)
+                                         ),
                             mapbox=dict(viewport=dict(
                                 latitude=50.5915,
                                 longitude=2.0165,

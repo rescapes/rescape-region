@@ -3,6 +3,24 @@ from django.db import transaction
 
 sample_regions = [
     dict(
+        key='norwayOslo',
+        name='Oslo, Norway',
+        geojson={
+            'type': 'FeatureCollection',
+            'features': [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [[49.5294835476, 2.51357303225], [51.4750237087, 2.51357303225],
+                         [51.4750237087, 6.15665815596],
+                         [49.5294835476, 6.15665815596], [49.5294835476, 2.51357303225]]]
+                }
+            }]
+        },
+        data=dict(locations=dict(params=[dict(country='Norway', city='Oslo')]))
+    ),
+    dict(
         key='belgium',
         name='Belgium',
         geojson={
@@ -18,8 +36,8 @@ sample_regions = [
                 }
             }]
         },
-        data=dict()
-    ),
+        data=dict(locations=dict(params=[dict(country='Belgium')]))
+    )
 ]
 
 

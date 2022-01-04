@@ -131,7 +131,9 @@ def create_sample_user_state(cls, regions, projects, user_state_dict):
 
 def user_state_scope_instances(scope_key, user_scope_key, scope_instances, data):
     """
-        Creates scope instance dicts for the given instances
+        Creates scope instance dicts for the given instances. New scope instances can be
+        passed as well for Project, which instructs the server to create the Project when
+        creating/updating the userProject
     :param scope_key: 'region', 'project', etc
     :param user_scope_key: 'userRegions', 'userProjects', etc
     :param scope_instances: regions or projects or ...
@@ -141,27 +143,41 @@ def user_state_scope_instances(scope_key, user_scope_key, scope_instances, data)
     """
 
     scope_instances_by_key = R.map_prop_value_as_index('key', scope_instances)
+
+    def resolve_scope_instance(scope_key, user_scope_instance):
+        # Replace key with id
+        id = R.compose(
+            # third get the id if it exists
+            R.prop_or(None, 'id'),
+            # second resolve the scope instance if it exists
+            lambda k: R.prop_or(None, k, scope_instances_by_key),
+            # first get the key
+            R.item_str_path(f'{scope_key}.key')
+        )(user_scope_instance)
+        return {
+            scope_key: R.compact_dict(
+                dict(
+                    # Resolve the persisted Scope instance by key
+                    id=id
+                ) if id else dict(
+                    # Otherwise pass everything so the server can create the instance
+                    # (Currently only supported for projects)
+                    user_scope_instance[scope_key]
+                )
+            )
+        }
+
     return R.map(
         # Find the id of th scope instance that matches,
         # returning dict(id=scope_instance_id). We can't return the whole scope instance
         # because we are saving within json data, not the Django ORM
+        # If the scope instance is new and doesn't match anything, create the user scope instance
+        # without an id so that the server saves it (Only implemented for Project, not Region thus far)
         lambda user_scope_instance: R.merge(
             # Other stuff like mapbox
             R.omit([scope_key], user_scope_instance),
-            # Replace key with id
-            {
-                scope_key: dict(
-                    # Resolve the persisted Scope instance by key
-                    id=R.compose(
-                        # third get the id
-                        R.prop('id'),
-                        # second resolve the scope instance
-                        lambda k: R.prop(k, scope_instances_by_key),
-                        # first get the key
-                        R.item_str_path(f'{scope_key}.key')
-                    )(user_scope_instance)
-                )
-            }
+            # The project or region
+            resolve_scope_instance(scope_key, user_scope_instance)
         ),
         R.prop(user_scope_key, data)
     )

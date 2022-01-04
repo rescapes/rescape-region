@@ -1,11 +1,12 @@
 import reversion
 from django.db.models import (
-    CharField, UniqueConstraint, Q)
+    CharField)
 from django.db.models import JSONField
 from safedelete.models import SafeDeleteModel
 
 from rescape_region.model_helpers import region_data_default, feature_collection_default
 from rescape_region.models.revision_mixin import RevisionModelMixin
+
 
 @reversion.register()
 class Location(SafeDeleteModel, RevisionModelMixin):

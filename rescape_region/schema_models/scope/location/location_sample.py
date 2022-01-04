@@ -46,10 +46,14 @@ local_sample_locations = [
 @transaction.atomic
 def create_sample_location(cls, location_dict):
     # Save the location with the complete data
-
-    location = cls(**location_dict)
-    location.save()
-    return location
+    if R.has('key', location_dict):
+        # rescape_region uses a key for uniqueness
+        return cls.objects.update_or_create(key=R.prop('key', location_dict), defaults=R.omit(['key'], location_dict))[0]
+    else:
+        # other implementors should delete duplicates first
+        location = cls(**location_dict)
+        location.save()
+        return location
 
 
 def delete_sample_locations(cls):
@@ -86,7 +90,7 @@ def create_sample_search_location(cls, search_location_dict):
     )
     search_location.save()
     search_jurisdictions = R.map(lambda instance: instance.save() or instance, [SearchJurisdiction(data=dict(country='Nowhere'))])
-    search_location.jurisdictions.set(*search_jurisdictions)
+    search_location.jurisdictions.set(search_jurisdictions)
     return search_location
 
 def delete_sample_search_locations(cls):
