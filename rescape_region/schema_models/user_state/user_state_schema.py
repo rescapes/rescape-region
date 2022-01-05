@@ -1,13 +1,10 @@
 import copy
 from collections import namedtuple
-from json import dumps
 
 import graphene
 from deepmerge import Merger
 from deepmerge.strategy.dict import DictStrategies
 from deepmerge.strategy.list import ListStrategies
-from django.db.models import ForeignKey
-from django.utils.timezone import now
 from graphene import Field, Mutation, InputObjectType, ObjectType
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
@@ -16,14 +13,16 @@ from rescape_graphene import input_type_fields, REQUIRE, DENY, CREATE, \
     guess_update_or_create, graphql_update_or_create, graphql_query, merge_with_django_properties, UserType, \
     enforce_unique_props, user_fields
 from rescape_graphene.graphql_helpers.json_field_helpers import resolve_selections, pick_selections
+from rescape_graphene.graphql_helpers.mutate_related_helpers import validate_and_mutate_scope_instances
 from rescape_graphene.graphql_helpers.schema_helpers import merge_data_fields_on_update, update_or_create_with_revision, \
     top_level_allowed_filter_arguments, process_filter_kwargs
 from rescape_graphene.schema_models.django_object_type_revisioned_mixin import reversion_and_safe_delete_types, \
     DjangoObjectTypeRevisionedMixin
-from rescape_python_helpers import ramda as R, compact
+from rescape_python_helpers import ramda as R
 
 from rescape_region.model_helpers import get_region_model, get_project_model, get_search_location_schema
 from rescape_region.models import UserState
+from rescape_region.schema_models.scope.project.project_schema import project_fields
 from rescape_region.schema_models.user_state.user_state_data_schema import UserStateDataType, user_state_data_fields
 
 
@@ -232,14 +231,19 @@ def create_user_state_config(class_config):
         if R.prop_or(None, 'additional_user_scope_schemas', class_config) else {}
 
     # The scope instance types expected in user_state.data
-    django_modal_user_state_scopes = R.concat([
+    user_state_scope_instances_config = R.concat([
         # dict(region=True) means search all userRegions for that dict
-        dict(pick=dict(userRegions=dict(region=True)), key='region', model=get_region_model()),
+        dict(pick=dict(userRegions=dict(region=True)),
+             key='region',
+             model=get_region_model()
+             ),
         # dict(project=True) means search all userProjects for that dict
         dict(
             pick=dict(userProjects=dict(project=True)),
             key='project',
             model=get_project_model(),
+            # This is currently just needed for the field key's unique_with function
+            field_config=project_fields,
             # Projects can be modified when userState is mutated
             can_mutate_related=True
         ),
@@ -292,68 +296,6 @@ def create_user_state_config(class_config):
         )
     )
 
-    @R.curry
-    def find_scope_instances_by_id(model, scope_ids):
-        return model.objects.all_with_deleted().filter(id__in=scope_ids)
-
-    @R.curry
-    def find_scope_instances(new_data, user_state_scope):
-        """
-            Retrieve the scope instances to verify the Ids.
-            Scope instances must have ids unless they are allowed to be created/updated
-            during the userState mutation (such as searchLocations)
-        :param new_data: The data to search
-        :param user_state_scope Dict with 'pick' in the shape of the instances we are looking for in new_data,
-        e.g. dict(userRegions={region: True}) to search new_data.userRegions[] for all occurrences of {region:...}
-         and 'key' which indicates the actually key of the instance (e.g. 'region' for regions)
-        :return: dict(
-            instances=Instances actually in the database,
-        )
-        """
-
-        def until(key, value):
-            return key != R.prop('key', user_state_scope)
-
-        return R.compose(
-            lambda scope_dict: dict(
-                # See which instances with ids are actually in the database
-                # If any are missing we have an invalid update or need to create those instances if permitted
-                instances=list(
-                    find_scope_instances_by_id(R.prop('model', user_state_scope), scope_dict['scope_ids'])
-                ),
-                # The path from userRegions or userProjects to the scope instances, used to replace
-                # a null update value with the existing values
-                user_scope_path=list(R.keys(R.flatten_dct(user_state_scope, '.')))[0],
-                **scope_dict
-            ),
-            lambda scope_objs: dict(
-                # Unique by id or accept if there is no id, this loses data, but it's just for validation
-                scope_objs=R.unique_by(lambda obj: R.prop_or(str(now()), 'id', obj['value']), scope_objs),
-                scope_ids=R.unique_by(
-                    R.identity,
-                    compact(
-                        R.map(
-                            lambda scope_obj: R.prop_or(None, 'id', scope_obj['value']), scope_objs
-                        )
-                    )
-                )
-            ),
-            # Use the pick key property to find the scope instances in the data
-            # If we don't match anything we can get null or an empty item. Filter/compact these out
-            R.filter(
-                lambda obj: obj['value'] and (not isinstance(obj['value'], list) or R.length(obj['value']) != 0)
-            ),
-            R.map(
-                lambda pair: dict(key=pair[0], value=pair[1])
-            ),
-            lambda flattened_data: R.to_pairs(flattened_data),
-            lambda data: R.flatten_dct_until(
-                R.pick_deep_all_array_items(R.prop('pick', user_state_scope), data),
-                until,
-                '.'
-            )
-        )(new_data)
-
     class UpsertUserState(Mutation):
         """
             Abstract base class for mutation
@@ -370,37 +312,20 @@ def create_user_state_config(class_config):
 
             # Check that all the scope instances in user_state.data exist. We permit deleted instances for now.
             new_data = R.prop_or({}, 'data', user_state_data)
-            updated_new_data = copy.deepcopy(new_data)
-            old_user_state_data = UserState.objects.get(id=user_state_data['id']).data if R.prop_or(None, 'id',
-                                                                                                    user_state_data) else None
+            # Copy since Graphene reuses this data
+            copied_new_data = copy.deepcopy(new_data)
+            old_user_state_data = UserState.objects.get(
+                id=user_state_data['id']
+            ).data if R.prop_or(None, 'id', user_state_data) else None
 
-            # If any scope instances specified in new_data don't exist, throw an error
-            validated_scope_objs_instances_and_ids_sets = R.map(
-                find_scope_instances(updated_new_data),
-                django_modal_user_state_scopes
+            # Inspect the data and find all scope instances within UserState.data
+            # This includes userRegions[*].region, userProject[*].project and within userRegions and userProjects
+            # userSearch.userSearchLocations[*].search_location and whatever the implementing libraries define
+            # in addition
+            updated_new_data = validate_and_mutate_scope_instances(
+                user_state_scope_instances_config,
+                copied_new_data
             )
-            for i, validated_scope_objs_instances_and_ids in enumerate(validated_scope_objs_instances_and_ids_sets):
-                scope = R.merge(
-                    django_modal_user_state_scopes[i],
-                    dict(model=django_modal_user_state_scopes[i]['model'].__name__)
-                )
-
-                if R.length(validated_scope_objs_instances_and_ids['scope_ids']) != R.length(
-                        validated_scope_objs_instances_and_ids['instances']):
-                    ids = R.join(', ', validated_scope_objs_instances_and_ids['scope_ids'])
-                    instances_string = R.join(', ', R.map(lambda instance: str(instance),
-                                                          validated_scope_objs_instances_and_ids['instances']))
-                    raise Exception(
-                        f"For scope {dumps(scope)} Some scope ids among ids:[{ids}] being saved in user state do not exist. Found the following instances in the database: {instances_string or 'None'}. UserState.data is {dumps(updated_new_data)}"
-                    )
-
-                model = django_modal_user_state_scopes[i]['model']
-                updated_new_data = handle_can_mutate_related(
-                    model,
-                    scope,
-                    updated_new_data,
-                    validated_scope_objs_instances_and_ids
-                )
 
             # If either userProjects or userRegions are null, it means those scope instances aren't part
             # of the update, so merge in the old values
@@ -516,63 +441,3 @@ def create_user_state_config(class_config):
         graphql_mutation=graphql_update_or_create_user_state,
         graphql_query=graphql_query_user_states
     )
-
-
-def handle_can_mutate_related(model, scope, updated_new_data, validated_scope_objs_instances_and_ids):
-    # This indicates that scope_objs were submitted that didn't have ids
-    # This is allowed if those scope_objs can be created/updated when the userState is mutated
-    if R.prop_or(False, 'can_mutate_related', scope):
-        for scope_obj_key_value in validated_scope_objs_instances_and_ids['scope_objs']:
-
-            def convert_foreign_key_to_id(scope_obj):
-                # Find ForeignKey attributes and map the class field name to the foreign key id field
-                # E.g. region to region_id, user to user_id, etc
-                converters = R.compose(
-                    R.from_pairs,
-                    R.map(
-                        lambda field: [field.name, field.attname]
-                    ),
-                    R.filter(
-                        lambda field: R.isinstance(ForeignKey, field)
-                    )
-                )(model._meta.fields)
-                # Convert scopo_obj[related_field] = {id: x} to scope_obj[related_field_id] = x
-                return R.from_pairs(R.map_with_obj_to_values(
-                    lambda key, value: [converters[key], R.prop('id', value)] \
-                        if R.has(key, converters)
-                        else [key, value],
-                    scope_obj
-                ))
-
-            def omit_to_many(scope_obj):
-                return R.omit(R.map(R.prop('attname'), model._meta.many_to_many), scope_obj)
-
-            scope_obj = scope_obj_key_value['value']
-            scope_obj_path = scope_obj_key_value['key']
-            if R.length(R.keys(R.omit(['id'], scope_obj))):
-                modified_scope_obj = R.compose(
-                    convert_foreign_key_to_id,
-                    omit_to_many
-                )(scope_obj)
-                if R.prop_or(False, 'id', scope_obj):
-                    # Update, we don't need the result since it's already in user_state.data
-                    instance, created = model.objects.update_or_create(
-                        defaults=R.omit(['id'], modified_scope_obj),
-                        **R.pick(['id'], scope_obj)
-                    )
-                else:
-                    # Create
-                    instance = model(**modified_scope_obj)
-                    instance.save()
-                    # We need to replace the object
-                    # passed in with an object containing the id of the instance
-                    updated_new_data = R.fake_lens_path_set(
-                        scope_obj_path.split('.'),
-                        R.pick(['id'], instance),
-                        updated_new_data
-                    )
-            for to_many in model._meta.many_to_many:
-                if to_many.attname in R.keys(scope_obj):
-                    # Set existing related values to the created/updated instances
-                    getattr(instance, to_many.attname).set(R.map(R.prop('id'), scope_obj[to_many.attname]))
-    return updated_new_data
