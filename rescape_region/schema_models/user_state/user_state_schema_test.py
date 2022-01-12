@@ -98,7 +98,8 @@ class UserStateSchemaTestCase(TestCase):
             self.client,
             R.prop('graphql_query', self.user_state_schema),
             'userStates',
-            dict(user=dict(id=R.prop('id', R.head(self.users))))
+            # The query always queries by the current user
+            dict()
         )
 
     def test_create(self):
