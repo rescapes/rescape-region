@@ -17,9 +17,22 @@ viewport_data_fields = dict(
 
 # Viewport settings within Mapbox
 ViewportDataType = type(
-    'ViewportDataType',
+    'MapboxViewportDataType',
     (ObjectType,),
     type_modify_fields(viewport_data_fields)
+)
+
+viewport_data_fields = dict(
+    hoveredColor=dict(type=String),
+    highlightedColor=dict(type=String),
+    mapboxStyleUrl=dict(type=String)
+)
+
+# Style settings within Mapbox
+StyleDataType = type(
+    'MapboxStyleDataType',
+    (ObjectType,),
+    type_modify_fields(style_data_fields)
 )
 
 mapbox_data_fields = dict(
@@ -27,6 +40,12 @@ mapbox_data_fields = dict(
         type=ViewportDataType,
         graphene_type=ViewportDataType,
         fields=viewport_data_fields,
+        type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
+    ),
+    style=dict(
+        type=StyleDataType,
+        graphene_type=StyleDataType,
+        fields=style_data_fields,
         type_modifier=lambda *type_and_args: Field(*type_and_args, resolver=resolver_for_dict_field),
     )
 )

@@ -83,20 +83,22 @@ def create_user_state_query(user_state_config):
         @login_required
         def resolve_user_states(self, info, **kwargs):
             """
-                Resolves only the user_state of the current user
+                Resolves only the user_state of the current user. If the user is_staff or is_superuser
+                then the user id will not be passed implicitly to the query
             :param info:
             :param kwargs:
             :return:
             """
             context = info.context
             user = R.prop_or(None, 'user', context)
+            admin = user.is_staff or user.is_superuser
 
             q_expressions = process_filter_kwargs(
                 UserState,
                 **R.merge_all([
                     dict(deleted__isnull=True),
                     kwargs,
-                    dict(user__id=user.id)
+                    dict(user__id=user.id) if not admin else {}
                 ])
             )
 
