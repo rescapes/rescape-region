@@ -62,7 +62,7 @@ tinycss2==1.1.0
 tqdm==4.60.0
 twine==3.4.1
 typing==3.7.4.3
-urllib3==1.26.4
+urllib3==1.26.5
 utils==1.0.1
 wasmer==1.0.0
 wcwidth==0.2.5
